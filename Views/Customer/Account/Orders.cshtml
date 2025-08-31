@@ -1,0 +1,178 @@
+@using AccessoryWorld.ViewModels
+@model List<OrderHistoryViewModel>
+@{
+    ViewData["Title"] = "Order History";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Account Navigation -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user"></i> My Account</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="@Url.Action("Dashboard", "Account")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="@Url.Action("Profile", "Account")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-edit me-2"></i> Profile
+                    </a>
+                    <a href="@Url.Action("Addresses", "Account")" class="list-group-item list-group-item-action">
+                        <i class="fas fa-map-marker-alt me-2"></i> Addresses
+                    </a>
+                    <a href="@Url.Action("Orders", "Account")" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-shopping-bag me-2"></i> Order History
+                    </a>
+                    <a href="/wishlist" class="list-group-item list-group-item-action">
+                        <i class="fas fa-heart me-2"></i> My Wishlist
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order History Content -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-shopping-bag"></i> Order History</h4>
+                    <span class="badge bg-primary">@Model.Count Orders</span>
+                </div>
+                <div class="card-body">
+                    @if (Model.Any())
+                    {
+                        <div class="row">
+                            @foreach (var order in Model)
+                            {
+                                <div class="col-12 mb-4">
+                                    <div class="card border">
+                                        <div class="card-header bg-light">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-3">
+                                                    <strong>Order #@order.OrderNumber</strong>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    @{
+                                                        var statusClass = order.Status switch
+                                                        {
+                                                            "PENDING" => "warning",
+                                                            "PAID" => "info",
+                                                            "PROCESSING" => "primary",
+                                                            "SHIPPED" => "secondary",
+                                                            "DELIVERED" => "success",
+                                                            "CANCELLED" => "danger",
+                                                            "REFUNDED" => "dark",
+                                                            _ => "secondary"
+                                                        };
+                                                    }
+                                                    <span class="badge bg-@statusClass">@order.Status</span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-calendar"></i> @order.CreatedAt.ToString("dd MMM yyyy")
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-2 text-end">
+                                                    <strong>@order.Currency @order.Total.ToString("N2")</strong>
+                                                </div>
+                                                <div class="col-md-2 text-end">
+                                                    <a href="@Url.Action("OrderDetails", "Account", new { id = order.Id })" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <p class="mb-1">
+                                                        <i class="fas fa-box"></i> <strong>@order.ItemCount</strong> item(s)
+                                                    </p>
+                                                    <p class="mb-1">
+                                                        <i class="fas fa-truck"></i> @order.FulfilmentMethod
+                                                    </p>
+                                                    @if (!string.IsNullOrEmpty(order.TrackingNumber))
+                                                    {
+                                                        <p class="mb-1">
+                                                            <i class="fas fa-barcode"></i> Tracking: <code>@order.TrackingNumber</code>
+                                                        </p>
+                                                    }
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <p class="mb-1">
+                                                        <i class="fas fa-map-marker-alt"></i> @order.ShippingAddress
+                                                    </p>
+                                                    @if (order.PaidAt.HasValue)
+                                                    {
+                                                        <p class="mb-1">
+                                                            <i class="fas fa-credit-card"></i> Paid: @order.PaidAt.Value.ToString("dd MMM yyyy HH:mm")
+                                                        </p>
+                                                    }
+                                                    @if (order.DeliveredAt.HasValue)
+                                                    {
+                                                        <p class="mb-1">
+                                                            <i class="fas fa-check-circle text-success"></i> Delivered: @order.DeliveredAt.Value.ToString("dd MMM yyyy")
+                                                        </p>
+                                                    }
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Order Items Preview -->
+                                            <div class="mt-3">
+                                                <div class="row">
+                                                    @foreach (var item in order.OrderItems.Take(3))
+                                                    {
+                                                        <div class="col-md-4 mb-2">
+                                                            <div class="d-flex align-items-center">
+                                                                @if (!string.IsNullOrEmpty(item.ProductImage))
+                                                                {
+                                                                    <img src="@item.ProductImage" alt="@item.ProductName" class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                                                }
+                                                                else
+                                                                {
+                                                                    <div class="me-2 bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; border-radius: 4px;">
+                                                                        <i class="fas fa-image text-muted"></i>
+                                                                    </div>
+                                                                }
+                                                                <div class="flex-grow-1">
+                                                                    <small class="fw-bold">@item.ProductName</small>
+                                                                    <br>
+                                                                    <small class="text-muted">Qty: @item.Quantity</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    @if (order.OrderItems.Count > 3)
+                                                    {
+                                                        <div class="col-md-4 mb-2">
+                                                            <div class="d-flex align-items-center justify-content-center h-100">
+                                                                <small class="text-muted">+@(order.OrderItems.Count - 3) more items</small>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Orders Yet</h5>
+                            <p class="text-muted">You haven't placed any orders yet. Start shopping to see your order history here.</p>
+                            <a href="@Url.Action("Index", "Products")" class="btn btn-primary">
+                                <i class="fas fa-shopping-cart"></i> Start Shopping
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

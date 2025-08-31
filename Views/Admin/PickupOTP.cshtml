@@ -1,0 +1,533 @@
+@model IEnumerable<AccessoryWorld.ViewModels.PickupOTPViewModel>
+@{
+    ViewData["Title"] = "Pickup OTP Management";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-key"></i> Pickup OTP Management
+                    </h4>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-warning" onclick="resendExpiredOTPs()">
+                            <i class="fas fa-redo"></i> Resend Expired
+                        </button>
+                        <button class="btn btn-success" onclick="generatePendingOTPs()">
+                            <i class="fas fa-plus"></i> Generate Pending
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filters -->
+                <div class="card-body border-bottom">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">OTP Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Statuses</option>
+                                <option value="PENDING" @(ViewBag.StatusFilter == "PENDING" ? "selected" : "")>Pending Generation</option>
+                                <option value="GENERATED" @(ViewBag.StatusFilter == "GENERATED" ? "selected" : "")>Generated</option>
+                                <option value="SENT" @(ViewBag.StatusFilter == "SENT" ? "selected" : "")>Sent to Customer</option>
+                                <option value="VERIFIED" @(ViewBag.StatusFilter == "VERIFIED" ? "selected" : "")>Verified</option>
+                                <option value="EXPIRED" @(ViewBag.StatusFilter == "EXPIRED" ? "selected" : "")>Expired</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="expiryStatus" class="form-label">Expiry Status</label>
+                            <select class="form-select" id="expiryStatus" name="expiryStatus">
+                                <option value="">All</option>
+                                <option value="ACTIVE" @(ViewBag.ExpiryFilter == "ACTIVE" ? "selected" : "")>Active</option>
+                                <option value="EXPIRING_SOON" @(ViewBag.ExpiryFilter == "EXPIRING_SOON" ? "selected" : "")>Expiring Soon</option>
+                                <option value="EXPIRED" @(ViewBag.ExpiryFilter == "EXPIRED" ? "selected" : "")>Expired</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="dateFrom" class="form-label">Date From</label>
+                            <input type="date" class="form-control" id="dateFrom" name="dateFrom" value="@ViewBag.DateFrom">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="dateTo" class="form-label">Date To</label>
+                            <input type="date" class="form-control" id="dateTo" name="dateTo" value="@ViewBag.DateTo">
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Filter
+                            </button>
+                            <a href="@Url.Action("PickupOTP")" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-body p-0">
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Order</th>
+                                        <th>Customer</th>
+                                        <th>Phone Number</th>
+                                        <th>OTP Code</th>
+                                        <th>Status</th>
+                                        <th>Generated</th>
+                                        <th>Expires</th>
+                                        <th>Verified</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var otp in Model)
+                                    {
+                                        <tr class="@(otp.IsExpired ? "table-warning" : "")">
+                                            <td>
+                                                <div>
+                                                    <a href="@Url.Action("OrderDetails", new { id = otp.OrderId })" class="text-decoration-none">
+                                                        <strong>#@otp.OrderNumber</strong>
+                                                    </a>
+                                                    <br>
+                                                    <small class="text-muted">R @otp.OrderTotal.ToString("N2")</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    @otp.CustomerName
+                                                    <br>
+                                                    <small class="text-muted">@otp.CustomerEmail</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <code>@otp.PhoneNumber</code>
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(otp.OTPCode))
+                                                {
+                                                    <div class="d-flex align-items-center">
+                                                        <code class="me-2 fs-5 fw-bold text-primary">@otp.OTPCode</code>
+                                                        <button class="btn btn-outline-secondary btn-sm" title="Copy OTP" 
+                                                                onclick="copyToClipboard('@otp.OTPCode')">
+                                                            <i class="fas fa-copy"></i>
+                                                        </button>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Not generated</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@GetOTPStatusColor(otp.Status, otp.IsExpired)">@otp.Status</span>
+                                                @if (otp.IsExpired && otp.Status != "VERIFIED")
+                                                {
+                                                    <br>
+                                                    <small class="text-danger">
+                                                        <i class="fas fa-exclamation-triangle"></i> Expired
+                                                    </small>
+                                                }
+                                                @if (otp.IsExpiringSoon && !otp.IsExpired && otp.Status != "VERIFIED")
+                                                {
+                                                    <br>
+                                                    <small class="text-warning">
+                                                        <i class="fas fa-clock"></i> Expiring Soon
+                                                    </small>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (otp.GeneratedAt.HasValue)
+                                                {
+                                                    <div>
+                                                        @otp.GeneratedAt.Value.ToString("MMM dd, yyyy")
+                                                        <br>
+                                                        <small class="text-muted">@otp.GeneratedAt.Value.ToString("HH:mm")</small>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Not generated</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (otp.ExpiresAt.HasValue)
+                                                {
+                                                    <div class="@(otp.IsExpired ? "text-danger" : otp.IsExpiringSoon ? "text-warning" : "")">
+                                                        @otp.ExpiresAt.Value.ToString("MMM dd, yyyy")
+                                                        <br>
+                                                        <small>@otp.ExpiresAt.Value.ToString("HH:mm")</small>
+                                                    </div>
+                                                    @if (!otp.IsExpired && otp.Status != "VERIFIED")
+                                                    {
+                                                        <small class="text-muted">
+                                                            (@otp.TimeUntilExpiry)
+                                                        </small>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">N/A</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (otp.VerifiedAt.HasValue)
+                                                {
+                                                    <div class="text-success">
+                                                        @otp.VerifiedAt.Value.ToString("MMM dd, yyyy")
+                                                        <br>
+                                                        <small>@otp.VerifiedAt.Value.ToString("HH:mm")</small>
+                                                    </div>
+                                                    @if (!string.IsNullOrEmpty(otp.VerifiedBy))
+                                                    {
+                                                        <small class="text-muted">by @otp.VerifiedBy</small>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Not verified</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    @if (otp.Status == "PENDING")
+                                                    {
+                                                        <button class="btn btn-outline-success btn-sm" title="Generate OTP" 
+                                                                onclick="generateOTP(@otp.OrderId)">
+                                                            <i class="fas fa-plus"></i>
+                                                        </button>
+                                                    }
+                                                    @if (otp.Status == "GENERATED" || (otp.IsExpired && otp.Status != "VERIFIED"))
+                                                    {
+                                                        <button class="btn btn-outline-primary btn-sm" title="Send SMS" 
+                                                                onclick="sendOTPSMS(@otp.OrderId)">
+                                                            <i class="fas fa-sms"></i>
+                                                        </button>
+                                                    }
+                                                    @if (otp.Status == "SENT" && !otp.IsExpired)
+                                                    {
+                                                        <button class="btn btn-outline-warning btn-sm" title="Manual Verify" 
+                                                                onclick="manualVerifyOTP(@otp.OrderId, '@otp.OTPCode')">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    }
+                                                    @if (otp.IsExpired && otp.Status != "VERIFIED")
+                                                    {
+                                                        <button class="btn btn-outline-info btn-sm" title="Regenerate OTP" 
+                                                                onclick="regenerateOTP(@otp.OrderId)">
+                                                            <i class="fas fa-redo"></i>
+                                                        </button>
+                                                    }
+                                                    <button class="btn btn-outline-secondary btn-sm" title="View Details" 
+                                                            onclick="viewOTPDetails(@otp.OrderId)">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-key fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No pickup OTPs found</h5>
+                            <p class="text-muted">Try adjusting your search criteria or generate OTPs for pending pickup orders.</p>
+                        </div>
+                    }
+                </div>
+                
+                <!-- Pagination -->
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <div class="card-footer">
+                        <nav aria-label="Pickup OTP pagination">
+                            <ul class="pagination justify-content-center mb-0">
+                                @if (ViewBag.CurrentPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=@(ViewBag.CurrentPage - 1)&pageSize=@ViewBag.PageSize">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                }
+                                
+                                @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link" href="?page=@i&pageSize=@ViewBag.PageSize">@i</a>
+                                    </li>
+                                }
+                                
+                                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=@(ViewBag.CurrentPage + 1)&pageSize=@ViewBag.PageSize">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- OTP Details Modal -->
+<div class="modal fade" id="otpDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">OTP Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="otpDetailsContent">
+                <!-- OTP details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Manual Verification Modal -->
+<div class="modal fade" id="manualVerifyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Manual OTP Verification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="manualVerifyForm">
+                    <input type="hidden" id="verifyOrderId" name="orderId">
+                    <div class="mb-3">
+                        <label for="enteredOTP" class="form-label">Customer Entered OTP</label>
+                        <input type="text" class="form-control" id="enteredOTP" name="enteredOTP" 
+                               placeholder="Enter the OTP provided by customer" maxlength="6" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="expectedOTP" class="form-label">Expected OTP</label>
+                        <input type="text" class="form-control" id="expectedOTP" name="expectedOTP" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="verificationNotes" class="form-label">Verification Notes</label>
+                        <textarea class="form-control" id="verificationNotes" name="verificationNotes" rows="3" 
+                                  placeholder="Optional notes about the verification process"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="submitManualVerification()">
+                    <i class="fas fa-check-circle me-1"></i>Verify OTP
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetOTPStatusColor(string status, bool isExpired)
+    {
+        if (isExpired && status != "VERIFIED") return "danger";
+        
+        return status switch
+        {
+            "PENDING" => "warning",
+            "GENERATED" => "info",
+            "SENT" => "primary",
+            "VERIFIED" => "success",
+            "EXPIRED" => "danger",
+            _ => "light"
+        };
+    }
+}
+
+@section Scripts {
+    <script>
+        function generateOTP(orderId) {
+            fetch('/Admin/GeneratePickupOTP', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({ orderId: orderId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error generating OTP: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error generating OTP');
+            });
+        }
+        
+        function sendOTPSMS(orderId) {
+            fetch('/Admin/SendPickupOTPSMS', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({ orderId: orderId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('OTP SMS sent successfully!');
+                    location.reload();
+                } else {
+                    alert('Error sending OTP SMS: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error sending OTP SMS');
+            });
+        }
+        
+        function manualVerifyOTP(orderId, expectedOTP) {
+            document.getElementById('verifyOrderId').value = orderId;
+            document.getElementById('expectedOTP').value = expectedOTP;
+            document.getElementById('enteredOTP').value = '';
+            document.getElementById('verificationNotes').value = '';
+            new bootstrap.Modal(document.getElementById('manualVerifyModal')).show();
+        }
+        
+        function submitManualVerification() {
+            const form = document.getElementById('manualVerifyForm');
+            const formData = new FormData(form);
+            
+            fetch('/Admin/ManualVerifyPickupOTP', {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('manualVerifyModal')).hide();
+                    alert('OTP verified successfully!');
+                    location.reload();
+                } else {
+                    alert('Error verifying OTP: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error verifying OTP');
+            });
+        }
+        
+        function regenerateOTP(orderId) {
+            if (confirm('This will generate a new OTP and invalidate the previous one. Continue?')) {
+                fetch('/Admin/RegeneratePickupOTP', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    body: JSON.stringify({ orderId: orderId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('New OTP generated successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error regenerating OTP: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error regenerating OTP');
+                });
+            }
+        }
+        
+        function viewOTPDetails(orderId) {
+            fetch(`/Admin/GetPickupOTPDetails/${orderId}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('otpDetailsContent').innerHTML = html;
+                    new bootstrap.Modal(document.getElementById('otpDetailsModal')).show();
+                })
+                .catch(error => {
+                    alert('Error loading OTP details');
+                });
+        }
+        
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Show temporary success message
+                const button = event.target.closest('button');
+                const originalIcon = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check text-success"></i>';
+                setTimeout(() => {
+                    button.innerHTML = originalIcon;
+                }, 1000);
+            }).catch(err => {
+                alert('Failed to copy OTP to clipboard');
+            });
+        }
+        
+        function generatePendingOTPs() {
+            if (confirm('This will generate OTPs for all pending pickup orders. Continue?')) {
+                fetch('/Admin/GeneratePendingPickupOTPs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Generated ${data.count} pickup OTPs successfully.`);
+                        location.reload();
+                    } else {
+                        alert('Error generating OTPs: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error generating OTPs');
+                });
+            }
+        }
+        
+        function resendExpiredOTPs() {
+            if (confirm('This will regenerate and send new OTPs for all expired pickup orders. Continue?')) {
+                fetch('/Admin/ResendExpiredPickupOTPs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Resent ${data.count} expired OTPs successfully.`);
+                        location.reload();
+                    } else {
+                        alert('Error resending expired OTPs: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error resending expired OTPs');
+                });
+            }
+        }
+    </script>
+}

@@ -1,0 +1,185 @@
+@using AccessoryWorld.Models
+@model Order
+@{
+    ViewData["Title"] = "Order Confirmation";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Success Alert -->
+            <div class="alert alert-success text-center mb-4">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <h4>Order Confirmed!</h4>
+                <p class="mb-0">Thank you for your order. We'll send you a confirmation email shortly.</p>
+            </div>
+
+            <!-- Order Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-receipt"></i> Order Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Order Number:</strong><br>
+                            <span class="text-primary">@Model.OrderNumber</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Order Date:</strong><br>
+                            @Model.CreatedAt.ToString("dd MMM yyyy, HH:mm")
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Status:</strong><br>
+                            <span class="badge bg-@(Model.Status == "PAID" ? "success" : Model.Status == "PENDING_PAYMENT" ? "warning" : "secondary")">@Model.Status</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Total Amount:</strong><br>
+                            <span class="h5 text-success">R @Model.Total.ToString("N2")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shopping-bag"></i> Order Items
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.OrderItems != null && Model.OrderItems.Any())
+                    {
+                        @foreach (var item in Model.OrderItems)
+                        {
+                            <div class="row align-items-center mb-3 pb-3 border-bottom">
+                                <div class="col-md-2">
+                                    @if (item.SKU?.Product?.ProductImages?.Any() == true)
+                                {
+                                    var primaryImage = item.SKU.Product.ProductImages.FirstOrDefault(img => img.IsPrimary) ?? item.SKU.Product.ProductImages.First();
+                                    <img src="@primaryImage.ImageUrl" alt="@(primaryImage.AltText ?? item.SKU.Product.Name)" class="img-fluid rounded" style="max-height: 60px;">
+                                }
+                                    else
+                                    {
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 60px; width: 60px;">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="mb-1">@item.SKU?.Product?.Name</h6>
+                                    <small class="text-muted">SKU: @item.SKU?.SKUCode</small><br>
+                                    @* SKU variant information *@
+                                    @if (!string.IsNullOrEmpty(item.SKU?.Variant))
+                                    {
+                                        <small class="text-muted">@item.SKU.Variant</small>
+                                    }
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="fw-bold">@item.Quantity</span>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <span class="fw-bold">R @item.LineTotal.ToString("N2")</span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No items found for this order.</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Shipping Information -->
+            @if (Model.ShippingAddress != null)
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-truck"></i> Shipping Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Delivery Method:</strong><br>
+                                @(Model.FulfilmentMethod == "delivery" ? "Home Delivery" : "Store Pickup")
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Shipping Address:</strong><br>
+                                @Model.ShippingAddress.AddressLine1<br>
+                                @Model.ShippingAddress.City, @Model.ShippingAddress.Province @Model.ShippingAddress.PostalCode<br>
+                                @Model.ShippingAddress.Country
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Payment Information -->
+            @if (Model.Payments != null && Model.Payments.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-credit-card"></i> Payment Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var payment in Model.Payments)
+                        {
+                            <div class="row mb-2">
+                                <div class="col-md-4">
+                                    <strong>Payment Method:</strong><br>
+                                    @payment.Method
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Amount:</strong><br>
+                                    R @payment.Amount.ToString("N2")
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Status:</strong><br>
+                                    <span class="badge bg-@(payment.Status == "COMPLETED" ? "success" : payment.Status == "PENDING" ? "warning" : "danger")">@payment.Status</span>
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(payment.TransactionId))
+                            {
+                                <div class="row">
+                                    <div class="col-12">
+                                        <small class="text-muted">Transaction ID: @payment.TransactionId</small>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Action Buttons -->
+            <div class="text-center mb-4">
+                <a href="@Url.Action("Index", "Products")" class="btn btn-primary me-2">
+                    <i class="fas fa-shopping-bag"></i> Continue Shopping
+                </a>
+                <a href="@Url.Action("Index", "Home")" class="btn btn-outline-secondary">
+                    <i class="fas fa-home"></i> Back to Home
+                </a>
+            </div>
+
+            <!-- Additional Information -->
+            @if (Model.Status == "PENDING_PAYMENT" && Model.Payments?.Any(p => p.Method == "EFT") == true)
+            {
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle"></i> EFT Payment Instructions</h6>
+                    <p>Your order is pending payment confirmation. Please make the EFT payment using the banking details provided on the payment page.</p>
+                    <p class="mb-0"><strong>Important:</strong> Use your order number <strong>@Model.OrderNumber</strong> as the payment reference.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

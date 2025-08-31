@@ -1,0 +1,1062 @@
+@model IEnumerable<AccessoryWorld.ViewModels.AdminUserViewModel>
+@{
+    ViewData["Title"] = "User Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+<style>
+    :root {
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --accent: #7c3aed;
+        --accent-magenta: #d946ef;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #06b6d4;
+        --text-dark: #1f2937;
+        --text-muted: #6b7280;
+        --bg-light: #f8fafc;
+        --border: #e5e7eb;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .admin-container {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .admin-sidebar {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+    }
+
+    .admin-sidebar .sidebar-header {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .admin-sidebar .sidebar-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .admin-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .admin-nav-item {
+        border-bottom: 1px solid var(--border);
+    }
+
+    .admin-nav-item:last-child {
+        border-bottom: none;
+    }
+
+    .admin-nav-link {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        color: var(--text-dark);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .admin-nav-link:hover {
+        background: var(--bg-light);
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    .admin-nav-link.active {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+    }
+
+    .admin-nav-link i {
+        width: 20px;
+        margin-right: 0.75rem;
+        text-align: center;
+    }
+</style>
+}
+
+<div class="admin-container">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Admin Navigation Sidebar -->
+            <div class="admin-sidebar">
+                <div class="sidebar-header">
+                    <h5>Admin Panel</h5>
+                </div>
+                <nav>
+                    <ul class="admin-nav">
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Dashboard", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Orders", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Orders</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Products", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-box"></i>
+                                <span>Products</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Users", "Admin")" class="admin-nav-link active">
+                                <i class="fas fa-users"></i>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Reports", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Reports</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Settings", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-users me-2"></i>User Management</h2>
+                <div>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="fas fa-user-plus me-1"></i>Add New User
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">Search Users</label>
+                            <input type="text" class="form-control" id="search" name="search" placeholder="Name, email, or phone..." value="@ViewBag.SearchTerm">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="role" class="form-label">Role</label>
+                            <select class="form-select" id="role" name="role">
+                                <option value="">All Roles</option>
+                                <option value="Admin" @(ViewBag.RoleFilter == "Admin" ? "selected" : "")>Admin</option>
+                                <option value="Customer" @(ViewBag.RoleFilter == "Customer" ? "selected" : "")>Customer</option>
+                                <option value="InventoryManager" @(ViewBag.RoleFilter == "InventoryManager" ? "selected" : "")>Inventory Manager</option>
+                                <option value="SalesAssociate" @(ViewBag.RoleFilter == "SalesAssociate" ? "selected" : "")>Sales Associate</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Status</option>
+                                <option value="active" @(ViewBag.StatusFilter == "active" ? "selected" : "")>Active</option>
+                                <option value="inactive" @(ViewBag.StatusFilter == "inactive" ? "selected" : "")>Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search me-1"></i>Search
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Users Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Users (@Model.Count() total)</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Roles</th>
+                                        <th>Status</th>
+                                        <th>Joined</th>
+                                        <th>Last Login</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle me-3">
+                                                        @user.FirstName.Substring(0, 1).ToUpper()@user.LastName.Substring(0, 1).ToUpper()
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-0 @(user.IsActive ? "" : "text-muted")">
+                                                            @user.FirstName @user.LastName
+                                                            @if (!user.IsActive)
+                                                            {
+                                                                <span class="badge bg-warning text-dark ms-2">Archived</span>
+                                                            }
+                                                        </h6>
+                                                        <small class="text-muted">ID: @user.Id.Substring(0, 8)...</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span>@user.Email</span>
+                                            </td>
+                                            <td>
+                                                @(user.PhoneNumber ?? "Not provided")
+                                            </td>
+                                            <td>
+                                                @if (user.Roles != null && user.Roles.Any())
+                                                {
+                                                    @foreach (var role in user.Roles)
+                                                    {
+                                                        <span class="badge bg-secondary me-1">@role</span>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-light text-dark">Customer</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@(user.IsActive ? "success" : "danger")">
+                                                    @(user.IsActive ? "Active" : "Inactive")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    @user.CreatedAt.ToString("MMM dd, yyyy")
+                                                </small>
+                                            </td>
+                                            <td>
+                                                @if (user.LastLoginAt.HasValue)
+                                                {
+                                                    <small class="text-muted">
+                                                        @user.LastLoginAt.Value.ToString("MMM dd, HH:mm")
+                                                    </small>
+                                                }
+                                                else
+                                                {
+                                                    <small class="text-muted">Never</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group" aria-label="User actions">
+                                                    <button class="btn btn-outline-primary btn-action" 
+                                                            title="View user details and statistics" 
+                                                            data-bs-toggle="tooltip" 
+                                                            data-bs-placement="top"
+                                                            onclick="viewUser('@user.Id')">
+                                                        <i class="fas fa-eye"></i>
+                                                        <span class="btn-text d-none d-lg-inline ms-1">View</span>
+                                                    </button>
+                                                    <button class="btn btn-outline-secondary btn-action" 
+                                                            title="Edit user roles and permissions" 
+                                                            data-bs-toggle="tooltip" 
+                                                            data-bs-placement="top"
+                                                            onclick="editUser('@user.Id')">
+                                                        <i class="fas fa-user-edit"></i>
+                                                        <span class="btn-text d-none d-lg-inline ms-1">Edit</span>
+                                                    </button>
+                                                    @if (user.IsActive)
+                                                    {
+                                                        <button class="btn btn-outline-warning btn-action" 
+                                                                title="Deactivate user account" 
+                                                                data-bs-toggle="tooltip" 
+                                                                data-bs-placement="top"
+                                                                onclick="toggleUserStatus('@user.Id', false)">
+                                                            <i class="fas fa-user-slash"></i>
+                                                            <span class="btn-text d-none d-lg-inline ms-1">Deactivate</span>
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button class="btn btn-outline-success btn-action" 
+                                                                title="Activate user account" 
+                                                                data-bs-toggle="tooltip" 
+                                                                data-bs-placement="top"
+                                                                onclick="toggleUserStatus('@user.Id', true)">
+                                                            <i class="fas fa-user-check"></i>
+                                                            <span class="btn-text d-none d-lg-inline ms-1">Activate</span>
+                                                        </button>
+                                                    }
+                                                    @if (user.IsActive)
+                                                     {
+                                                         <button class="btn btn-outline-warning btn-action" 
+                                                                 title="Archive user (can be restored later)" 
+                                                                 data-bs-toggle="tooltip" 
+                                                                 data-bs-placement="top"
+                                                                 onclick="archiveUser('@user.Id')">
+                                                             <i class="fas fa-archive"></i>
+                                                             <span class="btn-text d-none d-lg-inline ms-1">Archive</span>
+                                                         </button>
+                                                     }
+                                                     else
+                                                     {
+                                                         <button class="btn btn-outline-success btn-action" 
+                                                                 title="Restore archived user" 
+                                                                 data-bs-toggle="tooltip" 
+                                                                 data-bs-placement="top"
+                                                                 onclick="unarchiveUser('@user.Id')">
+                                                             <i class="fas fa-undo"></i>
+                                                             <span class="btn-text d-none d-lg-inline ms-1">Restore</span>
+                                                         </button>
+                                                     }
+                                                     <button class="btn btn-outline-danger btn-action" 
+                                                             title="Permanently delete user (cannot be undone)" 
+                                                             data-bs-toggle="tooltip" 
+                                                             data-bs-placement="top"
+                                                             onclick="deleteUser('@user.Id')">
+                                                         <i class="fas fa-trash"></i>
+                                                         <span class="btn-text d-none d-lg-inline ms-1">Delete</span>
+                                                     </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No users found</h5>
+                            <p class="text-muted">Try adjusting your search criteria or add a new user.</p>
+                        </div>
+                    }
+                </div>
+                
+                <!-- Pagination -->
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <div class="card-footer">
+                        <nav aria-label="User pagination">
+                            <ul class="pagination justify-content-center mb-0">
+                                @if (ViewBag.CurrentPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=@(ViewBag.CurrentPage - 1)&pageSize=@ViewBag.PageSize">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                }
+                                
+                                @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link" href="?page=@i&pageSize=@ViewBag.PageSize">@i</a>
+                                    </li>
+                                }
+                                
+                                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=@(ViewBag.CurrentPage + 1)&pageSize=@ViewBag.PageSize">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                        <div class="text-center mt-2">
+                            <small class="text-muted">
+                                Showing @((ViewBag.CurrentPage - 1) * ViewBag.PageSize + 1) to @Math.Min(ViewBag.CurrentPage * ViewBag.PageSize, Model.Count()) of @Model.Count() users
+                            </small>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userDetailsModalLabel">User Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="userDetailsContent">
+                <!-- User details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add New User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addUserModalLabel"><i class="fas fa-user-plus me-2"></i>Add New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addUserForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="firstName" class="form-label">First Name *</label>
+                                <input type="text" class="form-control" id="firstName" name="firstName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="lastName" class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" id="lastName" name="lastName" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phoneNumber" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password *</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <small class="form-text text-muted">Minimum 6 characters</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm Password *</label>
+                                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-user-tag me-2"></i>User Roles</label>
+                        <div class="border rounded p-3">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" value="Customer" id="role_Customer" checked>
+                                <label class="form-check-label" for="role_Customer">
+                                    <strong>Customer</strong>
+                                    <small class="text-muted d-block">Standard customer account access</small>
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" value="Admin" id="role_Admin">
+                                <label class="form-check-label" for="role_Admin">
+                                    <strong>Admin</strong>
+                                    <small class="text-muted d-block">Full system access and user management</small>
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" value="InventoryManager" id="role_InventoryManager">
+                                <label class="form-check-label" for="role_InventoryManager">
+                                    <strong>Inventory Manager</strong>
+                                    <small class="text-muted d-block">Manage products and inventory levels</small>
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" value="Cashier" id="role_Cashier">
+                                <label class="form-check-label" for="role_Cashier">
+                                    <strong>Cashier</strong>
+                                    <small class="text-muted d-block">Process sales and handle transactions</small>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="FulfilmentAgent" id="role_FulfilmentAgent">
+                                <label class="form-check-label" for="role_FulfilmentAgent">
+                                    <strong>Fulfilment Agent</strong>
+                                    <small class="text-muted d-block">Handle order processing and shipping</small>
+                                </label>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Select one or more roles for this user.</small>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="isActive" name="isActive" checked>
+                        <label class="form-check-label" for="isActive">
+                            <strong>Active Account</strong>
+                            <small class="text-muted d-block">User can log in and access the system</small>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-user-plus me-2"></i>Create User
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">Edit User Roles</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="editUserContent">
+                <!-- Edit form will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveUserRoles()">
+                    <i class="fas fa-save me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Confirmation Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteUserModalLabel">Confirm User Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Warning:</strong> This action cannot be undone!
+                </div>
+                <p>Are you sure you want to permanently delete this user?</p>
+                <p class="text-muted">This will remove:</p>
+                <ul class="text-muted">
+                    <li>User account and profile information</li>
+                    <li>All saved addresses</li>
+                    <li>Cart items and wishlist</li>
+                    <li>User roles and permissions</li>
+                </ul>
+                <p class="text-warning"><strong>Note:</strong> Users with existing orders cannot be deleted and should be archived instead.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteUser()">
+                    <i class="fas fa-trash me-1"></i>Delete User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentUserId = null;
+        
+        // Initialize tooltips and form handlers
+        $(document).ready(function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Password confirmation validation
+            $('#confirmPassword, #password').on('input', validatePassword);
+            
+            // Form submission
+            $('#addUserForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                if (!validatePassword()) {
+                    showNotification('Passwords do not match', 'error');
+                    return;
+                }
+                
+                // Collect form data
+                const formData = {
+                    firstName: $('#firstName').val(),
+                    lastName: $('#lastName').val(),
+                    email: $('#email').val(),
+                    phoneNumber: $('#phoneNumber').val(),
+                    password: $('#password').val(),
+                    isActive: $('#isActive').is(':checked'),
+                    roles: []
+                };
+                
+                // Collect selected roles
+                $('input[type="checkbox"][id^="role_"]:checked').each(function() {
+                    formData.roles.push($(this).val());
+                });
+                
+                if (formData.roles.length === 0) {
+                    showNotification('Please select at least one role for the user', 'error');
+                    return;
+                }
+                
+                addNewUser(formData);
+            });
+            
+            // Reset form when modal is closed
+            $('#addUserModal').on('hidden.bs.modal', function() {
+                document.getElementById('addUserForm').reset();
+                document.getElementById('confirmPassword').setCustomValidity('');
+            });
+        });
+        
+        function setButtonLoading(button, loading) {
+            if (loading) {
+                $(button).addClass('loading').prop('disabled', true);
+                $(button).find('i').removeClass().addClass('fas fa-spinner');
+            } else {
+                $(button).removeClass('loading').prop('disabled', false);
+            }
+        }
+        
+        function showNotification(message, type = 'success') {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            $('.col-md-10').prepend(alertHtml);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut();
+            }, 5000);
+        }
+        
+        function viewUser(userId) {
+            const button = event.target.closest('button');
+            setButtonLoading(button, true);
+            
+            $.get('@Url.Action("GetUserDetails", "Admin")', { id: userId })
+                .done(function(response) {
+                    if (response.success) {
+                        const user = response.user;
+                        const userDetailsHtml = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-user me-2"></i>Personal Information</h6>
+                                    <table class="table table-sm table-borderless">
+                                        <tr><td><strong>Name:</strong></td><td>${user.firstName} ${user.lastName}</td></tr>
+                                        <tr><td><strong>Email:</strong></td><td><a href="mailto:${user.email}">${user.email}</a></td></tr>
+                                        <tr><td><strong>Phone:</strong></td><td>${user.phoneNumber ? `<a href="tel:${user.phoneNumber}">${user.phoneNumber}</a>` : '<span class="text-muted">Not provided</span>'}</td></tr>
+                                        <tr><td><strong>Status:</strong></td><td><span class="badge bg-${user.isActive ? 'success' : 'danger'}">${user.isActive ? 'Active' : 'Inactive'}</span></td></tr>
+                                        <tr><td><strong>Member Since:</strong></td><td>${new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</td></tr>
+                                        <tr><td><strong>Last Login:</strong></td><td>${user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : '<span class="text-muted">Never</span>'}</td></tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-chart-line me-2"></i>Account Statistics</h6>
+                                    <table class="table table-sm table-borderless">
+                                        <tr><td><strong>Total Orders:</strong></td><td><span class="badge bg-primary">${user.totalOrders}</span></td></tr>
+                                        <tr><td><strong>Total Spent:</strong></td><td><strong class="text-success">R${user.totalSpent.toFixed(2)}</strong></td></tr>
+                                        <tr><td><strong>User Roles:</strong></td><td>${user.roles.length > 0 ? user.roles.map(role => `<span class="badge bg-secondary me-1">${role}</span>`).join('') : '<span class="badge bg-light text-dark">Customer</span>'}</td></tr>
+                                        <tr><td><strong>User ID:</strong></td><td><code>${user.id}</code></td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                        `;
+                        $('#userDetailsContent').html(userDetailsHtml);
+                        $('#userDetailsModal').modal('show');
+                    } else {
+                        showNotification('Error loading user details: ' + response.message, 'error');
+                    }
+                })
+                .fail(function() {
+                    showNotification('Failed to load user details. Please try again.', 'error');
+                })
+                .always(function() {
+                    // Restore original icon
+                    $(button).find('i').removeClass().addClass('fas fa-eye');
+                    setButtonLoading(button, false);
+                });
+        }
+        
+        function editUser(userId) {
+            const button = event.target.closest('button');
+            setButtonLoading(button, true);
+            currentUserId = userId;
+            
+            $.get('@Url.Action("GetUserDetails", "Admin")', { id: userId })
+                .done(function(response) {
+                    if (response.success) {
+                        const user = response.user;
+                        const availableRoles = ['Admin', 'InventoryManager', 'Cashier', 'FulfilmentAgent', 'Customer'];
+                        
+                        let roleCheckboxes = '';
+                        availableRoles.forEach(role => {
+                            const isChecked = user.roles.includes(role) ? 'checked' : '';
+                            roleCheckboxes += `
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" value="${role}" id="role_${role}" ${isChecked}>
+                                    <label class="form-check-label" for="role_${role}">
+                                        <strong>${role}</strong>
+                                        <small class="text-muted d-block">${getRoleDescription(role)}</small>
+                                    </label>
+                                </div>
+                            `;
+                        });
+                        
+                        const editUserHtml = `
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle me-3">
+                                        ${user.firstName.substring(0, 1).toUpperCase()}${user.lastName.substring(0, 1).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">${user.firstName} ${user.lastName}</h6>
+                                        <small class="text-muted">${user.email}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label"><i class="fas fa-user-tag me-2"></i>Assign Roles:</label>
+                                <div class="border rounded p-3">
+                                    ${roleCheckboxes}
+                                </div>
+                                <small class="form-text text-muted">Select one or more roles for this user. Changes will be applied immediately.</small>
+                            </div>
+                        `;
+                        
+                        $('#editUserContent').html(editUserHtml);
+                        $('#editUserModal').modal('show');
+                    } else {
+                        showNotification('Error loading user details: ' + response.message, 'error');
+                    }
+                })
+                .fail(function() {
+                    showNotification('Failed to load user details. Please try again.', 'error');
+                })
+                .always(function() {
+                    // Restore original icon
+                    $(button).find('i').removeClass().addClass('fas fa-user-edit');
+                    setButtonLoading(button, false);
+                });
+        }
+        
+        function getRoleDescription(role) {
+            const descriptions = {
+                'Admin': 'Full system access and user management',
+                'InventoryManager': 'Manage products and inventory levels',
+                'Cashier': 'Process sales and handle transactions',
+                'FulfilmentAgent': 'Handle order processing and shipping',
+                'Customer': 'Standard customer account access'
+            };
+            return descriptions[role] || 'Standard user role';
+        }
+        
+        function saveUserRoles() {
+            if (!currentUserId) return;
+            
+            const saveButton = $('.modal-footer .btn-primary');
+            const originalText = saveButton.html();
+            saveButton.html('<i class="fas fa-spinner fa-spin me-2"></i>Saving...').prop('disabled', true);
+            
+            const selectedRoles = [];
+            $('#editUserContent input[type="checkbox"]:checked').each(function() {
+                selectedRoles.push($(this).val());
+            });
+            
+            // Get current user roles first
+            $.get('@Url.Action("GetUserDetails", "Admin")', { id: currentUserId })
+                .done(function(response) {
+                    if (response.success) {
+                        const currentRoles = response.user.roles;
+                        
+                        // Find roles to add and remove
+                        const rolesToAdd = selectedRoles.filter(role => !currentRoles.includes(role));
+                        const rolesToRemove = currentRoles.filter(role => !selectedRoles.includes(role));
+                        
+                        let promises = [];
+                        
+                        // Add new roles
+                        rolesToAdd.forEach(role => {
+                            promises.push(
+                                $.post('@Url.Action("UpdateUserRole", "Admin")', {
+                                    userId: currentUserId,
+                                    role: role,
+                                    assign: true
+                                })
+                            );
+                        });
+                        
+                        // Remove old roles
+                        rolesToRemove.forEach(role => {
+                            promises.push(
+                                $.post('@Url.Action("UpdateUserRole", "Admin")', {
+                                    userId: currentUserId,
+                                    role: role,
+                                    assign: false
+                                })
+                            );
+                        });
+                        
+                        if (promises.length === 0) {
+                            showNotification('No changes were made to user roles.', 'info');
+                            $('#editUserModal').modal('hide');
+                            return;
+                        }
+                        
+                        Promise.all(promises)
+                            .then(() => {
+                                showNotification('User roles updated successfully!', 'success');
+                                $('#editUserModal').modal('hide');
+                                setTimeout(() => location.reload(), 1000);
+                            })
+                            .catch(() => {
+                                showNotification('Error updating user roles. Please try again.', 'error');
+                            })
+                            .finally(() => {
+                                saveButton.html(originalText).prop('disabled', false);
+                            });
+                    } else {
+                        showNotification('Error loading current user roles.', 'error');
+                        saveButton.html(originalText).prop('disabled', false);
+                    }
+                })
+                .fail(function() {
+                    showNotification('Failed to load user data. Please try again.', 'error');
+                    saveButton.html(originalText).prop('disabled', false);
+                });
+        }
+        
+        function toggleUserStatus(userId, activate) {
+            const button = event.target.closest('button');
+            const action = activate ? 'activate' : 'deactivate';
+            const actionPast = activate ? 'activated' : 'deactivated';
+            
+            if (confirm(`Are you sure you want to ${action} this user?`)) {
+                setButtonLoading(button, true);
+                
+                $.post('@Url.Action("ToggleUserStatus", "Admin")', {
+                    userId: userId,
+                    activate: activate
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        showNotification(`User ${actionPast} successfully!`, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification('Error: ' + response.message, 'error');
+                    }
+                })
+                .fail(function() {
+                    showNotification(`Error ${action}ing user. Please try again.`, 'error');
+                })
+                .always(function() {
+                    // Restore original icon
+                    const originalIcon = activate ? 'fas fa-user-check' : 'fas fa-user-slash';
+                    $(button).find('i').removeClass().addClass(originalIcon);
+                    setButtonLoading(button, false);
+                });
+            }
+        }
+        
+        function archiveUser(userId) {
+            const button = event.target.closest('button');
+            
+            // Confirmation for archive action
+            if (confirm('Are you sure you want to archive this user? They will no longer be able to access the system but can be restored later.')) {
+                setButtonLoading(button, true);
+                
+                $.post('@Url.Action("ArchiveUser", "Admin")', { userId: userId })
+                .done(function(response) {
+                    if (response.success) {
+                        showNotification('User archived successfully!', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification('Error: ' + response.message, 'error');
+                    }
+                })
+                .fail(function() {
+                    showNotification('Error archiving user. Please try again.', 'error');
+                })
+                .always(function() {
+                    // Restore original icon
+                    $(button).find('i').removeClass().addClass('fas fa-archive');
+                    setButtonLoading(button, false);
+                });
+            }
+        }
+        
+        function unarchiveUser(userId) {
+            const button = event.target.closest('button');
+            
+            // Confirmation for unarchive action
+            if (confirm('Are you sure you want to restore this user? They will be able to access the system again.')) {
+                setButtonLoading(button, true);
+                
+                $.post('@Url.Action("UnarchiveUser", "Admin")', { userId: userId })
+                .done(function(response) {
+                    if (response.success) {
+                        showNotification('User restored successfully!', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showNotification('Error: ' + response.message, 'error');
+                    }
+                })
+                .fail(function() {
+                    showNotification('Error restoring user. Please try again.', 'error');
+                })
+                .always(function() {
+                    // Restore original icon
+                    $(button).find('i').removeClass().addClass('fas fa-undo');
+                    setButtonLoading(button, false);
+                });
+            }
+        }
+        
+        // Add New User functionality
+        function validatePassword() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                document.getElementById('confirmPassword').setCustomValidity('Passwords do not match');
+                return false;
+            } else {
+                document.getElementById('confirmPassword').setCustomValidity('');
+                return true;
+            }
+        }
+
+        function addNewUser(formData) {
+            const submitBtn = document.querySelector('#addUserForm button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            
+            // Set loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating User...';
+            
+            $.ajax({
+                url: '@Url.Action("AddUser", "Admin")',
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        showNotification('User created successfully!', 'success');
+                        $('#addUserModal').modal('hide');
+                        document.getElementById('addUserForm').reset();
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showNotification(response.message || 'Failed to create user', 'error');
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Error occurred while creating user';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    showNotification(errorMessage, 'error');
+                },
+                complete: function() {
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            });
+        }
+        
+        // Delete User functionality
+        let userToDelete = null;
+        
+        function deleteUser(userId) {
+            userToDelete = userId;
+            $('#deleteUserModal').modal('show');
+        }
+        
+        function confirmDeleteUser() {
+            if (!userToDelete) return;
+            
+            const deleteBtn = document.querySelector('#deleteUserModal .btn-danger');
+            const originalText = deleteBtn.innerHTML;
+            
+            // Set loading state
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Deleting...';
+            
+            $.ajax({
+                url: '@Url.Action("DeleteUser", "Admin")',
+                type: 'DELETE',
+                data: { userId: userToDelete },
+                success: function(response) {
+                    if (response.success) {
+                        showNotification('User deleted successfully!', 'success');
+                        $('#deleteUserModal').modal('hide');
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showNotification(response.message || 'Failed to delete user', 'error');
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Error occurred while deleting user';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    showNotification(errorMessage, 'error');
+                },
+                complete: function() {
+                    // Reset button state
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerHTML = originalText;
+                    userToDelete = null;
+                }
+            });
+        }
+    </script>
+}

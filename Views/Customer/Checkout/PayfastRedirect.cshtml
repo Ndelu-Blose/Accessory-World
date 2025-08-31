@@ -1,0 +1,55 @@
+@using AccessoryWorld.ViewModels
+@model PayfastPaymentRequest
+@{
+    ViewData["Title"] = "Redirecting to Payment";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5>Redirecting to Payment Gateway</h5>
+                    <p class="text-muted">Please wait while we redirect you to complete your payment...</p>
+                    <p><small>If you are not redirected automatically, <a href="#" id="manualSubmit">click here</a>.</small></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payfast Payment Form -->
+<form id="payfastForm" action="https://sandbox.payfast.co.za/eng/process" method="post" style="display: none;">
+    <input type="hidden" name="merchant_id" value="@Model.MerchantId" />
+    <input type="hidden" name="merchant_key" value="@Model.MerchantKey" />
+    <input type="hidden" name="return_url" value="@Model.ReturnUrl" />
+    <input type="hidden" name="cancel_url" value="@Model.CancelUrl" />
+    <input type="hidden" name="notify_url" value="@Model.NotifyUrl" />
+    <input type="hidden" name="name_first" value="@Model.NameFirst" />
+    <input type="hidden" name="name_last" value="@Model.NameLast" />
+    <input type="hidden" name="email_address" value="@Model.EmailAddress" />
+    <input type="hidden" name="m_payment_id" value="@Model.MPaymentId" />
+    <input type="hidden" name="amount" value="@Model.Amount" />
+    <input type="hidden" name="item_name" value="@Model.ItemName" />
+    <input type="hidden" name="item_description" value="@Model.ItemDescription" />
+    <input type="hidden" name="signature" value="@Model.Signature" />
+</form>
+
+@section Scripts {
+    <script>
+        // Auto-submit the form after a short delay
+        setTimeout(function() {
+            document.getElementById('payfastForm').submit();
+        }, 2000);
+
+        // Manual submit link
+        document.getElementById('manualSubmit').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('payfastForm').submit();
+        });
+    </script>
+}

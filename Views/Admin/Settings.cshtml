@@ -1,0 +1,1032 @@
+@model AccessoryWorld.ViewModels.SettingsViewModel
+@{
+    ViewData["Title"] = "Settings - Admin Panel";
+    Layout = "_Layout";
+}
+
+@section Styles {
+<style>
+    :root {
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --accent: #7c3aed;
+        --accent-magenta: #d946ef;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #06b6d4;
+        --text-dark: #1f2937;
+        --text-muted: #6b7280;
+        --bg-light: #f8fafc;
+        --border: #e5e7eb;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .admin-container {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .admin-sidebar {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+    }
+
+    .admin-sidebar .sidebar-header {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .admin-sidebar .sidebar-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .admin-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .admin-nav-item {
+        border-bottom: 1px solid var(--border);
+    }
+
+    .admin-nav-item:last-child {
+        border-bottom: none;
+    }
+
+    .admin-nav-link {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        color: var(--text-dark);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .admin-nav-link:hover {
+        background: var(--bg-light);
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    .admin-nav-link.active {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+    }
+
+    .admin-nav-link i {
+        width: 20px;
+        margin-right: 0.75rem;
+        text-align: center;
+    }
+
+    .admin-content {
+        padding: 0;
+    }
+
+    .admin-content-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+</style>
+}
+
+<div class="admin-container">
+    <div class="row g-0">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="admin-sidebar">
+                <div class="sidebar-header">
+                    <h5><i class="fas fa-tachometer-alt me-2"></i>Admin Panel</h5>
+                </div>
+                <nav class="admin-nav">
+                    <ul class="list-unstyled mb-0">
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Dashboard", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-home"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Orders", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Orders</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Products", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-box"></i>
+                                <span>Products</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Users", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-users"></i>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Inventory", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-warehouse"></i>
+                                <span>Inventory</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Reports", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Reports</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Settings", "Admin")" class="admin-nav-link active">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="admin-content">
+                <!-- Page Header -->
+                <div class="admin-content-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="mb-1" style="color: var(--admin-primary); font-weight: 600;">
+                                    <i class="fas fa-cog me-2"></i>System Settings
+                                </h2>
+                                <p class="text-muted mb-0">Configure your system preferences and options</p>
+                            </div>
+                            <div>
+                                <button class="btn btn-success" onclick="saveAllSettings()" style="border-radius: 10px; padding: 10px 20px;">
+                                    <i class="fas fa-save me-1"></i>Save All Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="admin-content-card">
+                        <div class="alert alert-success alert-dismissible fade show m-0" role="alert" style="border-radius: 15px; border: none;">
+                            <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    </div>
+                }
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="admin-content-card">
+                        <div class="alert alert-danger alert-dismissible fade show m-0" role="alert" style="border-radius: 15px; border: none;">
+                            <i class="fas fa-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    </div>
+                }
+
+                <div class="row">
+                    <!-- General Settings -->
+                    <div class="col-md-6 mb-4">
+                        <div class="admin-content-card h-100">
+                            <div class="card-header" style="background: linear-gradient(135deg, var(--admin-primary), var(--admin-secondary)); color: white; border-radius: 15px 15px 0 0; border: none;">
+                                <h5 class="mb-0"><i class="fas fa-globe me-2"></i>General Settings</h5>
+                            </div>
+                            <div class="card-body">
+                            <form method="post" action="@Url.Action("Settings", "Admin")">
+                                @Html.AntiForgeryToken()
+                                <div class="mb-3">
+                                    <label asp-for="SiteName" class="form-label">Site Name</label>
+                                    <input asp-for="SiteName" class="form-control" required>
+                                    <span asp-validation-for="SiteName" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="SiteEmail" class="form-label">Site Email</label>
+                                    <input asp-for="SiteEmail" class="form-control" required>
+                                    <span asp-validation-for="SiteEmail" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="Currency" class="form-label">Default Currency</label>
+                                    <select asp-for="Currency" class="form-select">
+                                        <option value="USD">USD ($)</option>
+                                        <option value="EUR">EUR (€)</option>
+                                        <option value="GBP">GBP (£)</option>
+                                        <option value="CAD">CAD (C$)</option>
+                                    </select>
+                                    <span asp-validation-for="Currency" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input asp-for="MaintenanceMode" class="form-check-input" type="checkbox">
+                                        <label asp-for="MaintenanceMode" class="form-check-label">
+                                            Maintenance Mode
+                                        </label>
+                                    </div>
+                                    <small class="form-text text-muted">Enable to put the site in maintenance mode</small>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="border-radius: 10px; background: linear-gradient(135deg, var(--admin-primary), var(--admin-secondary)); border: none;">
+                                    <i class="fas fa-save me-1"></i>Save General Settings
+                                </button>
+                            </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email Settings -->
+                    <div class="col-md-6 mb-4">
+                        <div class="admin-content-card h-100">
+                            <div class="card-header" style="background: linear-gradient(135deg, var(--admin-accent), #5dade2); color: white; border-radius: 15px 15px 0 0; border: none;">
+                                <h5 class="mb-0"><i class="fas fa-envelope me-2"></i>Email Settings</h5>
+                            </div>
+                            <div class="card-body">
+                            <div>
+                                <div class="mb-3">
+                                    <label asp-for="SmtpHost" class="form-label">SMTP Host</label>
+                                    <input asp-for="SmtpHost" class="form-control" placeholder="smtp.gmail.com">
+                                    <span asp-validation-for="SmtpHost" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="SmtpPort" class="form-label">SMTP Port</label>
+                                    <input asp-for="SmtpPort" class="form-control">
+                                    <span asp-validation-for="SmtpPort" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="SmtpUsername" class="form-label">SMTP Username</label>
+                                    <input asp-for="SmtpUsername" class="form-control">
+                                    <span asp-validation-for="SmtpUsername" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="SmtpPassword" class="form-label">SMTP Password</label>
+                                    <input asp-for="SmtpPassword" class="form-control" type="password">
+                                    <span asp-validation-for="SmtpPassword" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input asp-for="SmtpSsl" class="form-check-input" type="checkbox">
+                                        <label asp-for="SmtpSsl" class="form-check-label">
+                                            Enable SSL/TLS
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-info" onclick="testEmailSettings()" style="border-radius: 10px; background: linear-gradient(135deg, var(--admin-accent), #5dade2); border: none;">
+                                    <i class="fas fa-paper-plane me-1"></i>Test Email Settings
+                                </button>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div class="col-md-6 mb-4">
+                        <div class="admin-content-card h-100">
+                            <div class="card-header" style="background: linear-gradient(135deg, var(--admin-warning), #f7dc6f); color: white; border-radius: 15px 15px 0 0; border: none;">
+                                <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Security Settings</h5>
+                            </div>
+                            <div class="card-body">
+                            <div>
+                                <div class="mb-3">
+                                    <label asp-for="SessionTimeout" class="form-label">Session Timeout (minutes)</label>
+                                    <input asp-for="SessionTimeout" class="form-control" min="5" max="1440">
+                                    <span asp-validation-for="SessionTimeout" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="MaxLoginAttempts" class="form-label">Max Login Attempts</label>
+                                    <input asp-for="MaxLoginAttempts" class="form-control" min="1" max="10">
+                                    <span asp-validation-for="MaxLoginAttempts" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input asp-for="RequireEmailVerification" class="form-check-input" type="checkbox">
+                                        <label asp-for="RequireEmailVerification" class="form-check-label">
+                                            Require Email Verification
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input asp-for="EnableTwoFactor" class="form-check-input" type="checkbox">
+                                        <label asp-for="EnableTwoFactor" class="form-check-label">
+                                            Enable Two-Factor Authentication
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Settings -->
+                    <div class="col-md-6 mb-4">
+                        <div class="admin-content-card h-100">
+                            <div class="card-header" style="background: linear-gradient(135deg, var(--admin-success), #58d68d); color: white; border-radius: 15px 15px 0 0; border: none;">
+                                <h5 class="mb-0"><i class="fas fa-credit-card me-2"></i>Payment Settings</h5>
+                            </div>
+                            <div class="card-body">
+                            <div>
+                                <div class="mb-3">
+                                    <label class="form-label">Payment Methods</label>
+                                    <div class="form-check">
+                                        <input asp-for="EnableStripe" class="form-check-input" type="checkbox">
+                                        <label asp-for="EnableStripe" class="form-check-label">
+                                            <i class="fab fa-stripe me-2"></i>Stripe
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input asp-for="EnablePaypal" class="form-check-input" type="checkbox">
+                                        <label asp-for="EnablePaypal" class="form-check-label">
+                                            <i class="fab fa-paypal me-2"></i>PayPal
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input asp-for="EnableCashOnDelivery" class="form-check-input" type="checkbox">
+                                        <label asp-for="EnableCashOnDelivery" class="form-check-label">
+                                            <i class="fas fa-money-bill-wave me-2"></i>Cash on Delivery
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="StripePublishableKey" class="form-label">Stripe Publishable Key</label>
+                                    <input asp-for="StripePublishableKey" class="form-control" placeholder="pk_test_...">
+                                    <span asp-validation-for="StripePublishableKey" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="StripeSecretKey" class="form-label">Stripe Secret Key</label>
+                                    <input asp-for="StripeSecretKey" class="form-control" type="password" placeholder="sk_test_...">
+                                    <span asp-validation-for="StripeSecretKey" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="PaypalClientId" class="form-label">PayPal Client ID</label>
+                                    <input asp-for="PaypalClientId" class="form-control">
+                                    <span asp-validation-for="PaypalClientId" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="PaypalClientSecret" class="form-label">PayPal Client Secret</label>
+                                    <input asp-for="PaypalClientSecret" class="form-control" type="password">
+                                    <span asp-validation-for="PaypalClientSecret" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="TaxRate" class="form-label">Default Tax Rate (%)</label>
+                                    <input asp-for="TaxRate" class="form-control" step="0.1" min="0" max="50">
+                                    <span asp-validation-for="TaxRate" class="text-danger"></span>
+                                </div>
+                                <div class="mb-3">
+                                    <label asp-for="ShippingCost" class="form-label">Default Shipping Cost ($)</label>
+                                    <input asp-for="ShippingCost" class="form-control" step="0.01" min="0">
+                                    <span asp-validation-for="ShippingCost" class="text-danger"></span>
+                                </div>
+                                <button type="button" class="btn btn-success" onclick="savePaymentSettings()" style="border-radius: 10px; background: linear-gradient(135deg, var(--admin-success), #58d68d); border: none;">
+                                    <i class="fas fa-save me-1"></i>Save Payment Settings
+                                </button>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Courier API Settings -->
+                    <div class="col-md-6 mb-4">
+                        <div class="admin-content-card h-100">
+                            <div class="card-header" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; border-radius: 15px 15px 0 0; border: none;">
+                                <h5 class="mb-0"><i class="fas fa-shipping-fast me-2"></i>Courier API Settings</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Primary Courier Service</label>
+                                    <select class="form-select" id="primaryCourier">
+                                        <option value="aramex">Aramex</option>
+                                        <option value="dhl">DHL</option>
+                                        <option value="fedex">FedEx</option>
+                                        <option value="ups">UPS</option>
+                                        <option value="postnet">PostNet</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">API Key</label>
+                                    <input type="password" class="form-control" id="courierApiKey" placeholder="Enter API key">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">API Secret</label>
+                                    <input type="password" class="form-control" id="courierApiSecret" placeholder="Enter API secret">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Webhook URL</label>
+                                    <input type="url" class="form-control" id="courierWebhook" placeholder="https://yoursite.com/webhook/courier">
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="enableRealTimeTracking">
+                                        <label class="form-check-label" for="enableRealTimeTracking">
+                                            Enable Real-time Tracking
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="enableOtpVerification">
+                                        <label class="form-check-label" for="enableOtpVerification">
+                                            Enable OTP Verification
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-danger me-2" onclick="testCourierConnection()" style="border-radius: 10px;">
+                                    <i class="fas fa-plug me-1"></i>Test Connection
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="saveCourierSettings()" style="border-radius: 10px; background: linear-gradient(135deg, var(--admin-success), #58d68d); border: none;">
+                                    <i class="fas fa-save me-1"></i>Save Courier Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notification Templates -->
+                    <div class="col-md-6 mb-4">
+                        <div class="admin-content-card h-100">
+                            <div class="card-header" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; border-radius: 15px 15px 0 0; border: none;">
+                                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Notification Templates</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Template Type</label>
+                                    <select class="form-select" id="templateType" onchange="loadTemplate()">
+                                        <option value="order_confirmation">Order Confirmation</option>
+                                        <option value="order_shipped">Order Shipped</option>
+                                        <option value="order_delivered">Order Delivered</option>
+                                        <option value="payment_received">Payment Received</option>
+                                        <option value="refund_processed">Refund Processed</option>
+                                        <option value="low_stock_alert">Low Stock Alert</option>
+                                        <option value="welcome_email">Welcome Email</option>
+                                        <option value="password_reset">Password Reset</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Subject</label>
+                                    <input type="text" class="form-control" id="templateSubject" placeholder="Email subject">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Message Template</label>
+                                    <textarea class="form-control" id="templateMessage" rows="6" placeholder="Use {{variable}} for dynamic content"></textarea>
+                                    <small class="form-text text-muted">Available variables: {{customer_name}}, {{order_number}}, {{product_name}}, {{amount}}, {{tracking_number}}</small>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="enableSmsNotification">
+                                        <label class="form-check-label" for="enableSmsNotification">
+                                            Enable SMS Notification
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-info me-2" onclick="previewTemplate()" style="border-radius: 10px;">
+                                    <i class="fas fa-eye me-1"></i>Preview
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="saveTemplate()" style="border-radius: 10px; background: linear-gradient(135deg, var(--admin-success), #58d68d); border: none;">
+                                    <i class="fas fa-save me-1"></i>Save Template
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tax/VAT Settings -->
+                    <div class="col-md-6 mb-4">
+                        <div class="admin-content-card h-100">
+                            <div class="card-header" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; border-radius: 15px 15px 0 0; border: none;">
+                                <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Tax & VAT Settings</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Tax System</label>
+                                    <select class="form-select" id="taxSystem">
+                                        <option value="inclusive">Tax Inclusive</option>
+                                        <option value="exclusive">Tax Exclusive</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Default VAT Rate (%)</label>
+                                    <input type="number" class="form-control" id="defaultVatRate" step="0.01" min="0" max="50" value="15">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">VAT Registration Number</label>
+                                    <input type="text" class="form-control" id="vatRegistrationNumber" placeholder="Enter VAT registration number">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Tax Exempt Categories</label>
+                                    <select class="form-select" id="taxExemptCategories" multiple>
+                                        <option value="books">Books</option>
+                                        <option value="medical">Medical Supplies</option>
+                                        <option value="food">Basic Food Items</option>
+                                        <option value="education">Educational Materials</option>
+                                    </select>
+                                    <small class="form-text text-muted">Hold Ctrl to select multiple categories</small>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="enableTaxCalculation">
+                                        <label class="form-check-label" for="enableTaxCalculation">
+                                            Enable Automatic Tax Calculation
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="showTaxBreakdown">
+                                        <label class="form-check-label" for="showTaxBreakdown">
+                                            Show Tax Breakdown on Invoices
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-success" onclick="saveTaxSettings()" style="border-radius: 10px; background: linear-gradient(135deg, var(--admin-success), #58d68d); border: none;">
+                                    <i class="fas fa-save me-1"></i>Save Tax Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Branding Options -->
+                    <div class="col-md-6 mb-4">
+                        <div class="admin-content-card h-100">
+                            <div class="card-header" style="background: linear-gradient(135deg, #1abc9c, #16a085); color: white; border-radius: 15px 15px 0 0; border: none;">
+                                <h5 class="mb-0"><i class="fas fa-palette me-2"></i>Branding Options</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Company Logo</label>
+                                    <input type="file" class="form-control" id="companyLogo" accept="image/*">
+                                    <small class="form-text text-muted">Recommended size: 200x80px, PNG or SVG format</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Favicon</label>
+                                    <input type="file" class="form-control" id="favicon" accept="image/*">
+                                    <small class="form-text text-muted">Recommended size: 32x32px, ICO or PNG format</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Primary Brand Color</label>
+                                    <input type="color" class="form-control form-control-color" id="primaryBrandColor" value="#2563eb">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Secondary Brand Color</label>
+                                    <input type="color" class="form-control form-control-color" id="secondaryBrandColor" value="#7c3aed">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Company Tagline</label>
+                                    <input type="text" class="form-control" id="companyTagline" placeholder="Your company tagline">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Footer Text</label>
+                                    <textarea class="form-control" id="footerText" rows="3" placeholder="Copyright and additional footer information"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="enableCustomTheme">
+                                        <label class="form-check-label" for="enableCustomTheme">
+                                            Enable Custom Theme
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-info me-2" onclick="previewBranding()" style="border-radius: 10px;">
+                                    <i class="fas fa-eye me-1"></i>Preview
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="saveBrandingSettings()" style="border-radius: 10px; background: linear-gradient(135deg, var(--admin-success), #58d68d); border: none;">
+                                    <i class="fas fa-save me-1"></i>Save Branding
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Information -->
+                    <div class="col-md-12 mb-4">
+                        <div class="admin-content-card">
+                            <div class="card-header" style="background: linear-gradient(135deg, var(--admin-dark), #34495e); color: white; border-radius: 15px 15px 0 0; border: none;">
+                                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>System Information</h5>
+                            </div>
+                            <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="text-center p-3 border rounded">
+                                        <i class="fas fa-server fa-2x text-primary mb-2"></i>
+                                        <h6>Server Status</h6>
+                                        <span class="badge bg-success">Online</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center p-3 border rounded">
+                                        <i class="fas fa-database fa-2x text-info mb-2"></i>
+                                        <h6>Database</h6>
+                                        <span class="badge bg-success">Connected</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center p-3 border rounded">
+                                        <i class="fas fa-code-branch fa-2x text-warning mb-2"></i>
+                                        <h6>Version</h6>
+                                        <span class="badge bg-secondary">v1.0.0</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center p-3 border rounded">
+                                        <i class="fas fa-clock fa-2x text-success mb-2"></i>
+                                        <h6>Uptime</h6>
+                                        <span class="badge bg-info">24h 15m</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-tools me-2"></i>System Actions</h6>
+                                    <button class="btn btn-outline-primary me-2 mb-2" onclick="clearCache()" style="border-radius: 10px;">
+                                        <i class="fas fa-broom me-1"></i>Clear Cache
+                                    </button>
+                                    <button class="btn btn-outline-info me-2 mb-2" onclick="backupDatabase()" style="border-radius: 10px;">
+                                        <i class="fas fa-download me-1"></i>Backup Database
+                                    </button>
+                                    <button class="btn btn-outline-warning me-2 mb-2" onclick="viewLogs()" style="border-radius: 10px;">
+                                        <i class="fas fa-file-alt me-1"></i>View System Logs
+                                    </button>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-chart-pie me-2"></i>Storage Usage</h6>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Database: 245 MB / 1 GB</small>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-info" style="width: 24.5%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Files: 1.2 GB / 5 GB</small>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-warning" style="width: 24%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function saveAllSettings() {
+            // Save all settings functionality
+            alert('All settings saved successfully!');
+        }
+
+        function testEmailSettings() {
+            fetch('@Url.Action("TestEmailSettings", "Admin")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Test email sent successfully!', 'success');
+                } else {
+                    showAlert('Failed to send test email: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Error testing email settings', 'danger');
+            });
+        }
+
+        function saveSecuritySettings() {
+            // Save security settings functionality
+            alert('Security settings saved successfully!');
+        }
+
+        function savePaymentSettings() {
+            // Save payment settings functionality
+            alert('Payment settings saved successfully!');
+        }
+
+        function clearCache() {
+            if (confirm('Are you sure you want to clear the cache?')) {
+                fetch('@Url.Action("ClearCache", "Admin")', {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('Cache cleared successfully!', 'success');
+                    } else {
+                        showAlert('Failed to clear cache: ' + data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    showAlert('Error clearing cache', 'danger');
+                });
+            }
+        }
+
+        function backupDatabase() {
+            if (confirm('Are you sure you want to backup the database?')) {
+                fetch('@Url.Action("BackupDatabase", "Admin")', {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showAlert('Database backup completed successfully!', 'success');
+                    } else {
+                        showAlert('Failed to backup database: ' + data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    showAlert('Error backing up database', 'danger');
+                });
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertDiv = $('<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
+                message +
+                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                '</div>');
+            $('.container-fluid').prepend(alertDiv);
+            setTimeout(() => alertDiv.alert('close'), 5000);
+        }
+
+        function viewLogs() {
+            // View system logs functionality
+            window.open('/Admin/SystemLogs', '_blank');
+        }
+
+        // Courier API Settings Functions
+        function testCourierConnection() {
+            const courier = document.getElementById('primaryCourier').value;
+            const apiKey = document.getElementById('courierApiKey').value;
+            
+            if (!apiKey) {
+                showAlert('Please enter API key before testing connection', 'warning');
+                return;
+            }
+
+            fetch('@Url.Action("TestCourierConnection", "Admin")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({ courier: courier, apiKey: apiKey })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Courier connection test successful!', 'success');
+                } else {
+                    showAlert('Courier connection failed: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Error testing courier connection', 'danger');
+            });
+        }
+
+        function saveCourierSettings() {
+            const settings = {
+                primaryCourier: document.getElementById('primaryCourier').value,
+                apiKey: document.getElementById('courierApiKey').value,
+                apiSecret: document.getElementById('courierApiSecret').value,
+                webhookUrl: document.getElementById('courierWebhook').value,
+                enableRealTimeTracking: document.getElementById('enableRealTimeTracking').checked,
+                enableOtpVerification: document.getElementById('enableOtpVerification').checked
+            };
+
+            fetch('@Url.Action("SaveCourierSettings", "Admin")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify(settings)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Courier settings saved successfully!', 'success');
+                } else {
+                    showAlert('Failed to save courier settings: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Error saving courier settings', 'danger');
+            });
+        }
+
+        // Notification Template Functions
+        function loadTemplate() {
+            const templateType = document.getElementById('templateType').value;
+            
+            fetch('@Url.Action("GetNotificationTemplate", "Admin")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify({ templateType: templateType })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('templateSubject').value = data.subject || '';
+                    document.getElementById('templateMessage').value = data.message || '';
+                    document.getElementById('enableSmsNotification').checked = data.enableSms || false;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading template:', error);
+            });
+        }
+
+        function previewTemplate() {
+            const templateData = {
+                subject: document.getElementById('templateSubject').value,
+                message: document.getElementById('templateMessage').value,
+                templateType: document.getElementById('templateType').value
+            };
+
+            // Open preview in modal or new window
+            const previewWindow = window.open('', '_blank', 'width=600,height=400');
+            previewWindow.document.write(`
+                <html>
+                    <head><title>Template Preview</title></head>
+                    <body style="font-family: Arial, sans-serif; padding: 20px;">
+                        <h3>Subject: ${templateData.subject}</h3>
+                        <div style="border: 1px solid #ccc; padding: 15px; background: #f9f9f9;">
+                            ${templateData.message.replace(/\n/g, '<br>')}
+                        </div>
+                    </body>
+                </html>
+            `);
+        }
+
+        function saveTemplate() {
+            const templateData = {
+                templateType: document.getElementById('templateType').value,
+                subject: document.getElementById('templateSubject').value,
+                message: document.getElementById('templateMessage').value,
+                enableSms: document.getElementById('enableSmsNotification').checked
+            };
+
+            fetch('@Url.Action("SaveNotificationTemplate", "Admin")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify(templateData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Notification template saved successfully!', 'success');
+                } else {
+                    showAlert('Failed to save template: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Error saving notification template', 'danger');
+            });
+        }
+
+        // Tax Settings Functions
+        function saveTaxSettings() {
+            const taxSettings = {
+                taxSystem: document.getElementById('taxSystem').value,
+                defaultVatRate: parseFloat(document.getElementById('defaultVatRate').value),
+                vatRegistrationNumber: document.getElementById('vatRegistrationNumber').value,
+                taxExemptCategories: Array.from(document.getElementById('taxExemptCategories').selectedOptions).map(option => option.value),
+                enableTaxCalculation: document.getElementById('enableTaxCalculation').checked,
+                showTaxBreakdown: document.getElementById('showTaxBreakdown').checked
+            };
+
+            fetch('@Url.Action("SaveTaxSettings", "Admin")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify(taxSettings)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Tax settings saved successfully!', 'success');
+                } else {
+                    showAlert('Failed to save tax settings: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Error saving tax settings', 'danger');
+            });
+        }
+
+        // Branding Functions
+        function previewBranding() {
+            const primaryColor = document.getElementById('primaryBrandColor').value;
+            const secondaryColor = document.getElementById('secondaryBrandColor').value;
+            const tagline = document.getElementById('companyTagline').value;
+            
+            // Create a simple preview
+            const previewWindow = window.open('', '_blank', 'width=800,height=600');
+            previewWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Branding Preview</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                            .header { background: ${primaryColor}; color: white; padding: 20px; text-align: center; }
+                            .content { padding: 20px; }
+                            .button { background: ${secondaryColor}; color: white; padding: 10px 20px; border: none; border-radius: 5px; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>AccessoryWorld</h1>
+                            <p>${tagline}</p>
+                        </div>
+                        <div class="content">
+                            <h2>Sample Content</h2>
+                            <p>This is how your branding will look across the site.</p>
+                            <button class="button">Sample Button</button>
+                        </div>
+                    </body>
+                </html>
+            `);
+        }
+
+        function saveBrandingSettings() {
+            const formData = new FormData();
+            
+            // Add file uploads
+            const logoFile = document.getElementById('companyLogo').files[0];
+            const faviconFile = document.getElementById('favicon').files[0];
+            
+            if (logoFile) formData.append('companyLogo', logoFile);
+            if (faviconFile) formData.append('favicon', faviconFile);
+            
+            // Add other settings
+            formData.append('primaryBrandColor', document.getElementById('primaryBrandColor').value);
+            formData.append('secondaryBrandColor', document.getElementById('secondaryBrandColor').value);
+            formData.append('companyTagline', document.getElementById('companyTagline').value);
+            formData.append('footerText', document.getElementById('footerText').value);
+            formData.append('enableCustomTheme', document.getElementById('enableCustomTheme').checked);
+            formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
+
+            fetch('@Url.Action("SaveBrandingSettings", "Admin")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Branding settings saved successfully!', 'success');
+                } else {
+                    showAlert('Failed to save branding settings: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Error saving branding settings', 'danger');
+            });
+        }
+
+        // Load initial template on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTemplate();
+        });
+    </script>
+}

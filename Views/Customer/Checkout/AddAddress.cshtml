@@ -1,0 +1,137 @@
+@using AccessoryWorld.Models
+@model Address
+@{
+    ViewData["Title"] = "Add New Address";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-map-marker-alt"></i> Add Delivery Address
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="AddAddress" method="post">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="AddressLine1" class="form-label">Address Line 1 <span class="text-danger">*</span></label>
+                            <input asp-for="AddressLine1" class="form-control" placeholder="Street address, P.O. box, company name, c/o" />
+                            <span asp-validation-for="AddressLine1" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="AddressLine2" class="form-label">Address Line 2</label>
+                            <input asp-for="AddressLine2" class="form-control" placeholder="Apartment, suite, unit, building, floor, etc." />
+                            <span asp-validation-for="AddressLine2" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="City" class="form-label">City <span class="text-danger">*</span></label>
+                                <input asp-for="City" class="form-control" />
+                                <span asp-validation-for="City" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PostalCode" class="form-label">Postal Code <span class="text-danger">*</span></label>
+                                <input asp-for="PostalCode" class="form-control" />
+                                <span asp-validation-for="PostalCode" class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Province" class="form-label">Province <span class="text-danger">*</span></label>
+                            <select asp-for="Province" class="form-select">
+                                <option value="">Select Province</option>
+                                <option value="Eastern Cape">Eastern Cape</option>
+                                <option value="Free State">Free State</option>
+                                <option value="Gauteng">Gauteng</option>
+                                <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                                <option value="Limpopo">Limpopo</option>
+                                <option value="Mpumalanga">Mpumalanga</option>
+                                <option value="Northern Cape">Northern Cape</option>
+                                <option value="North West">North West</option>
+                                <option value="Western Cape">Western Cape</option>
+                            </select>
+                            <span asp-validation-for="Province" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="Country" class="form-label">Country <span class="text-danger">*</span></label>
+                            <input asp-for="Country" class="form-control" value="South Africa" readonly />
+                            <span asp-validation-for="Country" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input asp-for="IsDefault" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsDefault" class="form-check-label">
+                                    Set as default address
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="@Url.Action("Index")" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-arrow-left"></i> Back to Checkout
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Address
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Auto-format postal code
+            $('#PostalCode').on('input', function() {
+                var value = $(this).val().replace(/\D/g, '');
+                if (value.length > 4) {
+                    value = value.substring(0, 4);
+                }
+                $(this).val(value);
+            });
+            
+            // Validate postal code format
+            $('#PostalCode').on('blur', function() {
+                var value = $(this).val();
+                if (value && value.length !== 4) {
+                    $(this).addClass('is-invalid');
+                    if (!$(this).next('.invalid-feedback').length) {
+                        $(this).after('<div class="invalid-feedback">Postal code must be 4 digits</div>');
+                    }
+                } else {
+                    $(this).removeClass('is-invalid');
+                    $(this).next('.invalid-feedback').remove();
+                }
+            });
+        });
+    </script>
+}
+
+<style>
+    .form-label .text-danger {
+        font-size: 0.875em;
+    }
+    
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+</style>

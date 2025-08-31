@@ -1,0 +1,671 @@
+@model AccessoryWorld.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+<style>
+    :root {
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --accent: #7c3aed;
+        --accent-magenta: #d946ef;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #06b6d4;
+        --text-dark: #1f2937;
+        --text-muted: #6b7280;
+        --bg-light: #f8fafc;
+        --border: #e5e7eb;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .admin-container {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .admin-sidebar {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+    }
+
+    .admin-sidebar .sidebar-header {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .admin-sidebar .sidebar-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .admin-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .admin-nav-item {
+        border-bottom: 1px solid var(--border);
+    }
+
+    .admin-nav-item:last-child {
+        border-bottom: none;
+    }
+
+    .admin-nav-link {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem 1.5rem;
+        color: var(--text-dark);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .admin-nav-link:hover {
+        background: var(--bg-light);
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    .admin-nav-link.active {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        border-left: 4px solid var(--accent-magenta);
+    }
+
+    .admin-nav-link i {
+        font-size: 1.1rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .dashboard-header {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-sm);
+        border-left: 4px solid var(--primary);
+    }
+
+    .dashboard-header h2 {
+        margin: 0;
+        color: var(--text-dark);
+        font-weight: 700;
+        font-size: 2rem;
+    }
+
+    .dashboard-header .last-updated {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .metric-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-md);
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .metric-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--card-color), var(--card-accent));
+    }
+
+    .metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .metric-card.users {
+        --card-color: var(--primary);
+        --card-accent: var(--accent);
+    }
+
+    .metric-card.orders {
+        --card-color: var(--success);
+        --card-accent: #059669;
+    }
+
+    .metric-card.products {
+        --card-color: var(--info);
+        --card-accent: #0891b2;
+    }
+
+    .metric-card.revenue {
+        --card-color: var(--warning);
+        --card-accent: #d97706;
+    }
+
+    .metric-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .metric-info h4 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        color: var(--text-dark);
+    }
+
+    .metric-info p {
+        margin: 0.25rem 0 0 0;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .metric-icon {
+        font-size: 3rem;
+        opacity: 0.7;
+        color: var(--card-color);
+    }
+
+    .metric-footer {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .metric-footer a {
+        color: var(--card-color);
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .metric-footer a:hover {
+        color: var(--card-accent);
+        text-decoration: none;
+    }
+
+    .dashboard-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-card-header {
+        background: linear-gradient(135deg, var(--bg-light), #e2e8f0);
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .dashboard-card-header h5 {
+        margin: 0;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+
+    .dashboard-card-body {
+        padding: 1.5rem;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .admin-container {
+            padding: 1rem;
+        }
+
+        .metrics-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .dashboard-header h2 {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+}
+
+<div class="admin-container">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Admin Navigation Sidebar -->
+            <div class="admin-sidebar">
+                <div class="sidebar-header">
+                    <h5>Admin Panel</h5>
+                </div>
+                <nav>
+                    <ul class="admin-nav">
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Dashboard", "Admin")" class="admin-nav-link active">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Orders", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Orders</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Products", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-box"></i>
+                                <span>Products</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Users", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-users"></i>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="#" class="admin-nav-link">
+                                <i class="fas fa-warehouse"></i>
+                                <span>Inventory</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="#" class="admin-nav-link">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Reports</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="#" class="admin-nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Dashboard Header -->
+            <div class="dashboard-header">
+                <h2>Admin Dashboard</h2>
+                <div class="last-updated">Last updated: @DateTime.Now.ToString("MMM dd, yyyy HH:mm")</div>
+            </div>
+
+            <!-- Key Metrics Cards -->
+            <div class="metrics-grid">
+                <div class="metric-card users">
+                    <div class="metric-content">
+                        <div class="metric-info">
+                            <h4>@Model.TotalUsers</h4>
+                            <p>Total Users</p>
+                        </div>
+                        <i class="fas fa-users metric-icon"></i>
+                    </div>
+                    <div class="metric-footer">
+                        <a href="@Url.Action("Users", "Admin")">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="metric-card orders">
+                    <div class="metric-content">
+                        <div class="metric-info">
+                            <h4>@Model.TotalOrders</h4>
+                            <p>Total Orders</p>
+                        </div>
+                        <i class="fas fa-shopping-cart metric-icon"></i>
+                    </div>
+                    <div class="metric-footer">
+                        <a href="@Url.Action("Orders", "Admin")">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="metric-card products">
+                    <div class="metric-content">
+                        <div class="metric-info">
+                            <h4>@Model.TotalProducts</h4>
+                            <p>Total Products</p>
+                        </div>
+                        <i class="fas fa-box metric-icon"></i>
+                    </div>
+                    <div class="metric-footer">
+                        <a href="@Url.Action("Products", "Admin")">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="metric-card revenue">
+                    <div class="metric-content">
+                        <div class="metric-info">
+                            <h4>R @Model.TotalRevenue.ToString("N2")</h4>
+                            <p>Total Revenue</p>
+                        </div>
+                        <i class="fas fa-dollar-sign metric-icon"></i>
+                    </div>
+                    <div class="metric-footer">
+                        <a href="#">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="metric-card" style="--card-color: var(--accent); --card-accent: var(--accent-magenta);">
+                    <div class="metric-content">
+                        <div class="metric-info">
+                            <h4>@Model.PendingTradeIns</h4>
+                            <p>Pending Trade-ins</p>
+                        </div>
+                        <i class="fas fa-mobile-alt metric-icon"></i>
+                    </div>
+                    <div class="metric-footer">
+                        <a href="#">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="metric-card" style="--card-color: var(--danger); --card-accent: #dc2626;">
+                    <div class="metric-content">
+                        <div class="metric-info">
+                            <h4>@Model.ActiveCreditNotes</h4>
+                            <p>Active Credit Notes</p>
+                        </div>
+                        <i class="fas fa-credit-card metric-icon"></i>
+                    </div>
+                    <div class="metric-footer">
+                        <a href="#">
+                            R @Model.TotalCreditValue.ToString("N2") Total Value
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="metric-card" style="--card-color: var(--success); --card-accent: #059669;">
+                    <div class="metric-content">
+                        <div class="metric-info">
+                            <h4>@Model.NewCustomersThisMonth</h4>
+                            <p>New Customers (Month)</p>
+                        </div>
+                        <i class="fas fa-user-plus metric-icon"></i>
+                    </div>
+                    <div class="metric-footer">
+                        <a href="@Url.Action("Users", "Admin")">
+                            View Details <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Trade-in Quick Stats Row -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h5><i class="fas fa-calendar-day me-2"></i>Today's Trade-ins</h5>
+                        </div>
+                        <div class="dashboard-card-body text-center">
+                            <h3 class="text-primary">@Model.TodayTradeIns</h3>
+                            <p class="text-muted mb-0">Submitted today</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h5><i class="fas fa-calendar-week me-2"></i>Weekly Trade-ins</h5>
+                        </div>
+                        <div class="dashboard-card-body text-center">
+                            <h3 class="text-success">@Model.WeeklyTradeIns</h3>
+                            <p class="text-muted mb-0">Last 7 days</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h5><i class="fas fa-receipt me-2"></i>Credit Notes Issued</h5>
+                        </div>
+                        <div class="dashboard-card-body text-center">
+                            <h3 class="text-warning">@Model.TotalCreditNotesIssued</h3>
+                            <p class="text-muted mb-0">This month</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts and Tables Row -->
+            <div class="row">
+                <!-- Monthly Sales Chart -->
+                <div class="col-md-8">
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h5><i class="fas fa-chart-line me-2"></i>Monthly Sales Trend</h5>
+                        </div>
+                        <div class="dashboard-card-body">
+                            <canvas id="salesChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Low Stock Alerts -->
+                <div class="col-md-4">
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h5><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Low Stock Alerts</h5>
+                            <span class="badge bg-warning">@Model.LowStockProducts.Count</span>
+                        </div>
+                        <div class="dashboard-card-body p-0">
+                            @if (Model.LowStockProducts.Any())
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var product in Model.LowStockProducts)
+                                    {
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">@product.ProductName</h6>
+                                                <small class="text-muted">@product.SKUCode</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="badge bg-@(product.StockQuantity <= 5 ? "danger" : "warning") rounded-pill">
+                                                    @product.StockQuantity left
+                                                </span>
+                                                <br>
+                                                <small class="text-muted">R @product.Price.ToString("N2")</small>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center py-4">
+                                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                    <p class="text-muted">All products are well stocked!</p>
+                                </div>
+                            }
+                        </div>
+                        @if (Model.LowStockProducts.Any())
+                        {
+                            <div class="card-footer">
+                                <a href="#" class="btn btn-sm btn-outline-primary w-100">
+                                    <i class="fas fa-warehouse me-1"></i>Manage Inventory
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Orders Table -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="dashboard-card">
+                        <div class="dashboard-card-header">
+                            <h5><i class="fas fa-shopping-bag me-2"></i>Recent Orders</h5>
+                            <a href="@Url.Action("Orders", "Admin")" class="btn btn-sm btn-outline-primary">
+                                View All Orders
+                            </a>
+                        </div>
+                        <div class="dashboard-card-body">
+                            @if (Model.RecentOrders != null && Model.RecentOrders.Any())
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Order ID</th>
+                                                <th>Customer</th>
+                                                <th>Date</th>
+                                                <th>Status</th>
+                                                <th>Total</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var order in Model.RecentOrders)
+                                            {
+                                                <tr>
+                                                    <td><strong>#@order.Id</strong></td>
+                                                    <td>@order.CustomerName</td>
+                                                    <td>@order.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                                    <td>
+                                                        <span class="badge bg-@(order.Status == "Completed" ? "success" : order.Status == "Processing" ? "warning" : "secondary")">
+                                                            @order.Status
+                                                        </span>
+                                                    </td>
+                                                    <td><strong>R @order.Total.ToString("N2")</strong></td>
+                                                    <td>
+                                                        <a href="@Url.Action("OrderDetails", "Admin", new { id = order.Id })" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fas fa-eye"></i> View
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-shopping-cart fa-3x mb-3"></i>
+                                    <h6>No recent orders</h6>
+                                    <p>Orders will appear here once customers start placing them.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Monthly Sales Chart
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        const salesData = @Html.Raw(Json.Serialize(Model.MonthlySales));
+        
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: salesData.map(item => item.monthName),
+                datasets: [{
+                    label: 'Sales (ZAR)',
+                    data: salesData.map(item => item.totalSales),
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    tension: 0.1,
+                    fill: true
+                }, {
+                    label: 'Orders',
+                    data: salesData.map(item => item.orderCount),
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                    tension: 0.1,
+                    yAxisID: 'y1'
+                }]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Sales (ZAR)'
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Number of Orders'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Sales Performance Over Time'
+                    }
+                }
+            }
+        });
+
+        // Auto-refresh dashboard every 5 minutes
+        setTimeout(function() {
+            location.reload();
+        }, 300000);
+    </script>
+}

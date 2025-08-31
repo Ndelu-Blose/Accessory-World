@@ -1,0 +1,1358 @@
+@{
+    ViewData["Title"] = "Reports & Analytics - Admin Panel";
+    Layout = "_Layout";
+}
+
+@section Styles {
+<style>
+    :root {
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --accent: #7c3aed;
+        --accent-magenta: #d946ef;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #06b6d4;
+        --text-dark: #1f2937;
+        --text-muted: #6b7280;
+        --bg-light: #f8fafc;
+        --border: #e5e7eb;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .admin-container {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .admin-sidebar {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+    }
+
+    .admin-sidebar .sidebar-header {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .admin-sidebar .sidebar-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .admin-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .admin-nav-item {
+        border-bottom: 1px solid var(--border);
+    }
+
+    .admin-nav-item:last-child {
+        border-bottom: none;
+    }
+
+    .admin-nav-link {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        color: var(--text-dark);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .admin-nav-link:hover {
+        background: var(--bg-light);
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    .admin-nav-link.active {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+    }
+
+    .admin-nav-link i {
+        width: 20px;
+        margin-right: 0.75rem;
+        text-align: center;
+    }
+
+    .admin-content {
+        padding: 0;
+    }
+
+    .admin-content-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        border: none;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .stats-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .stats-card .stats-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .stats-card .stats-info h6 {
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+
+    .stats-card .stats-info h3 {
+        color: var(--text-dark);
+        font-weight: 700;
+        font-size: 2rem;
+        margin: 0;
+    }
+
+    .stats-card.primary {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+    }
+
+    .stats-card.primary .stats-info h6,
+    .stats-card.primary .stats-info h3 {
+        color: white;
+    }
+
+    .stats-card.success {
+        background: linear-gradient(135deg, var(--success), #059669);
+        color: white;
+    }
+
+    .stats-card.success .stats-info h6,
+    .stats-card.success .stats-info h3 {
+        color: white;
+    }
+
+    .stats-card.warning {
+        background: linear-gradient(135deg, var(--warning), #d97706);
+        color: white;
+    }
+
+    .stats-card.warning .stats-info h6,
+    .stats-card.warning .stats-info h3 {
+        color: white;
+    }
+
+    .stats-card.info {
+        background: linear-gradient(135deg, var(--info), #0891b2);
+        color: white;
+    }
+
+    .stats-card.info .stats-info h6,
+    .stats-card.info .stats-info h3 {
+        color: white;
+    }
+
+    .report-tabs {
+        border-bottom: 2px solid var(--border);
+        margin-bottom: 2rem;
+    }
+
+    .report-tabs .nav-link {
+        border: none;
+        border-bottom: 3px solid transparent;
+        color: var(--text-muted);
+        font-weight: 600;
+        padding: 1rem 1.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .report-tabs .nav-link:hover {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+    }
+
+    .report-tabs .nav-link.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+        background: none;
+    }
+
+    .filter-section {
+        background: var(--bg-light);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .btn-export {
+        background: linear-gradient(135deg, var(--success), #059669);
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-export:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+        color: white;
+    }
+
+    .table-responsive {
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .table {
+        margin: 0;
+    }
+
+    .table thead th {
+        background: var(--bg-light);
+        border: none;
+        font-weight: 600;
+        color: var(--text-dark);
+        padding: 1rem;
+    }
+
+    .table tbody td {
+        border-color: var(--border);
+        padding: 1rem;
+        vertical-align: middle;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin: 1rem 0;
+    }
+
+    .aging-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .aging-item:last-child {
+        border-bottom: none;
+    }
+
+    .aging-bar {
+        height: 8px;
+        background: var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+
+    .aging-progress {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+</style>
+}
+
+<div class="admin-container">
+    <div class="row g-0">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="admin-sidebar">
+                <div class="sidebar-header">
+                    <h5><i class="fas fa-tachometer-alt me-2"></i>Admin Panel</h5>
+                </div>
+                <nav class="admin-nav">
+                    <ul class="list-unstyled mb-0">
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Dashboard", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-home"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Orders", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Orders</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Products", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-box"></i>
+                                <span>Products</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Users", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-users"></i>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Inventory", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-warehouse"></i>
+                                <span>Inventory</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Reports", "Admin")" class="admin-nav-link active">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Reports</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Settings", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="admin-content">
+                <!-- Page Header -->
+                <div class="admin-content-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h2 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Reports & Analytics</h2>
+                            <div>
+                                <button class="btn btn-export me-2" onclick="exportAllReports()">
+                                    <i class="fas fa-download me-2"></i>Export All
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="refreshData()">
+                                    <i class="fas fa-sync-alt me-2"></i>Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stats-card primary">
+                            <div class="card-body">
+                                <div class="stats-content">
+                                    <div class="stats-info">
+                                        <h6>Total Revenue</h6>
+                                        <h3>$@ViewBag.TotalRevenue?.ToString("N0")</h3>
+                                    </div>
+                                    <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card success">
+                            <div class="card-body">
+                                <div class="stats-content">
+                                    <div class="stats-info">
+                                        <h6>Monthly Revenue</h6>
+                                        <h3>$@ViewBag.MonthlyRevenue?.ToString("N0")</h3>
+                                    </div>
+                                    <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card info">
+                            <div class="card-body">
+                                <div class="stats-content">
+                                    <div class="stats-info">
+                                        <h6>Total Orders</h6>
+                                        <h3>@ViewBag.TotalOrders</h3>
+                                    </div>
+                                    <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card warning">
+                            <div class="card-body">
+                                <div class="stats-content">
+                                    <div class="stats-info">
+                                        <h6>Pending Orders</h6>
+                                        <h3>@ViewBag.PendingOrders</h3>
+                                    </div>
+                                    <i class="fas fa-clock fa-2x opacity-75"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report Tabs -->
+                <ul class="nav nav-tabs report-tabs" id="reportTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab">
+                            <i class="fas fa-chart-line me-2"></i>Sales Reports
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="tradein-tab" data-bs-toggle="tab" data-bs-target="#tradein" type="button" role="tab">
+                            <i class="fas fa-exchange-alt me-2"></i>Trade-in Reports
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+                            <i class="fas fa-users me-2"></i>User Activity
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="inventory-tab" data-bs-toggle="tab" data-bs-target="#inventory" type="button" role="tab">
+                            <i class="fas fa-warehouse me-2"></i>Inventory Aging
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content" id="reportTabsContent">
+                    <!-- Sales Reports Tab -->
+                    <div class="tab-pane fade show active" id="sales" role="tabpanel">
+                        <!-- Filter Section -->
+                        <div class="filter-section">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="form-label">Date Range</label>
+                                    <select class="form-select" id="salesDateRange">
+                                        <option value="7">Last 7 days</option>
+                                        <option value="30" selected>Last 30 days</option>
+                                        <option value="90">Last 90 days</option>
+                                        <option value="365">Last year</option>
+                                        <option value="custom">Custom range</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Report Type</label>
+                                    <select class="form-select" id="salesReportType">
+                                        <option value="revenue">Revenue Analysis</option>
+                                        <option value="products">Product Performance</option>
+                                        <option value="categories">Category Analysis</option>
+                                        <option value="customers">Customer Analysis</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Group By</label>
+                                    <select class="form-select" id="salesGroupBy">
+                                        <option value="day">Daily</option>
+                                        <option value="week">Weekly</option>
+                                        <option value="month" selected>Monthly</option>
+                                        <option value="quarter">Quarterly</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button class="btn btn-primary me-2" onclick="loadSalesReport()">
+                                        <i class="fas fa-search me-2"></i>Generate
+                                    </button>
+                                    <button class="btn btn-export" onclick="exportSalesReport()">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Charts Row -->
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="admin-content-card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Revenue Trend</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="revenueChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="admin-content-card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Order Status</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="orderStatusChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Products Table -->
+                        <div class="admin-content-card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Top Performing Products</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Product</th>
+                                                <th>Units Sold</th>
+                                                <th>Revenue</th>
+                                                <th>Growth</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="topProductsTable">
+                                            @if (ViewBag.TopProducts != null)
+                                            {
+                                                @foreach (var product in ViewBag.TopProducts)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            <strong>@product.ProductName</strong>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-primary">@product.TotalSold</span>
+                                                        </td>
+                                                        <td>
+                                                            <strong>$@product.Revenue.ToString("N2")</strong>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-success">+12%</span>
+                                                        </td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-outline-primary" onclick="viewProductDetails(@product.ProductName)">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trade-in Reports Tab -->
+                    <div class="tab-pane fade" id="tradein" role="tabpanel">
+                        <!-- Filter Section -->
+                        <div class="filter-section">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="form-label">Date Range</label>
+                                    <select class="form-select" id="tradeinDateRange">
+                                        <option value="7">Last 7 days</option>
+                                        <option value="30" selected>Last 30 days</option>
+                                        <option value="90">Last 90 days</option>
+                                        <option value="365">Last year</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-select" id="tradeinStatus">
+                                        <option value="all">All Status</option>
+                                        <option value="SUBMITTED">Submitted</option>
+                                        <option value="AWAITING_EVALUATION">Awaiting Evaluation</option>
+                                        <option value="EVALUATED">Evaluated</option>
+                                        <option value="APPROVED">Approved</option>
+                                        <option value="COMPLETED">Completed</option>
+                                        <option value="REJECTED">Rejected</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Device Type</label>
+                                    <select class="form-select" id="tradeinDeviceType">
+                                        <option value="all">All Devices</option>
+                                        <option value="smartphone">Smartphones</option>
+                                        <option value="tablet">Tablets</option>
+                                        <option value="laptop">Laptops</option>
+                                        <option value="smartwatch">Smartwatches</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button class="btn btn-primary me-2" onclick="loadTradeinReport()">
+                                        <i class="fas fa-search me-2"></i>Generate
+                                    </button>
+                                    <button class="btn btn-export" onclick="exportTradeinReport()">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trade-in Stats -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="stats-card">
+                                    <div class="card-body">
+                                        <div class="stats-content">
+                                            <div class="stats-info">
+                                                <h6>Total Trade-ins</h6>
+                                                <h3 id="totalTradeinCount">0</h3>
+                                            </div>
+                                            <i class="fas fa-exchange-alt fa-2x text-primary opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stats-card">
+                                    <div class="card-body">
+                                        <div class="stats-content">
+                                            <div class="stats-info">
+                                                <h6>Total Value</h6>
+                                                <h3 id="totalTradeinValue">$0</h3>
+                                            </div>
+                                            <i class="fas fa-dollar-sign fa-2x text-success opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stats-card">
+                                    <div class="card-body">
+                                        <div class="stats-content">
+                                            <div class="stats-info">
+                                                <h6>Avg. Value</h6>
+                                                <h3 id="avgTradeinValue">$0</h3>
+                                            </div>
+                                            <i class="fas fa-calculator fa-2x text-info opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stats-card">
+                                    <div class="card-body">
+                                        <div class="stats-content">
+                                            <div class="stats-info">
+                                                <h6>Completion Rate</h6>
+                                                <h3 id="tradeinCompletionRate">0%</h3>
+                                            </div>
+                                            <i class="fas fa-percentage fa-2x text-warning opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Trade-in Charts -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="admin-content-card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Trade-in Status Distribution</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="tradeinStatusChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="admin-content-card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Trade-in Trend</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="tradeinTrendChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Activity Tab -->
+                    <div class="tab-pane fade" id="users" role="tabpanel">
+                        <!-- Filter Section -->
+                        <div class="filter-section">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="form-label">Date Range</label>
+                                    <select class="form-select" id="userDateRange">
+                                        <option value="7">Last 7 days</option>
+                                        <option value="30" selected>Last 30 days</option>
+                                        <option value="90">Last 90 days</option>
+                                        <option value="365">Last year</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Activity Type</label>
+                                    <select class="form-select" id="userActivityType">
+                                        <option value="all">All Activities</option>
+                                        <option value="registration">New Registrations</option>
+                                        <option value="orders">Order Activity</option>
+                                        <option value="tradein">Trade-in Activity</option>
+                                        <option value="login">Login Activity</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">User Segment</label>
+                                    <select class="form-select" id="userSegment">
+                                        <option value="all">All Users</option>
+                                        <option value="new">New Users</option>
+                                        <option value="active">Active Users</option>
+                                        <option value="inactive">Inactive Users</option>
+                                        <option value="vip">VIP Customers</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button class="btn btn-primary me-2" onclick="loadUserReport()">
+                                        <i class="fas fa-search me-2"></i>Generate
+                                    </button>
+                                    <button class="btn btn-export" onclick="exportUserReport()">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Stats -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="stats-card">
+                                    <div class="card-body">
+                                        <div class="stats-content">
+                                            <div class="stats-info">
+                                                <h6>Total Users</h6>
+                                                <h3 id="totalUserCount">0</h3>
+                                            </div>
+                                            <i class="fas fa-users fa-2x text-primary opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stats-card">
+                                    <div class="card-body">
+                                        <div class="stats-content">
+                                            <div class="stats-info">
+                                                <h6>Active Users</h6>
+                                                <h3 id="activeUserCount">0</h3>
+                                            </div>
+                                            <i class="fas fa-user-check fa-2x text-success opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stats-card">
+                                    <div class="card-body">
+                                        <div class="stats-content">
+                                            <div class="stats-info">
+                                                <h6>New This Month</h6>
+                                                <h3 id="newUserCount">0</h3>
+                                            </div>
+                                            <i class="fas fa-user-plus fa-2x text-info opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stats-card">
+                                    <div class="card-body">
+                                        <div class="stats-content">
+                                            <div class="stats-info">
+                                                <h6>Retention Rate</h6>
+                                                <h3 id="userRetentionRate">0%</h3>
+                                            </div>
+                                            <i class="fas fa-heart fa-2x text-warning opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Activity Charts -->
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="admin-content-card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>User Activity Timeline</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="userActivityChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="admin-content-card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-chart-doughnut me-2"></i>User Segments</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="userSegmentChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Inventory Aging Tab -->
+                    <div class="tab-pane fade" id="inventory" role="tabpanel">
+                        <!-- Filter Section -->
+                        <div class="filter-section">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="form-label">Category</label>
+                                    <select class="form-select" id="inventoryCategory">
+                                        <option value="all">All Categories</option>
+                                        <option value="smartphones">Smartphones</option>
+                                        <option value="tablets">Tablets</option>
+                                        <option value="laptops">Laptops</option>
+                                        <option value="accessories">Accessories</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Aging Period</label>
+                                    <select class="form-select" id="inventoryAging">
+                                        <option value="30">0-30 days</option>
+                                        <option value="60">31-60 days</option>
+                                        <option value="90">61-90 days</option>
+                                        <option value="180">91-180 days</option>
+                                        <option value="365">180+ days</option>
+                                        <option value="all" selected>All Ages</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Stock Level</label>
+                                    <select class="form-select" id="inventoryStockLevel">
+                                        <option value="all">All Stock Levels</option>
+                                        <option value="high">High Stock</option>
+                                        <option value="normal">Normal Stock</option>
+                                        <option value="low">Low Stock</option>
+                                        <option value="out">Out of Stock</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button class="btn btn-primary me-2" onclick="loadInventoryReport()">
+                                        <i class="fas fa-search me-2"></i>Generate
+                                    </button>
+                                    <button class="btn btn-export" onclick="exportInventoryReport()">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inventory Stats -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="stats-card">
+                                    <div class="card-body">
+                                        <div class="stats-content">
+                                            <div class="stats-info">
+                                                <h6>Total Value</h6>
+                                                <h3 id="totalInventoryValue">$0</h3>
+                                            </div>
+                                            <i class="fas fa-dollar-sign fa-2x text-primary opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stats-card">
+                                    <div class="card-body">
+                                        <div class="stats-content">
+                                            <div class="stats-info">
+                                                <h6>Slow Moving</h6>
+                                                <h3 id="slowMovingItems">0</h3>
+                                            </div>
+                                            <i class="fas fa-turtle fa-2x text-warning opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stats-card">
+                                    <div class="card-body">
+                                        <div class="stats-content">
+                                            <div class="stats-info">
+                                                <h6>Dead Stock</h6>
+                                                <h3 id="deadStockItems">0</h3>
+                                            </div>
+                                            <i class="fas fa-skull fa-2x text-danger opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stats-card">
+                                    <div class="card-body">
+                                        <div class="stats-content">
+                                            <div class="stats-info">
+                                                <h6>Turnover Rate</h6>
+                                                <h3 id="inventoryTurnover">0x</h3>
+                                            </div>
+                                            <i class="fas fa-sync-alt fa-2x text-success opacity-75"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inventory Aging Analysis -->
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="admin-content-card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Inventory Aging Analysis</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="inventoryAgingChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="admin-content-card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Action Required</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="actionRequiredList">
+                                            <div class="aging-item">
+                                                <div>
+                                                    <strong>iPhone 12 Cases</strong>
+                                                    <br><small class="text-muted">180+ days old</small>
+                                                </div>
+                                                <span class="badge bg-danger">Dead Stock</span>
+                                            </div>
+                                            <div class="aging-item">
+                                                <div>
+                                                    <strong>Samsung Chargers</strong>
+                                                    <br><small class="text-muted">120 days old</small>
+                                                </div>
+                                                <span class="badge bg-warning">Slow Moving</span>
+                                            </div>
+                                            <div class="aging-item">
+                                                <div>
+                                                    <strong>Tablet Stands</strong>
+                                                    <br><small class="text-muted">90 days old</small>
+                                                </div>
+                                                <span class="badge bg-info">Review</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Initialize charts
+        let revenueChart, orderStatusChart, tradeinStatusChart, tradeinTrendChart, userActivityChart, userSegmentChart, inventoryAgingChart;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
+            loadSalesReport();
+        });
+
+        function initializeCharts() {
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            revenueChart = new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: [12000, 19000, 15000, 25000, 22000, 30000],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Order Status Chart
+            const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
+            orderStatusChart = new Chart(orderStatusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Processing', 'Pending', 'Cancelled'],
+                    datasets: [{
+                        data: [@ViewBag.CompletedOrders, 45, @ViewBag.PendingOrders, 12],
+                        backgroundColor: [
+                            '#10b981',
+                            '#f59e0b',
+                            '#06b6d4',
+                            '#ef4444'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Trade-in Status Chart
+            const tradeinStatusCtx = document.getElementById('tradeinStatusChart').getContext('2d');
+            tradeinStatusChart = new Chart(tradeinStatusCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Submitted', 'Evaluating', 'Approved', 'Completed', 'Rejected'],
+                    datasets: [{
+                        label: 'Count',
+                        data: [25, 15, 30, 45, 8],
+                        backgroundColor: [
+                            '#06b6d4',
+                            '#f59e0b',
+                            '#10b981',
+                            '#2563eb',
+                            '#ef4444'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Trade-in Trend Chart
+            const tradeinTrendCtx = document.getElementById('tradeinTrendChart').getContext('2d');
+            tradeinTrendChart = new Chart(tradeinTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'Trade-ins',
+                        data: [12, 18, 15, 22],
+                        borderColor: '#7c3aed',
+                        backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // User Activity Chart
+            const userActivityCtx = document.getElementById('userActivityChart').getContext('2d');
+            userActivityChart = new Chart(userActivityCtx, {
+                type: 'area',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'New Users',
+                        data: [25, 32, 28, 35],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Active Users',
+                        data: [120, 135, 128, 145],
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // User Segment Chart
+            const userSegmentCtx = document.getElementById('userSegmentChart').getContext('2d');
+            userSegmentChart = new Chart(userSegmentCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['New Users', 'Active Users', 'Inactive Users', 'VIP Customers'],
+                    datasets: [{
+                        data: [30, 45, 20, 5],
+                        backgroundColor: [
+                            '#10b981',
+                            '#2563eb',
+                            '#6b7280',
+                            '#f59e0b'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Inventory Aging Chart
+            const inventoryAgingCtx = document.getElementById('inventoryAgingChart').getContext('2d');
+            inventoryAgingChart = new Chart(inventoryAgingCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['0-30 days', '31-60 days', '61-90 days', '91-180 days', '180+ days'],
+                    datasets: [{
+                        label: 'Items',
+                        data: [150, 85, 45, 25, 12],
+                        backgroundColor: [
+                            '#10b981',
+                            '#06b6d4',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#7c2d12'
+                        ]
+                    }, {
+                        label: 'Value ($)',
+                        data: [75000, 42500, 22500, 12500, 6000],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.5)',
+                            'rgba(6, 182, 212, 0.5)',
+                            'rgba(245, 158, 11, 0.5)',
+                            'rgba(239, 68, 68, 0.5)',
+                            'rgba(124, 45, 18, 0.5)'
+                        ],
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Report generation functions
+        function loadSalesReport() {
+            const dateRange = document.getElementById('salesDateRange').value;
+            const reportType = document.getElementById('salesReportType').value;
+            const groupBy = document.getElementById('salesGroupBy').value;
+            
+            // Simulate loading data
+            console.log('Loading sales report:', { dateRange, reportType, groupBy });
+            // In real implementation, make AJAX call to load data
+        }
+
+        function loadTradeinReport() {
+            const dateRange = document.getElementById('tradeinDateRange').value;
+            const status = document.getElementById('tradeinStatus').value;
+            const deviceType = document.getElementById('tradeinDeviceType').value;
+            
+            // Update stats
+            document.getElementById('totalTradeinCount').textContent = '123';
+            document.getElementById('totalTradeinValue').textContent = '$45,600';
+            document.getElementById('avgTradeinValue').textContent = '$371';
+            document.getElementById('tradeinCompletionRate').textContent = '78%';
+            
+            console.log('Loading trade-in report:', { dateRange, status, deviceType });
+        }
+
+        function loadUserReport() {
+            const dateRange = document.getElementById('userDateRange').value;
+            const activityType = document.getElementById('userActivityType').value;
+            const segment = document.getElementById('userSegment').value;
+            
+            // Update stats
+            document.getElementById('totalUserCount').textContent = '1,245';
+            document.getElementById('activeUserCount').textContent = '892';
+            document.getElementById('newUserCount').textContent = '156';
+            document.getElementById('userRetentionRate').textContent = '72%';
+            
+            console.log('Loading user report:', { dateRange, activityType, segment });
+        }
+
+        function loadInventoryReport() {
+            const category = document.getElementById('inventoryCategory').value;
+            const aging = document.getElementById('inventoryAging').value;
+            const stockLevel = document.getElementById('inventoryStockLevel').value;
+            
+            // Update stats
+            document.getElementById('totalInventoryValue').textContent = '$234,500';
+            document.getElementById('slowMovingItems').textContent = '45';
+            document.getElementById('deadStockItems').textContent = '12';
+            document.getElementById('inventoryTurnover').textContent = '4.2x';
+            
+            console.log('Loading inventory report:', { category, aging, stockLevel });
+        }
+
+        // Export functions
+        function exportAllReports() {
+            window.location.href = '/Admin/ExportAllReports';
+        }
+
+        function exportSalesReport() {
+            const params = new URLSearchParams({
+                dateRange: document.getElementById('salesDateRange').value,
+                reportType: document.getElementById('salesReportType').value,
+                groupBy: document.getElementById('salesGroupBy').value
+            });
+            window.location.href = '/Admin/ExportSalesReport?' + params.toString();
+        }
+
+        function exportTradeinReport() {
+            const params = new URLSearchParams({
+                dateRange: document.getElementById('tradeinDateRange').value,
+                status: document.getElementById('tradeinStatus').value,
+                deviceType: document.getElementById('tradeinDeviceType').value
+            });
+            window.location.href = '/Admin/ExportTradeinReport?' + params.toString();
+        }
+
+        function exportUserReport() {
+            const params = new URLSearchParams({
+                dateRange: document.getElementById('userDateRange').value,
+                activityType: document.getElementById('userActivityType').value,
+                segment: document.getElementById('userSegment').value
+            });
+            window.location.href = '/Admin/ExportUserReport?' + params.toString();
+        }
+
+        function exportInventoryReport() {
+            const params = new URLSearchParams({
+                category: document.getElementById('inventoryCategory').value,
+                aging: document.getElementById('inventoryAging').value,
+                stockLevel: document.getElementById('inventoryStockLevel').value
+            });
+            window.location.href = '/Admin/ExportInventoryReport?' + params.toString();
+        }
+
+        function refreshData() {
+            location.reload();
+        }
+
+        function viewProductDetails(productName) {
+            // Navigate to product details or show modal
+            console.log('Viewing product details for:', productName);
+        }
+
+        // Tab change handlers
+        document.getElementById('tradein-tab').addEventListener('click', function() {
+            setTimeout(loadTradeinReport, 100);
+        });
+
+        document.getElementById('users-tab').addEventListener('click', function() {
+            setTimeout(loadUserReport, 100);
+        });
+
+        document.getElementById('inventory-tab').addEventListener('click', function() {
+            setTimeout(loadInventoryReport, 100);
+        });
+    </script>
+}

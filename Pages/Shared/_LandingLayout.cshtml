@@ -1,0 +1,217 @@
+@using Microsoft.AspNetCore.Identity
+@using AccessoryWorld.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Accessory World</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/landing.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Top Strip (Header Utility Bar) -->
+    <div class="header-top">
+        <div class="container">
+            <div class="header-top-content">
+                <div class="header-top-left">
+                    <span class="flash-sale">⚡ Flash Sale</span>
+                </div>
+                <div class="header-top-right">
+                    <a href="#">Track Order</a>
+                    <a href="/about">About</a>
+                    <a href="/contact">Contact</a>
+                    <a href="/blog">Blog</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Primary Navigation Bar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <!-- Logo -->
+            <a class="navbar-brand" href="/">
+                <span class="logo-text">ACCESSORY <span class="logo-highlight">WORLD</span></span>
+            </a>
+
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <!-- Main Menu -->
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/faq">FAQ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/trade-ins">Trade Ins</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contact">Contact</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            Shop
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" asp-controller="Products" asp-action="Index" asp-route-category="Apple iPhone">Apple iPhone</a></li>
+                            <li><a class="dropdown-item" asp-controller="Products" asp-action="Index" asp-route-category="Accessories">Accessories</a></li>
+                            <li><a class="dropdown-item" asp-controller="Products" asp-action="Index" asp-route-category="Macbook">Macbook</a></li>
+                            <li><a class="dropdown-item" asp-controller="Products" asp-action="Index" asp-route-category="iPads">iPads</a></li>
+                            <li><a class="dropdown-item" asp-controller="Products" asp-action="Index" asp-route-category="Apple Watches">Apple Watches</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <!-- Controls -->
+                <div class="navbar-controls">
+                    <div class="search-box me-3">
+                        <input type="search" class="form-control form-control-sm" placeholder="Search products...">
+                    </div>
+                    <a href="/wishlist" class="nav-icon me-2 position-relative">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
+                        </svg>
+                        Wishlist
+                        <span class="wishlist-count badge bg-danger position-absolute top-0 start-100 translate-middle" style="display: none;">0</span>
+                    </a>
+                    <partial name="_LoginPartial" />
+                    <a asp-area="" asp-page="/Cart/Index" class="nav-icon cart-link">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM3.102 4l1.313 7h8.17l1.313-7H3.102zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                        </svg>
+                        My Cart <span class="cart-total">R0,00</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <!-- Brand Block -->
+                <div class="footer-column">
+                    <div class="footer-brand">
+                        <h5>ACCESSORY <span class="logo-highlight">WORLD</span></h5>
+                        <p>support@accessoryworld.co.za</p>
+                        <p>061 238 8527</p>
+                        <p>379 Anton Lembede St, Doone House, Floor 3, Durban</p>
+                        <div class="social-icons">
+                            <a href="#" aria-label="Facebook">📘</a>
+                            <a href="#" aria-label="Instagram">📷</a>
+                            <a href="#" aria-label="Twitter">🐦</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="footer-column">
+                    <h6>Quick Links</h6>
+                    <ul>
+                        <li><a href="/about">About Us</a></li>
+                        <li><a href="/collection">Our Collection</a></li>
+                        <li><a href="/Products?category=Apple iPhone">iPhones</a></li>
+                        <li><a href="/Products?category=Accessories">Accessories</a></li>
+                        <li><a href="/stores">Our Stores</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support -->
+                <div class="footer-column">
+                    <h6>Support</h6>
+                    <ul>
+                        <li><a href="/support">Support Center</a></li>
+                        <li><a href="/help">Help Desk</a></li>
+                        <li><a href="/repair">Book A Repair</a></li>
+                        <li><a href="/trade-ins">Trade Ins</a></li>
+                        <li><a href="/contact">Contact</a></li>
+                    </ul>
+                </div>
+
+                <!-- Order -->
+                <div class="footer-column">
+                    <h6>Order</h6>
+                    <ul>
+                        <li><a href="/track-order">Check Order</a></li>
+                        <li><a href="/delivery">Delivery & Pickup</a></li>
+                        <li><a href="/returns">Returns</a></li>
+                        <li><a href="/exchanges">Exchanges</a></li>
+                        <li><a href="/faq">FAQ's</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Payment Strip & Copyright -->
+            <div class="footer-bottom">
+                <div class="payment-strip">
+                    <span>💳 Visa</span>
+                    <span>💳 Mastercard</span>
+                    <span>🏦 EFT</span>
+                    <span>📱 PayFast</span>
+                </div>
+                <p class="copyright">
+                    2025 © Accessory World | Developed by Computer Garden
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <script>
+        // Load wishlist count on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWishlistCount();
+        });
+        
+        function loadWishlistCount() {
+            fetch('/Wishlist/Count')
+            .then(response => response.json())
+            .then(data => {
+                updateWishlistCount(data.count);
+            })
+            .catch(error => {
+                console.error('Error loading wishlist count:', error);
+            });
+        }
+        
+        function updateWishlistCount(count) {
+            const wishlistCountElement = document.querySelector('.wishlist-count');
+            if (wishlistCountElement) {
+                wishlistCountElement.textContent = count;
+                wishlistCountElement.style.display = count > 0 ? 'inline' : 'none';
+            }
+        }
+    </script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

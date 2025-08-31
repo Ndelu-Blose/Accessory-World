@@ -1,0 +1,629 @@
+@model IEnumerable<AccessoryWorld.ViewModels.AdminProductViewModel>
+@{
+    ViewData["AddProductModel"] = new AccessoryWorld.ViewModels.AddProductViewModel();
+}
+@{
+    ViewData["Title"] = "Product Management";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+<style>
+    :root {
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --accent: #7c3aed;
+        --accent-magenta: #d946ef;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #06b6d4;
+        --text-dark: #1f2937;
+        --text-muted: #6b7280;
+        --bg-light: #f8fafc;
+        --border: #e5e7eb;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .admin-container {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .admin-sidebar {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+    }
+
+    .admin-sidebar .sidebar-header {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .product-thumbnail {
+        width: 50px;
+        height: 50px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+
+    .admin-sidebar .sidebar-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .admin-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .admin-nav-item {
+        border-bottom: 1px solid var(--border);
+    }
+
+    .admin-nav-item:last-child {
+        border-bottom: none;
+    }
+
+    .admin-nav-link {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        color: var(--text-dark);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .admin-nav-link:hover {
+        background: var(--bg-light);
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    .admin-nav-link.active {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+    }
+
+    .admin-nav-link i {
+        width: 20px;
+        margin-right: 0.75rem;
+        text-align: center;
+    }
+</style>
+}
+
+<div class="admin-container">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Admin Navigation Sidebar -->
+            <div class="admin-sidebar">
+                <div class="sidebar-header">
+                    <h5>Admin Panel</h5>
+                </div>
+                <nav>
+                    <ul class="admin-nav">
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Dashboard", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Orders", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Orders</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Products", "Admin")" class="admin-nav-link active">
+                                <i class="fas fa-box"></i>
+                                <span>Products</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Users", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-users"></i>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Reports", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Reports</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Settings", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-box me-2"></i>Product Management</h2>
+                <div>
+                    <button class="btn btn-success me-2" onclick="exportProducts()">
+                        <i class="fas fa-download me-1"></i>Export Products
+                    </button>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                        <i class="fas fa-plus me-1"></i>Add Product
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Total Products</h6>
+                                    <h3 class="mb-0">@ViewBag.TotalProducts</h3>
+                                </div>
+                                <i class="fas fa-box fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Active Products</h6>
+                                    <h3 class="mb-0">@ViewBag.ActiveProducts</h3>
+                                </div>
+                                <i class="fas fa-check-circle fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Low Stock</h6>
+                                    <h3 class="mb-0">@ViewBag.LowStockProducts</h3>
+                                </div>
+                                <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6 class="card-title">Out of Stock</h6>
+                                    <h3 class="mb-0">@ViewBag.OutOfStockProducts</h3>
+                                </div>
+                                <i class="fas fa-times-circle fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filter Bar -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">Search Products</label>
+                            <input type="text" class="form-control" id="search" name="search" placeholder="Name, SKU, description..." value="@ViewBag.SearchTerm">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">All Categories</option>
+                                @foreach (var category in ViewBag.Categories as IEnumerable<dynamic>)
+                                {
+                                    <option value="@category.Id" @(ViewBag.CategoryFilter == category.Id.ToString() ? "selected" : "")>@category.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="brand" class="form-label">Brand</label>
+                            <select class="form-select" id="brand" name="brand">
+                                <option value="">All Brands</option>
+                                @foreach (var brand in ViewBag.Brands as IEnumerable<dynamic>)
+                                {
+                                    <option value="@brand.Id" @(ViewBag.BrandFilter == brand.Id.ToString() ? "selected" : "")>@brand.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Status</option>
+                                <option value="active" @(ViewBag.StatusFilter == "active" ? "selected" : "")>Active</option>
+                                <option value="inactive" @(ViewBag.StatusFilter == "inactive" ? "selected" : "")>Inactive</option>
+                                <option value="lowstock" @(ViewBag.StatusFilter == "lowstock" ? "selected" : "")>Low Stock</option>
+                                <option value="outofstock" @(ViewBag.StatusFilter == "outofstock" ? "selected" : "")>Out of Stock</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="sortBy" class="form-label">Sort By</label>
+                            <select class="form-select" id="sortBy" name="sortBy">
+                                <option value="name" @(ViewBag.SortBy == "name" ? "selected" : "")>Name</option>
+                                <option value="price" @(ViewBag.SortBy == "price" ? "selected" : "")>Price</option>
+                                <option value="stock" @(ViewBag.SortBy == "stock" ? "selected" : "")>Stock</option>
+                                <option value="created" @(ViewBag.SortBy == "created" ? "selected" : "")>Date Created</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-search me-1"></i>Search
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Products (@Model.Count() results)</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>SKU</th>
+                                        <th>Category</th>
+                                        <th>Brand</th>
+                                        <th>Price</th>
+                                        <th>Stock</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var product in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="@(product.ImageUrl ?? "/images/placeholder-product.jpg")" 
+                                                         alt="@product.Name" class="product-thumbnail me-3">
+                                                    <div>
+                                                        <h6 class="mb-0">@product.Name</h6>
+                                                        <small class="text-muted">@product.ShortDescription</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <code>@product.SKU</code>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-light text-dark">@product.CategoryName</span>
+                                            </td>
+                                            <td>
+                                                @product.BrandName
+                                            </td>
+                                            <td>
+                                                <strong>@product.Price.ToString("C")</strong>
+                                                @if (product.CompareAtPrice.HasValue && product.CompareAtPrice > product.Price)
+                                                {
+                                                    <br>
+                                                    <small class="text-muted text-decoration-line-through">@product.CompareAtPrice.Value.ToString("C")</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="me-2">@product.StockQuantity</span>
+                                                    @if (product.StockQuantity <= 0)
+                                                    {
+                                                        <span class="badge bg-danger">Out</span>
+                                                    }
+                                                    else if (product.StockQuantity <= product.LowStockThreshold)
+                                                    {
+                                                        <span class="badge bg-warning">Low</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-success">OK</span>
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-@(product.IsActive ? "success" : "secondary")">
+                                                    @(product.IsActive ? "Active" : "Inactive")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" title="View Product" 
+                                                            onclick="viewProduct(@product.Id)">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-secondary" title="Edit Product" 
+                                                            onclick="editProduct(@product.Id)">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-info" title="Manage Inventory" 
+                                                            onclick="manageInventory(@product.Id)">
+                                                        <i class="fas fa-warehouse"></i>
+                                                    </button>
+                                                    @if (product.IsActive)
+                                                    {
+                                                        <button class="btn btn-outline-warning" title="Deactivate Product" 
+                                                                onclick="toggleProductStatus(@product.Id, false)">
+                                                            <i class="fas fa-pause"></i>
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button class="btn btn-outline-success" title="Activate Product" 
+                                                                onclick="toggleProductStatus(@product.Id, true)">
+                                                            <i class="fas fa-play"></i>
+                                                        </button>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5">
+                            <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No products found</h5>
+                            <p class="text-muted">Try adjusting your search criteria or add a new product.</p>
+                        </div>
+                    }
+                </div>
+                
+                <!-- Pagination -->
+                @if (ViewBag.TotalPages > 1)
+                {
+                    <div class="card-footer">
+                        <nav aria-label="Product pagination">
+                            <ul class="pagination justify-content-center mb-0">
+                                @if (ViewBag.CurrentPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=@(ViewBag.CurrentPage - 1)&pageSize=@ViewBag.PageSize">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                }
+                                
+                                @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link" href="?page=@i&pageSize=@ViewBag.PageSize">@i</a>
+                                    </li>
+                                }
+                                
+                                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=@(ViewBag.CurrentPage + 1)&pageSize=@ViewBag.PageSize">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProductModalLabel">
+                    <i class="fas fa-plus me-2"></i>Add New Product
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addProductForm" action="@Url.Action("AddProduct", "Admin")" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="productName" class="form-label">Product Name *</label>
+                                <input type="text" class="form-control" id="productName" name="Name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="productSKU" class="form-label">SKU Code</label>
+                                <input type="text" class="form-control" id="productSKU" name="SKUCode" placeholder="Auto-generated if empty">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="productCategory" class="form-label">Category *</label>
+                                <select class="form-select" id="productCategory" name="CategoryId" required>
+                                    <option value="">Select Category</option>
+                                    @foreach (var category in ViewBag.Categories as IEnumerable<dynamic>)
+                                    {
+                                        <option value="@category.Id">@category.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="productBrand" class="form-label">Brand *</label>
+                                <select class="form-select" id="productBrand" name="BrandId" required>
+                                    <option value="">Select Brand</option>
+                                    @foreach (var brand in ViewBag.Brands as IEnumerable<dynamic>)
+                                    {
+                                        <option value="@brand.Id">@brand.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="productPrice" class="form-label">Price *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="productPrice" name="Price" step="0.01" min="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="productComparePrice" class="form-label">Compare At Price</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="productComparePrice" name="CompareAtPrice" step="0.01" min="0.01">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="productStock" class="form-label">Stock Quantity</label>
+                                <input type="number" class="form-control" id="productStock" name="StockQuantity" min="0" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="productLowStock" class="form-label">Low Stock Threshold</label>
+                                <input type="number" class="form-control" id="productLowStock" name="LowStockThreshold" min="0" value="5">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="productStatus" class="form-label">Status</label>
+                                <select class="form-select" id="productStatus" name="IsActive">
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="productDescription" name="Description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="productImage" class="form-label">Product Image URL</label>
+                        <input type="url" class="form-control" id="productImage" name="ImageUrl" placeholder="https://example.com/image.jpg">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts {
+    <script>
+        function viewProduct(productId) {
+            // Redirect to product details page
+            window.location.href = '/Products/Details/' + productId;
+        }
+        
+        function editProduct(productId) {
+            // Redirect to product edit page
+            window.location.href = '/Admin/EditProduct/' + productId;
+        }
+        
+        function manageInventory(productId) {
+            // Redirect to inventory management page
+            window.location.href = '/Admin/Inventory?productId=' + productId;
+        }
+        
+        function toggleProductStatus(productId, activate) {
+            const action = activate ? 'activate' : 'deactivate';
+            if (confirm(`Are you sure you want to ${action} this product?`)) {
+                // Get the antiforgery token
+                const token = $('input[name="__RequestVerificationToken"]').val();
+                
+                // Implement AJAX call to toggle product status
+                fetch(`/Admin/ToggleProductStatus`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({ productId: productId, isActive: activate })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error updating product status: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error updating product status');
+                });
+            }
+        }
+        
+        function exportProducts() {
+            // Export products to CSV
+            window.location.href = '/Admin/ExportProducts';
+        }
+    </script>
+}

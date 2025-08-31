@@ -1,0 +1,1121 @@
+@model AccessoryWorld.ViewModels.CustomerDashboardViewModel
+@{
+    ViewData["Title"] = "My Account";
+}
+
+@section Styles {
+    <style>
+        :root {
+            --primary: #1399FF;
+            --accent-magenta: #FF37B9;
+            --red-chip: #EF4444;
+            --text-dark: #111111;
+            --text-muted: #6B7280;
+            --border: #E5E7EB;
+            --card-bg: #FFFFFF;
+            --page-bg: #F8FAFC;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --info: #3B82F6;
+            --radius-card: 20px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            background-color: var(--page-bg);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary), var(--accent-magenta));
+            color: white;
+            padding: 2rem;
+            border-radius: var(--radius-card);
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .dashboard-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .dashboard-header .subtitle {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .account-nav {
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .account-nav .nav-header {
+            background: linear-gradient(135deg, var(--text-dark), #374151);
+            color: white;
+            padding: 1.5rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .account-nav .nav-item {
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .account-nav .nav-item:hover {
+            background-color: #F3F4F6;
+            transform: translateX(4px);
+        }
+
+        .account-nav .nav-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--accent-magenta));
+            color: white;
+        }
+
+        .account-nav .nav-item.active:hover {
+            transform: none;
+        }
+
+        .account-nav .nav-link {
+            padding: 1rem 1.5rem;
+            color: var(--text-dark);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+        }
+
+        .account-nav .nav-item.active .nav-link {
+            color: white;
+        }
+
+        .account-nav .nav-link i {
+            width: 20px;
+            margin-right: 0.75rem;
+        }
+
+        .welcome-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .welcome-card h2 {
+            color: var(--text-dark);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border-top: 4px solid transparent;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card.orders {
+            border-top-color: var(--primary);
+        }
+
+        .stat-card.addresses {
+            border-top-color: var(--success);
+        }
+
+        .stat-card.status {
+            border-top-color: var(--info);
+        }
+
+        .stat-card .icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.25rem;
+        }
+
+        .stat-card.orders .icon {
+            background: rgba(19, 153, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .stat-card.addresses .icon {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .stat-card.status .icon {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .stat-card.wishlist .icon {
+            background: rgba(255, 55, 185, 0.1);
+            color: var(--accent-magenta);
+        }
+
+        .stat-card .number {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .label {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        /* Recent Orders Section */
+        .recent-orders-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .recent-orders-card .card-header {
+            background: linear-gradient(135deg, var(--primary), var(--accent-magenta));
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .recent-orders-card .card-header h3 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .view-all-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            opacity: 0.9;
+            transition: opacity 0.3s ease;
+        }
+
+        .view-all-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        .orders-list {
+            padding: 0;
+        }
+
+        .order-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.3s ease;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-item:hover {
+            background-color: #F9FAFB;
+        }
+
+        .order-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .order-number {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .order-date {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .order-status {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            width: fit-content;
+        }
+
+        .status-pending {
+            background: rgba(251, 191, 36, 0.1);
+            color: #D97706;
+        }
+
+        .status-processing {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .status-shipped {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-delivered {
+            background: rgba(34, 197, 94, 0.1);
+            color: #059669;
+        }
+
+        .order-details {
+            text-align: center;
+        }
+
+        .order-total {
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
+
+        .order-items {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .order-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-small.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-small.secondary {
+            background: #6B7280;
+            color: white;
+        }
+
+        .btn-small.success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-small:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Notifications Section */
+        .notifications-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .notifications-card .card-header {
+            background: linear-gradient(135deg, #6B7280, #4B5563);
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notifications-card .card-header h3 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .notification-count {
+            background: var(--red-chip);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .notifications-list {
+            padding: 0;
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.3s ease;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item.unread {
+            background: rgba(59, 130, 246, 0.05);
+            border-left: 4px solid var(--info);
+        }
+
+        .notification-item:hover {
+            background-color: #F9FAFB;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .notification-success .notification-icon {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .notification-warning .notification-icon {
+            background: rgba(251, 191, 36, 0.1);
+            color: #D97706;
+        }
+
+        .notification-error .notification-icon {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red-chip);
+        }
+
+        .notification-info .notification-icon {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--info);
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-message {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .notification-action {
+            flex-shrink: 0;
+        }
+
+        .actions-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .actions-card .card-header {
+            background: linear-gradient(135deg, var(--primary), var(--accent-magenta));
+            color: white;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .actions-card .card-header h5 {
+            margin: 0;
+            font-weight: 700;
+            color: white;
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            padding: 2rem;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .action-btn:hover::before {
+            left: 100%;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--primary), #0EA5E9);
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #6B7280, #4B5563);
+            color: white;
+        }
+
+        .action-btn.success {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+        }
+
+        .action-btn.info {
+            background: linear-gradient(135deg, var(--info), #2563EB);
+            color: white;
+        }
+
+        .action-btn.warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            text-decoration: none;
+        }
+
+        .action-btn i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        /* Recommendations Styles */
+        .recommendations-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+
+        .recommendation-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+
+        .recommendation-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .recommendation-item .product-image {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .recommendation-item .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .recommendation-item:hover .product-image img {
+            transform: scale(1.05);
+        }
+
+        .recommendation-item .badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            z-index: 2;
+        }
+
+        .recommendation-item .badge.new {
+            background: linear-gradient(135deg, #10B981, #059669);
+        }
+
+        .recommendation-item .badge.bestseller {
+            background: linear-gradient(135deg, #F59E0B, #D97706);
+        }
+
+        .recommendation-item .product-info {
+            padding: 1rem;
+        }
+
+        .recommendation-item .product-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .recommendation-item .product-brand {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .recommendation-item .product-price {
+            margin-bottom: 1rem;
+        }
+
+        .recommendation-item .current-price {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .recommendation-item .original-price {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            text-decoration: line-through;
+            margin-left: 0.5rem;
+        }
+
+        .recommendation-item .product-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .recommendation-item .btn-small {
+            flex: 1;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .recommendation-item .btn-small.primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .recommendation-item .btn-small.primary:hover {
+            background: #0EA5E9;
+            transform: translateY(-1px);
+        }
+
+        .recommendation-item .btn-small.secondary {
+            background: var(--border);
+            color: var(--text-muted);
+            flex: 0 0 auto;
+            width: 40px;
+            padding: 0.5rem;
+        }
+
+        .recommendation-item .btn-small.secondary:hover {
+            background: var(--accent-magenta);
+            color: white;
+        }
+
+        .recommendations-footer {
+            padding: 1rem 1.5rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            background: #F8FAFC;
+        }
+
+        .recommendations-footer .btn {
+            padding: 0.75rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .recommendations-footer .btn.secondary {
+            background: var(--text-muted);
+            color: white;
+        }
+
+        .recommendations-footer .btn.secondary:hover {
+            background: var(--text-dark);
+            transform: translateY(-2px);
+        }
+
+        @@media (max-width: 768px) {
+            .dashboard-container {
+                padding: 1rem;
+            }
+
+            .dashboard-header {
+                text-align: center;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .dashboard-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .account-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .nav-item {
+                text-align: center;
+                padding: 0.75rem 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .stat-card {
+                padding: 1rem;
+                flex-direction: column;
+                text-align: center;
+                gap: 0.5rem;
+            }
+
+            .stat-card .icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .stat-card .number {
+                font-size: 1.5rem;
+            }
+
+            .actions-grid {
+                grid-template-columns: 1fr;
+                padding: 1.5rem;
+                gap: 0.75rem;
+            }
+
+            .action-btn {
+                justify-content: center;
+                padding: 1rem;
+                font-size: 0.875rem;
+            }
+
+            .order-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .order-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .notification-item {
+                padding: 1rem;
+            }
+
+            .recent-orders-card .card-header,
+            .notifications-card .card-header {
+                padding: 1rem;
+            }
+
+            .recommendations-grid {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .recommendation-item .product-image {
+                height: 180px;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .welcome-card {
+                padding: 1rem;
+            }
+
+            .btn-small {
+                padding: 0.375rem 0.75rem;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+}
+
+<div class="dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>Welcome back, @Model.FirstName!</h1>
+        <p class="subtitle">Member since @Model.MemberSince.ToString("MMMM yyyy")</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Account Navigation -->
+            <div class="account-nav">
+                <div class="nav-header">
+                    <i class="fas fa-user-circle me-2"></i>My Account
+                </div>
+                <div class="nav-item active">
+                    <a href="@Url.Action("Dashboard", "Account")" class="nav-link">
+                        <i class="fas fa-tachometer-alt"></i>Dashboard
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="@Url.Action("Profile", "Account")" class="nav-link">
+                        <i class="fas fa-user"></i>Profile
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="@Url.Action("Addresses", "Account")" class="nav-link">
+                        <i class="fas fa-map-marker-alt"></i>Addresses
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="@Url.Action("Orders", "Account")" class="nav-link">
+                        <i class="fas fa-shopping-bag"></i>Order History
+                    </a>
+                </div>
+                <div class="nav-item">
+                    <a href="/wishlist" class="nav-link">
+                        <i class="fas fa-heart"></i>My Wishlist
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Quick Stats -->
+            <div class="stats-grid">
+                <div class="stat-card orders">
+                    <div class="icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="number">@Model.TotalOrders</div>
+                    <div class="label">Total Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="number">@Model.PendingOrders</div>
+                    <div class="label">Pending Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="number">@Model.CompletedOrders</div>
+                    <div class="label">Completed Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="number">@Model.TotalSpent.ToString("C")</div>
+                    <div class="label">Total Spent</div>
+                </div>
+                <div class="stat-card addresses">
+                    <div class="icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="number">@Model.SavedAddresses</div>
+                    <div class="label">Saved Addresses</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="number">@Model.MembershipDuration</div>
+                    <div class="label">Member Since</div>
+                </div>
+                <div class="stat-card wishlist">
+                    <div class="icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="number">@Model.WishlistItems</div>
+                    <div class="label">Wishlist Items</div>
+                </div>
+            </div>
+
+            <!-- Recent Orders Section -->
+            @if (Model.RecentOrders != null && Model.RecentOrders.Any())
+            {
+                <div class="recent-orders-card">
+                    <div class="card-header">
+                        <h3>Recent Orders</h3>
+                        <a href="@Url.Action("OrderHistory", "Account")" class="view-all-link">View All</a>
+                    </div>
+                    <div class="orders-list">
+                        @foreach (var order in Model.RecentOrders)
+                        {
+                            <div class="order-item">
+                                <div class="order-info">
+                                    <div class="order-number">#@order.OrderNumber</div>
+                                    <div class="order-date">@order.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                    <div class="order-status status-@order.Status.ToLower()">@order.Status</div>
+                                </div>
+                                <div class="order-details">
+                                    <div class="order-total">@order.Total.ToString("C")</div>
+                                    <div class="order-items">@order.ItemCount item(s)</div>
+                                </div>
+                                <div class="order-actions">
+                                    <a href="@Url.Action("OrderDetails", "Account", new { id = order.Id })" class="btn-small primary">View</a>
+                                    @if (order.CanTrack)
+                                    {
+                                        <a href="@Url.Action("TrackOrder", "Account", new { id = order.Id })" class="btn-small secondary">Track</a>
+                                    }
+                                    @if (order.CanReorder)
+                                    {
+                                        <a href="@Url.Action("Reorder", "Account", new { id = order.Id })" class="btn-small success">Reorder</a>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Notifications Section -->
+            @if (Model.Notifications != null && Model.Notifications.Any())
+            {
+                <div class="notifications-card">
+                    <div class="card-header">
+                        <h3>Notifications</h3>
+                        <span class="notification-count">@Model.Notifications.Count(n => !n.IsRead)</span>
+                    </div>
+                    <div class="notifications-list">
+                        @foreach (var notification in Model.Notifications)
+                        {
+                            <div class="notification-item @(!notification.IsRead ? "unread" : "") notification-@notification.Type">
+                                <div class="notification-icon">
+                                    @switch (notification.Type)
+                                    {
+                                        case "success":
+                                            <i class="fas fa-check-circle"></i>
+                                            break;
+                                        case "warning":
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                            break;
+                                        case "error":
+                                            <i class="fas fa-times-circle"></i>
+                                            break;
+                                        default:
+                                            <i class="fas fa-info-circle"></i>
+                                            break;
+                                    }
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">@notification.Title</div>
+                                    <div class="notification-message">@notification.Message</div>
+                                    <div class="notification-time">@notification.CreatedAt.ToString("MMM dd, yyyy HH:mm")</div>
+                                </div>
+                                @if (!string.IsNullOrEmpty(notification.ActionUrl))
+                                {
+                                    <div class="notification-action">
+                                        <a href="@notification.ActionUrl" class="btn-small primary">@notification.ActionText</a>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Personalized Recommendations -->
+            @if (Model.RecommendedProducts != null && Model.RecommendedProducts.Any())
+            {
+                <div class="recommendations-card">
+                    <div class="card-header">
+                        <h3>Recommended for You</h3>
+                        <p class="card-subtitle">Based on your order history</p>
+                    </div>
+                    <div class="recommendations-grid">
+                        @foreach (var product in Model.RecommendedProducts)
+                        {
+                            <div class="recommendation-item">
+                                <div class="product-image">
+                                    @if (product.ProductImages != null && product.ProductImages.Any())
+                                    {
+                                        <img src="@product.ProductImages.First().ImageUrl" alt="@product.Name" loading="lazy" />
+                                    }
+                                    else
+                                    {
+                                        <img src="https://via.placeholder.com/200x200?text=No+Image" alt="@product.Name" loading="lazy" />
+                                    }
+                                    @if (product.IsNew)
+                                    {
+                                        <span class="badge new">New</span>
+                                    }
+                                    @if (product.IsBestSeller)
+                                    {
+                                        <span class="badge bestseller">Best Seller</span>
+                                    }
+                                </div>
+                                <div class="product-info">
+                                    <h4 class="product-name">@product.Name</h4>
+                                    <p class="product-brand">@product.Brand?.Name</p>
+                                    <div class="product-price">
+                                        <span class="current-price">R @product.Price.ToString("N2")</span>
+                                        @if (product.CompareAtPrice.HasValue && product.CompareAtPrice > product.Price)
+                                        {
+                                            <span class="original-price">R @product.CompareAtPrice.Value.ToString("N2")</span>
+                                        }
+                                    </div>
+                                    <div class="product-actions">
+                                        <a href="@Url.Action("Details", "Products", new { id = product.Id })" class="btn-small primary">View Details</a>
+                                        <button type="button" class="btn-small secondary wishlist-btn" data-product-id="@product.Id">
+                                            <i class="far fa-heart"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="recommendations-footer">
+                        <a href="@Url.Action("Index", "Products")" class="btn secondary">View All Products</a>
+                    </div>
+                </div>
+            }
+
+            <!-- Quick Actions -->
+            <div class="actions-card">
+                <div class="card-header">
+                    <h5>Quick Actions</h5>
+                </div>
+                <div class="actions-grid">
+                    <a href="@Url.Action("Orders", "Account")" class="action-btn primary">
+                        <i class="fas fa-shopping-bag"></i>View My Orders
+                    </a>
+                    <a href="@Url.Action("Profile", "Account")" class="action-btn secondary">
+                        <i class="fas fa-user-edit"></i>Edit Profile
+                    </a>
+                    <a href="@Url.Action("Addresses", "Account")" class="action-btn success">
+                        <i class="fas fa-map-marker-alt"></i>Manage Addresses
+                    </a>
+                    <a href="@Url.Action("Index", "Products")" class="action-btn info">
+                        <i class="fas fa-shopping-cart"></i>Continue Shopping
+                    </a>
+                    <a href="@Url.Action("ChangePassword", "Account")" class="action-btn warning">
+                        <i class="fas fa-lock"></i>Change Password
+                    </a>
+                    <a href="@Url.Action("DownloadData", "Account")" class="action-btn info">
+                        <i class="fas fa-download"></i>Download Data
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Add any dashboard-specific JavaScript here
+    </script>
+}

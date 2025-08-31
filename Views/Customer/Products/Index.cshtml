@@ -1,0 +1,760 @@
+@model AccessoryWorld.ViewModels.ShopVM
+@{
+    ViewData["Title"] = "Products";
+    Layout = "~/Pages/Shared/_LandingLayout.cshtml";
+}
+
+<div class="products-page">
+<div class="container-fluid py-4">
+    <div class="row g-0">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3 col-md-4">
+            <div class="filter-sidebar">
+                <div class="filter-header">
+                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filterForm">
+                        <!-- Search -->
+                        <div class="mb-3">
+                            <label for="searchTerm" class="form-label">Search</label>
+                            <input type="text" class="form-control" id="searchTerm" name="searchTerm" value="@Model.SearchTerm" placeholder="Search products...">
+                        </div>
+
+                        <!-- Categories -->
+                        <div class="mb-3">
+                            <label for="categoryId" class="form-label">Category</label>
+                            <select class="form-select" id="categoryId" name="categoryId">
+                                <option value="">All Categories</option>
+                                @if (Model.Categories != null)
+                                {
+                                    @foreach (var cat in Model.Categories)
+                                    {
+                                        <option value="@cat.Id" @(Model.CategoryId == cat.Id ? "selected" : "")>@cat.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="mb-3">
+                            <label class="form-label">Price Range</label>
+                            <div class="row">
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="minPrice" value="@Model.MinPrice" placeholder="Min" step="0.01">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" name="maxPrice" value="@Model.MaxPrice" placeholder="Max" step="0.01">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Brand Filter -->
+                        <div class="mb-3">
+                            <label for="brandId" class="form-label">Brand</label>
+                            <select class="form-select" id="brandId" name="brandId">
+                                <option value="">All Brands</option>
+                                @if (Model.Brands != null)
+                                {
+                                    @foreach (var brand in Model.Brands)
+                                    {
+                                        <option value="@brand.Id" @(Model.BrandId == brand.Id ? "selected" : "")>@brand.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <!-- Condition Filter -->
+                        <div class="mb-3">
+                            <label for="condition" class="form-label">Condition</label>
+                            <select class="form-select" id="condition" name="condition">
+                                <option value="">All Conditions</option>
+                                <option value="New" @(Model.Condition == "New" ? "selected" : "")>New</option>
+                                <option value="C.P.O" @(Model.Condition == "C.P.O" ? "selected" : "")>C.P.O</option>
+                            </select>
+                        </div>
+
+                        <!-- In Stock Filter -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="inStock" name="inStock" value="true" @(Model.InStock == true ? "checked" : "")>
+                                <label class="form-check-label" for="inStock">
+                                    In Stock Only
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Feature Filters -->
+                        <div class="mb-3">
+                            <label class="form-label">Special Offers</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isOnSale" name="isOnSale" value="true" @(Model.IsOnSale == true ? "checked" : "")>
+                                <label class="form-check-label" for="isOnSale">On Sale</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isBestSeller" name="isBestSeller" value="true" @(Model.IsBestSeller == true ? "checked" : "")>
+                                <label class="form-check-label" for="isBestSeller">Best Seller</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isNew" name="isNew" value="true" @(Model.IsNew == true ? "checked" : "")>
+                                <label class="form-check-label" for="isNew">New Arrivals</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isHot" name="isHot" value="true" @(Model.IsHot == true ? "checked" : "")>
+                                <label class="form-check-label" for="isHot">Hot Items</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="isTodayDeal" name="isTodayDeal" value="true" @(Model.IsTodayDeal == true ? "checked" : "")>
+                                <label class="form-check-label" for="isTodayDeal">Today's Deals</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary w-100 mt-2">Clear Filters</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-lg-9 col-md-8 products-grid">
+            <!-- Results Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2>Products</h2>
+                    <p class="text-muted mb-0">Showing @((Model.CurrentPage - 1) * Model.PageSize + 1)-@Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalProducts) of @Model.TotalProducts products</p>
+                </div>
+                <div class="d-flex align-items-center sort-controls">
+                    <label for="sortBy" class="form-label me-2 mb-0">Sort by:</label>
+                    <select class="form-select" id="sortBy" name="sortBy" style="width: auto;" onchange="updateSort(this.value)">
+                        <option value="name" @(Model.SortBy == "name" ? "selected" : "")>Name A-Z</option>
+                        <option value="price" @(Model.SortBy == "price" ? "selected" : "")>Price Low-High</option>
+                        <option value="newest" @(Model.SortBy == "newest" ? "selected" : "")>Newest First</option>
+                        <option value="bestseller" @(Model.SortBy == "bestseller" ? "selected" : "")>Best Sellers</option>
+                        <option value="sales" @(Model.SortBy == "sales" ? "selected" : "")>Most Popular</option>
+                    </select>
+                    <select class="form-select ms-2" id="sortOrder" name="sortOrder" style="width: auto;" onchange="updateSort()">
+                        <option value="asc" @(Model.SortOrder == "asc" ? "selected" : "")>Ascending</option>
+                        <option value="desc" @(Model.SortOrder == "desc" ? "selected" : "")>Descending</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            @if (Model.Products.Any())
+            {
+                <div class="products-grid">
+                    @foreach (var product in Model.Products)
+                    {
+                        <div class="product-card">
+                            <div class="product-image-container">
+                                @if (product.ProductImages.Any())
+                                {
+                                    <img src="@product.ProductImages.First().ImageUrl" class="product-image" alt="@product.Name">
+                                }
+                                else
+                                {
+                                    <div class="product-image d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-image fa-3x text-muted"></i>
+                                    </div>
+                                }
+                                
+                                <!-- Product Badges -->
+                                <div class="product-badges">
+                                    @if (product.IsTodayDeal)
+                                    {
+                                        <span class="badge badge-deal">Today's Deal</span>
+                                    }
+                                    @if (product.IsHot)
+                                    {
+                                        <span class="badge badge-hot">Hot</span>
+                                    }
+                                    @if (product.IsNew)
+                                    {
+                                        <span class="badge badge-new">New</span>
+                                    }
+                                    @if (product.IsOnSale)
+                                    {
+                                        <span class="badge badge-sale">Sale</span>
+                                    }
+                                </div>
+                            </div>
+                            
+                            <div class="product-card-body">
+                                <div class="product-brand">@product.Brand?.Name</div>
+                                <h5 class="product-title">@product.Name</h5>
+                                <p class="product-description">@Html.Raw(product.Description?.Length > 120 ? product.Description.Substring(0, 120) + "..." : product.Description ?? "No description available")</p>
+                                
+                                <div class="product-pricing">
+                                    @if (product.IsOnSale && product.SalePrice.HasValue)
+                                    {
+                                        <div class="product-price">
+                                            <span class="product-compare-price">R@product.Price.ToString("N2")</span>
+                                            R@product.SalePrice.Value.ToString("N2")
+                                            @{
+                                                var discount = Math.Round(((product.Price - product.SalePrice.Value) / product.Price) * 100);
+                                            }
+                                            <span class="product-discount">(@discount% off)</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="product-price">R@product.Price.ToString("N2")</div>
+                                    }
+                                    
+                                    @if (product.CompareAtPrice.HasValue && product.CompareAtPrice > product.Price)
+                                    {
+                                        <small class="text-muted">Compare at: R@product.CompareAtPrice.Value.ToString("N2")</small>
+                                    }
+                                </div>
+                                
+                                <div class="product-stock">
+                                    @if (product.InStock)
+                                    {
+                                        var totalStock = product.SKUs.Sum(s => s.AvailableQuantity);
+                                        @if (totalStock <= 5 && totalStock > 0)
+                                        {
+                                            <span class="stock-low"><i class="fas fa-exclamation-triangle"></i> Only @totalStock left!</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="stock-available"><i class="fas fa-check-circle"></i> In Stock</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="stock-out"><i class="fas fa-times-circle"></i> Out of Stock</span>
+                                    }
+                                    
+                                    @if (product.SalesCount > 0)
+                                    {
+                                        <div class="mt-1"><small class="text-muted">@product.SalesCount sold</small></div>
+                                    }
+                                </div>
+                                
+                                <div class="product-actions">
+                                    @if (product.InStock)
+                                    {
+                                        <button class="btn btn-add-cart" onclick="addToCart(@product.Id)">
+                                            <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-add-cart" disabled>
+                                            <i class="fas fa-times me-2"></i>Out of Stock
+                                        </button>
+                                    }
+                                    <a href="@Url.Action("Details", new { id = product.Id })" class="btn btn-view-details">
+                                        <i class="fas fa-eye me-2"></i>Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.TotalPages > 1)
+                {
+                    <nav aria-label="Products pagination">
+                        <ul class="pagination justify-content-center">
+                            @if (Model.CurrentPage > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Model.GetPageUrl(Model.CurrentPage - 1)">Previous</a>
+                                </li>
+                            }
+
+                            @for (int i = Math.Max(1, Model.CurrentPage - 2); i <= Math.Min(Model.TotalPages, Model.CurrentPage + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link" href="@Model.GetPageUrl(i)">@i</a>
+                                </li>
+                            }
+
+                            @if (Model.CurrentPage < Model.TotalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Model.GetPageUrl(Model.CurrentPage + 1)">Next</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="no-products">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <h4>No products found</h4>
+                    <p class="text-muted">Try adjusting your search criteria or browse all products.</p>
+                    <a href="@Url.Action("Index")" class="btn btn-primary">View All Products</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+    <script>
+        function updateSort() {
+            const sortBy = document.getElementById('sortBy').value;
+            const sortOrder = document.getElementById('sortOrder').value;
+            const url = new URL(window.location);
+            
+            if (sortBy) {
+                url.searchParams.set('sortBy', sortBy);
+            } else {
+                url.searchParams.delete('sortBy');
+            }
+            
+            if (sortOrder) {
+                url.searchParams.set('sortOrder', sortOrder);
+            } else {
+                url.searchParams.delete('sortOrder');
+            }
+            
+            url.searchParams.set('page', '1'); // Reset to first page
+            window.location.href = url.toString();
+        }
+
+        // Auto-submit form when filters change
+        document.getElementById('categoryId')?.addEventListener('change', function() {
+            this.form.submit();
+        });
+        
+        document.getElementById('brandId')?.addEventListener('change', function() {
+            this.form.submit();
+        });
+        
+        document.getElementById('condition')?.addEventListener('change', function() {
+            this.form.submit();
+        });
+        
+        document.getElementById('inStock')?.addEventListener('change', function() {
+            this.form.submit();
+        });
+        
+        // Auto-submit for feature filters
+        document.getElementById('isOnSale')?.addEventListener('change', function() {
+            this.form.submit();
+        });
+        
+        document.getElementById('isBestSeller')?.addEventListener('change', function() {
+            this.form.submit();
+        });
+        
+        document.getElementById('isNew')?.addEventListener('change', function() {
+            this.form.submit();
+        });
+        
+        document.getElementById('isHot')?.addEventListener('change', function() {
+            this.form.submit();
+        });
+        
+        document.getElementById('isTodayDeal')?.addEventListener('change', function() {
+            this.form.submit();
+        });
+        
+        // Add to Cart functionality
+        async function addToCart(productId) {
+            try {
+                // Get CSRF token
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || 
+                             document.querySelector('meta[name="__RequestVerificationToken"]')?.content || '';
+                
+                // First, get the product's default SKU
+                const skuResponse = await fetch(`/api/products/${productId}/default-sku`);
+                let skuId;
+                
+                if (skuResponse.ok) {
+                    const skuData = await skuResponse.json();
+                    skuId = skuData.skuId;
+                } else {
+                    // Fallback: assume SKU ID pattern (this is not ideal but works with current seeding)
+                    skuId = productId; // This assumes SKU IDs match product IDs from seeding
+                }
+                
+                // Add to cart
+                const response = await fetch('/Cart/AddItem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({
+                        productId: productId,
+                        skuId: skuId,
+                        quantity: 1
+                    })
+                });
+                
+                if (response.status === 401) {
+                    // User needs to login
+                    showNotification('Please login to add items to your cart.', 'info');
+                    setTimeout(() => {
+                        window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+                    }, 2000);
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('Product added to cart successfully!', 'success');
+                    updateCartCount(data.cartCount);
+                } else {
+                    showNotification(data.message || 'Failed to add item to cart.', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                showNotification('An error occurred while adding item to cart.', 'error');
+            }
+        }
+        
+        // Helper function to show notifications
+        function showNotification(message, type) {
+            // Remove any existing notifications
+            const existingNotifications = document.querySelectorAll('.cart-notification');
+            existingNotifications.forEach(n => n.remove());
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : type === 'info' ? 'info' : 'danger'} alert-dismissible fade show position-fixed cart-notification`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 400px;';
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'info' ? 'info-circle' : 'exclamation-circle'}"></i>
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+        
+        // Helper function to update cart count in navigation
+        function updateCartCount(count) {
+            const cartCountElements = document.querySelectorAll('.cart-count, .cart-item-count');
+            cartCountElements.forEach(element => {
+                if (element) {
+                    element.textContent = count || '0';
+                    element.style.display = (count && count > 0) ? 'inline' : 'none';
+                }
+            });
+        }
+    </script>
+}
+
+@section Styles {
+<style>
+    /* Filter Sidebar Styling - Admin Dashboard Style */
+    .filter-sidebar {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        overflow: hidden;
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+        margin: 20px;
+    }
+    
+    .filter-header {
+        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .filter-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    /* Enhanced Product Card Styling */
+    .product-card {
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #fff;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .product-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+        border-color: #007bff;
+    }
+    
+    .product-image-container {
+        position: relative;
+        overflow: hidden;
+        background: #f8f9fa;
+        padding: 1rem;
+    }
+    
+    .product-image {
+        width: 100%;
+        height: 220px;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+        border-radius: 8px;
+    }
+    
+    .product-card:hover .product-image {
+        transform: scale(1.05);
+    }
+    
+    .product-badges {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .product-card-body {
+        padding: 1.25rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .product-brand {
+        font-size: 0.8rem;
+        color: #6c757d;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .product-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 2.8rem;
+    }
+    
+    .product-description {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        flex-grow: 1;
+    }
+    
+    .product-pricing {
+        margin-bottom: 1rem;
+    }
+    
+    .product-price {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #007bff;
+        margin-bottom: 0.25rem;
+    }
+    
+    .product-compare-price {
+        font-size: 1rem;
+        color: #6c757d;
+        text-decoration: line-through;
+        margin-right: 0.5rem;
+    }
+    
+    .product-discount {
+        font-size: 0.8rem;
+        color: #28a745;
+        font-weight: 600;
+    }
+    
+    .product-stock {
+        font-size: 0.85rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stock-available {
+        color: #28a745;
+        font-weight: 500;
+    }
+    
+    .stock-low {
+        color: #ffc107;
+        font-weight: 500;
+    }
+    
+    .stock-out {
+        color: #dc3545;
+        font-weight: 500;
+    }
+    
+    .product-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: auto;
+    }
+    
+    .btn-add-cart {
+        flex: 1;
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+    
+    .btn-add-cart:hover {
+        background: linear-gradient(135deg, #0056b3, #004085);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        color: white;
+    }
+    
+    .btn-add-cart:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .btn-view-details {
+        background: transparent;
+        border: 2px solid #007bff;
+        color: #007bff;
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-view-details:hover {
+        background: #007bff;
+        color: white;
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+    
+    /* Enhanced Badge Styles */
+    .badge-deal {
+        background: linear-gradient(135deg, #ff6b35, #e55a2b);
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(255,107,53,0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge-hot {
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(231,76,60,0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge-new {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(46,204,113,0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .badge-sale {
+        background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(155,89,182,0.3);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .product-card-body {
+            padding: 1rem;
+        }
+        
+        .product-image {
+            height: 180px;
+        }
+        
+        .product-actions {
+            flex-direction: column;
+        }
+        
+        .btn-add-cart,
+        .btn-view-details {
+            width: 100%;
+        }
+    }
+    
+    /* Grid layout improvements */
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    @@media (max-width: 576px) {
+        .products-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+    }
+</style>
+}

@@ -1,0 +1,776 @@
+@model List<AccessoryWorld.ViewModels.StockWriteOffViewModel>
+@{
+    ViewData["Title"] = "Stock Write-offs";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    :root {
+        --admin-primary: #2c3e50;
+        --admin-secondary: #34495e;
+        --admin-accent: #3498db;
+        --admin-success: #27ae60;
+        --admin-warning: #f39c12;
+        --admin-danger: #e74c3c;
+        --admin-light: #ecf0f1;
+        --admin-dark: #2c3e50;
+    }
+
+    .admin-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 0;
+    }
+
+    .admin-sidebar {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        margin: 20px;
+        padding: 0;
+        height: calc(100vh - 40px);
+        overflow-y: auto;
+    }
+
+    .admin-sidebar-header {
+        background: linear-gradient(135deg, var(--admin-primary), var(--admin-secondary));
+        color: white;
+        padding: 25px 20px;
+        border-radius: 15px 15px 0 0;
+        text-align: center;
+    }
+
+    .admin-sidebar-header h4 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.2rem;
+    }
+
+    .admin-nav {
+        padding: 20px 0;
+    }
+
+    .admin-nav-item {
+        margin: 0 15px 8px 15px;
+    }
+
+    .admin-nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        color: var(--admin-dark);
+        text-decoration: none;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .admin-nav-link:hover {
+        background: linear-gradient(135deg, var(--admin-accent), #5dade2);
+        color: white;
+        transform: translateX(5px);
+    }
+
+    .admin-nav-link.active {
+        background: linear-gradient(135deg, var(--admin-primary), var(--admin-secondary));
+        color: white;
+    }
+
+    .admin-nav-link i {
+        width: 20px;
+        margin-right: 12px;
+        text-align: center;
+    }
+
+    .admin-content {
+        padding: 20px;
+    }
+
+    .admin-content-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border: none;
+        margin-bottom: 20px;
+    }
+
+    .writeoff-reason-expired { border-left: 4px solid #ffc107; }
+    .writeoff-reason-damaged { border-left: 4px solid #dc3545; }
+    .writeoff-reason-defective { border-left: 4px solid #fd7e14; }
+    .writeoff-reason-lost { border-left: 4px solid #6c757d; }
+    .writeoff-reason-obsolete { border-left: 4px solid #6f42c1; }
+    .writeoff-reason-other { border-left: 4px solid #20c997; }
+
+    .status-pending { background-color: #ffc107; color: #000; }
+    .status-approved { background-color: #198754; }
+    .status-rejected { background-color: #dc3545; }
+    .status-completed { background-color: #0d6efd; }
+
+    .cost-impact {
+        font-weight: bold;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+    }
+
+    .cost-high { background-color: #f8d7da; color: #721c24; }
+    .cost-medium { background-color: #fff3cd; color: #856404; }
+    .cost-low { background-color: #d1ecf1; color: #0c5460; }
+</style>
+
+<div class="admin-container">
+    <div class="row g-0">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="admin-sidebar">
+                <div class="admin-sidebar-header">
+                    <h4><i class="fas fa-tachometer-alt me-2"></i>Admin Panel</h4>
+                </div>
+                <nav class="admin-nav">
+                    <ul class="list-unstyled mb-0">
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Dashboard", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-home"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Orders", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Orders</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Products", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-box"></i>
+                                <span>Products</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Users", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-users"></i>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Inventory", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-warehouse"></i>
+                                <span>Inventory</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("PurchaseOrders", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-file-invoice"></i>
+                                <span>Purchase Orders</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("StockWriteOffs", "Admin")" class="admin-nav-link active">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>Stock Write-offs</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Reports", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Reports</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Settings", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="admin-content">
+                <div class="admin-content-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 class="mb-0">Stock Write-offs</h2>
+                            <div class="btn-toolbar">
+                                <button type="button" class="btn btn-success me-2" onclick="exportWriteOffs()">
+                                    <i class="fas fa-download"></i> Export
+                                </button>
+                                <button class="btn btn-primary" onclick="createWriteOff()">
+                                    <i class="fas fa-plus"></i> Create Write-off
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Write-off Stats -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card text-white bg-warning">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title">@ViewBag.PendingWriteOffs</h4>
+                                                <p class="card-text">Pending</p>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-clock fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-white bg-success">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title">@ViewBag.ApprovedWriteOffs</h4>
+                                                <p class="card-text">Approved</p>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-check fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-white bg-primary">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title">@ViewBag.CompletedWriteOffs</h4>
+                                                <p class="card-text">Completed</p>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-check-double fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card text-white bg-danger">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <h4 class="card-title">R @ViewBag.TotalWriteOffValue</h4>
+                                                <p class="card-text">Total Value</p>
+                                            </div>
+                                            <div class="align-self-center">
+                                                <i class="fas fa-money-bill-wave fa-2x"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Search and Filter Bar -->
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <form method="get" class="row g-3">
+                                    <div class="col-md-3">
+                                        <input type="text" class="form-control" name="search" placeholder="Search SKU, Product, Reference..." value="@ViewBag.SearchTerm">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <select class="form-select" name="status">
+                                            <option value="">All Status</option>
+                                            <option value="pending" selected="@(ViewBag.StatusFilter == "pending")">Pending</option>
+                                            <option value="approved" selected="@(ViewBag.StatusFilter == "approved")">Approved</option>
+                                            <option value="rejected" selected="@(ViewBag.StatusFilter == "rejected")">Rejected</option>
+                                            <option value="completed" selected="@(ViewBag.StatusFilter == "completed")">Completed</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <select class="form-select" name="reason">
+                                            <option value="">All Reasons</option>
+                                            <option value="expired" selected="@(ViewBag.ReasonFilter == "expired")">Expired</option>
+                                            <option value="damaged" selected="@(ViewBag.ReasonFilter == "damaged")">Damaged</option>
+                                            <option value="defective" selected="@(ViewBag.ReasonFilter == "defective")">Defective</option>
+                                            <option value="lost" selected="@(ViewBag.ReasonFilter == "lost")">Lost</option>
+                                            <option value="obsolete" selected="@(ViewBag.ReasonFilter == "obsolete")">Obsolete</option>
+                                            <option value="other" selected="@(ViewBag.ReasonFilter == "other")">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="date" class="form-control" name="dateFrom" value="@ViewBag.DateFrom">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-filter me-1"></i>Filter
+                    </button>
+                                        <a href="@Url.Action("StockWriteOffs")" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-1"></i>Clear
+                </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Write-offs Table -->
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Reference</th>
+                                                <th>Product</th>
+                                                <th>Quantity</th>
+                                                <th>Unit Cost</th>
+                                                <th>Total Value</th>
+                                                <th>Reason</th>
+                                                <th>Date Created</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (Model != null)
+                                            {
+                                                @foreach (var writeOff in Model)
+                                                {
+                                                    <tr class="writeoff-reason-@writeOff.Reason.ToLower()">
+                                                        <td>
+                                                            <strong>@writeOff.ReferenceNumber</strong>
+                                                        </td>
+                                                        <td>
+                                                            <div class="d-flex align-items-center">
+                                                                @if (!string.IsNullOrEmpty(writeOff.ImageUrl))
+                                                                {
+                                                                    <img src="@writeOff.ImageUrl" alt="@writeOff.ProductName" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                                                }
+                                                                <div>
+                                                                    <strong>@writeOff.ProductName</strong><br>
+                                                                    <small class="text-muted">SKU: @writeOff.SKUCode</small>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-danger">@writeOff.Quantity</span>
+                                                        </td>
+                                                        <td>R @writeOff.UnitCost.ToString("N2")</td>
+                                                        <td>
+                                                            <span class="cost-impact cost-@(writeOff.TotalValue > 1000 ? "high" : writeOff.TotalValue > 500 ? "medium" : "low")">
+                                                                R @writeOff.TotalValue.ToString("N2")
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-@(writeOff.Reason.ToLower() == "expired" ? "warning" : writeOff.Reason.ToLower() == "damaged" ? "danger" : writeOff.Reason.ToLower() == "defective" ? "warning" : "secondary")">
+                                                                @writeOff.Reason
+                                                            </span>
+                                                        </td>
+                                                        <td>@writeOff.CreatedDate.ToString("dd/MM/yyyy")</td>
+                                                        <td>
+                                                            <span class="badge status-@writeOff.Status.ToLower()">@writeOff.Status</span>
+                                                        </td>
+                                                        <td>
+                                                            <div class="btn-group" role="group">
+                                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewWriteOff('@writeOff.Id')" title="View Details">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </button>
+                                                                @if (writeOff.Status.ToLower() == "pending")
+                                                                {
+                                                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="approveWriteOff('@writeOff.Id')" title="Approve">
+                                                                        <i class="fas fa-check"></i>
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="rejectWriteOff('@writeOff.Id')" title="Reject">
+                                                                        <i class="fas fa-times"></i>
+                                                                    </button>
+                                                                }
+                                                                @if (writeOff.Status.ToLower() == "approved")
+                                                                {
+                                                                    <button type="button" class="btn btn-sm btn-outline-info" onclick="completeWriteOff('@writeOff.Id')" title="Complete Write-off">
+                                                                        <i class="fas fa-check-double"></i>
+                                                                    </button>
+                                                                }
+                                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="printWriteOff('@writeOff.Id')" title="Print">
+                                                                    <i class="fas fa-print"></i>
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                @if (Model == null || !Model.Any())
+                                {
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-trash-alt fa-3x text-muted mb-3"></i>
+                                        <h5 class="text-muted">No stock write-offs found</h5>
+                                        <p class="text-muted">Create write-offs for expired, damaged, or defective inventory.</p>
+                                        <button class="btn btn-primary" onclick="createWriteOff()">
+                                            <i class="fas fa-plus"></i> Create Write-off
+                                        </button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Pagination -->
+                        @if (ViewBag.TotalPages > 1)
+                        {
+                            <nav aria-label="Write-offs pagination" class="mt-4">
+                                <ul class="pagination justify-content-center">
+                                    @if (ViewBag.CurrentPage > 1)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=@(ViewBag.CurrentPage - 1)&search=@ViewBag.SearchTerm&status=@ViewBag.StatusFilter&reason=@ViewBag.ReasonFilter&dateFrom=@ViewBag.DateFrom">Previous</a>
+                                        </li>
+                                    }
+
+                                    @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
+                                    {
+                                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                            <a class="page-link" href="?page=@i&search=@ViewBag.SearchTerm&status=@ViewBag.StatusFilter&reason=@ViewBag.ReasonFilter&dateFrom=@ViewBag.DateFrom">@i</a>
+                                        </li>
+                                    }
+
+                                    @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page=@(ViewBag.CurrentPage + 1)&search=@ViewBag.SearchTerm&status=@ViewBag.StatusFilter&reason=@ViewBag.ReasonFilter&dateFrom=@ViewBag.DateFrom">Next</a>
+                                        </li>
+                                    }
+                                </ul>
+                            </nav>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Write-off Details Modal -->
+<div class="modal fade" id="writeOffModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Write-off Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="writeOffContent">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" id="approveBtn" style="display: none;" onclick="approveCurrentWriteOff()">
+                        <i class="fas fa-check me-1"></i>Approve
+                    </button>
+                    <button type="button" class="btn btn-danger" id="rejectBtn" style="display: none;" onclick="rejectCurrentWriteOff()">
+                        <i class="fas fa-times me-1"></i>Reject
+                    </button>
+                    <button type="button" class="btn btn-info" id="completeBtn" style="display: none;" onclick="completeCurrentWriteOff()">
+                        <i class="fas fa-check-circle me-1"></i>Complete
+                    </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Write-off Modal -->
+<div class="modal fade" id="createWriteOffModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Stock Write-off</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createWriteOffForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Product/SKU <span class="text-danger">*</span></label>
+                                <select class="form-select" name="SKUId" id="skuSelect" required>
+                                    <option value="">Select product...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Quantity to Write-off <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" name="Quantity" min="1" required>
+                                <small class="form-text text-muted">Available: <span id="availableStock">-</span></small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Reason <span class="text-danger">*</span></label>
+                                <select class="form-select" name="Reason" required>
+                                    <option value="">Select reason...</option>
+                                    <option value="Expired">Expired</option>
+                                    <option value="Damaged">Damaged</option>
+                                    <option value="Defective">Defective</option>
+                                    <option value="Lost">Lost</option>
+                                    <option value="Obsolete">Obsolete</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Unit Cost <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" name="UnitCost" step="0.01" min="0" required readonly>
+                                <small class="form-text text-muted">Auto-filled from product cost</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description/Notes</label>
+                        <textarea class="form-control" name="Description" rows="3" placeholder="Provide details about the write-off reason..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Supporting Documents</label>
+                        <input type="file" class="form-control" name="SupportingDocuments" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
+                        <small class="form-text text-muted">Upload photos or documents supporting this write-off</small>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Total Write-off Value:</strong> R <span id="totalValue">0.00</span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitWriteOff()">
+                        <i class="fas fa-plus me-1"></i>Create Write-off
+                    </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentWriteOffId = null;
+        let availableProducts = [];
+
+        // Load available products for write-off
+        function loadAvailableProducts() {
+            fetch('@Url.Action("GetAvailableProductsForWriteOff")')
+                .then(response => response.json())
+                .then(data => {
+                    availableProducts = data;
+                    const select = document.getElementById('skuSelect');
+                    select.innerHTML = '<option value="">Select product...</option>';
+                    data.forEach(product => {
+                        select.innerHTML += `<option value="${product.skuId}" data-cost="${product.unitCost}" data-stock="${product.availableStock}">${product.productName} - ${product.skuCode} (Stock: ${product.availableStock})</option>`;
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading products:', error);
+                });
+        }
+
+        function createWriteOff() {
+            loadAvailableProducts();
+            const modal = new bootstrap.Modal(document.getElementById('createWriteOffModal'));
+            modal.show();
+        }
+
+        // Handle product selection
+        document.addEventListener('DOMContentLoaded', function() {
+            const skuSelect = document.getElementById('skuSelect');
+            const quantityInput = document.querySelector('input[name="Quantity"]');
+            const unitCostInput = document.querySelector('input[name="UnitCost"]');
+            const availableStockSpan = document.getElementById('availableStock');
+            const totalValueSpan = document.getElementById('totalValue');
+
+            if (skuSelect) {
+                skuSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    if (selectedOption.value) {
+                        const cost = parseFloat(selectedOption.dataset.cost) || 0;
+                        const stock = parseInt(selectedOption.dataset.stock) || 0;
+                        
+                        unitCostInput.value = cost.toFixed(2);
+                        availableStockSpan.textContent = stock;
+                        quantityInput.max = stock;
+                        
+                        updateTotalValue();
+                    } else {
+                        unitCostInput.value = '';
+                        availableStockSpan.textContent = '-';
+                        quantityInput.max = '';
+                        totalValueSpan.textContent = '0.00';
+                    }
+                });
+            }
+
+            if (quantityInput) {
+                quantityInput.addEventListener('input', updateTotalValue);
+            }
+        });
+
+        function updateTotalValue() {
+            const quantity = parseFloat(document.querySelector('input[name="Quantity"]').value) || 0;
+            const unitCost = parseFloat(document.querySelector('input[name="UnitCost"]').value) || 0;
+            const totalValue = quantity * unitCost;
+            document.getElementById('totalValue').textContent = totalValue.toFixed(2);
+        }
+
+        function submitWriteOff() {
+            const form = document.getElementById('createWriteOffForm');
+            const formData = new FormData(form);
+
+            fetch('@Url.Action("CreateStockWriteOff")', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Stock write-off created successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while creating the write-off.');
+                });
+        }
+
+        function viewWriteOff(writeOffId) {
+            currentWriteOffId = writeOffId;
+            const modal = new bootstrap.Modal(document.getElementById('writeOffModal'));
+            modal.show();
+
+            fetch(`@Url.Action("GetWriteOffDetails")?id=${writeOffId}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayWriteOffDetails(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('writeOffContent').innerHTML = '<p class="text-danger text-center">Error loading write-off details.</p>';
+                });
+        }
+
+        function displayWriteOffDetails(writeOff) {
+            const canApprove = writeOff.status.toLowerCase() === 'pending';
+            const canComplete = writeOff.status.toLowerCase() === 'approved';
+
+            document.getElementById('approveBtn').style.display = canApprove ? 'inline-block' : 'none';
+            document.getElementById('rejectBtn').style.display = canApprove ? 'inline-block' : 'none';
+            document.getElementById('completeBtn').style.display = canComplete ? 'inline-block' : 'none';
+
+            const documentsHtml = writeOff.supportingDocuments && writeOff.supportingDocuments.length > 0 
+                ? writeOff.supportingDocuments.map(doc => `<a href="${doc.url}" target="_blank" class="btn btn-sm btn-outline-primary me-2">${doc.name}</a>`).join('')
+                : '<span class="text-muted">No documents attached</span>';
+
+            const html = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Write-off Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Reference:</strong></td><td>${writeOff.referenceNumber}</td></tr>
+                            <tr><td><strong>Status:</strong></td><td><span class="badge status-${writeOff.status.toLowerCase()}">${writeOff.status}</span></td></tr>
+                            <tr><td><strong>Reason:</strong></td><td><span class="badge bg-warning">${writeOff.reason}</span></td></tr>
+                            <tr><td><strong>Created Date:</strong></td><td>${new Date(writeOff.createdDate).toLocaleDateString()}</td></tr>
+                            <tr><td><strong>Created By:</strong></td><td>${writeOff.createdByUser}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Product Information</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>Product:</strong></td><td>${writeOff.productName}</td></tr>
+                            <tr><td><strong>SKU Code:</strong></td><td>${writeOff.skuCode}</td></tr>
+                            <tr><td><strong>Quantity:</strong></td><td>${writeOff.quantity}</td></tr>
+                            <tr><td><strong>Unit Cost:</strong></td><td>R ${writeOff.unitCost.toFixed(2)}</td></tr>
+                            <tr><td><strong>Total Value:</strong></td><td><strong>R ${writeOff.totalValue.toFixed(2)}</strong></td></tr>
+                        </table>
+                    </div>
+                </div>
+                <hr>
+                <h6>Description</h6>
+                <p>${writeOff.description || 'No description provided'}</p>
+                <h6>Supporting Documents</h6>
+                <div class="mb-3">${documentsHtml}</div>
+                ${writeOff.approvalNotes ? `<h6>Approval Notes</h6><p>${writeOff.approvalNotes}</p>` : ''}
+                ${writeOff.completionNotes ? `<h6>Completion Notes</h6><p>${writeOff.completionNotes}</p>` : ''}
+            `;
+
+            document.getElementById('writeOffContent').innerHTML = html;
+        }
+
+        function approveWriteOff(writeOffId) {
+            if (confirm('Are you sure you want to approve this write-off?')) {
+                updateWriteOffStatus(writeOffId, 'approved');
+            }
+        }
+
+        function rejectWriteOff(writeOffId) {
+            const reason = prompt('Please provide a reason for rejection:');
+            if (reason) {
+                updateWriteOffStatus(writeOffId, 'rejected', reason);
+            }
+        }
+
+        function completeWriteOff(writeOffId) {
+            if (confirm('Are you sure you want to complete this write-off? This will permanently remove the stock.')) {
+                updateWriteOffStatus(writeOffId, 'completed');
+            }
+        }
+
+        function approveCurrentWriteOff() {
+            if (currentWriteOffId) approveWriteOff(currentWriteOffId);
+        }
+
+        function rejectCurrentWriteOff() {
+            if (currentWriteOffId) rejectWriteOff(currentWriteOffId);
+        }
+
+        function completeCurrentWriteOff() {
+            if (currentWriteOffId) completeWriteOff(currentWriteOffId);
+        }
+
+        function updateWriteOffStatus(writeOffId, status, notes = '') {
+            fetch('@Url.Action("UpdateWriteOffStatus")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: writeOffId, status: status, notes: notes })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Write-off ${status} successfully!`);
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while updating the write-off.');
+                });
+        }
+
+        function printWriteOff(writeOffId) {
+            window.open(`@Url.Action("PrintWriteOff")?id=${writeOffId}`, '_blank');
+        }
+
+        function exportWriteOffs() {
+            window.location.href = '@Url.Action("ExportStockWriteOffs", "Admin")';
+        }
+    </script>
+}

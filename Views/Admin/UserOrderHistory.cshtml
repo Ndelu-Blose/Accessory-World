@@ -1,0 +1,484 @@
+@model List<AccessoryWorld.ViewModels.AdminOrderViewModel>
+@{
+    ViewData["Title"] = "User Order History";
+    var userId = ViewBag.UserId as string;
+    var userName = ViewBag.UserName as string;
+    var userEmail = ViewBag.UserEmail as string;
+}
+
+<style>
+    .admin-container {
+        background-color: #f8f9fa;
+        min-height: 100vh;
+        padding: 20px 0;
+    }
+    
+    .admin-sidebar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .admin-sidebar .card-header {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: white;
+    }
+    
+    .admin-sidebar .list-group-item {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.8);
+        transition: all 0.3s ease;
+    }
+    
+    .admin-sidebar .list-group-item:hover,
+    .admin-sidebar .list-group-item.active {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateX(5px);
+    }
+    
+    .main-content {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+    }
+    
+    .page-header {
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .order-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .table th {
+        background: #495057;
+        color: white;
+        border: none;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        border-color: #e9ecef;
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-processing { background: #cce5ff; color: #004085; }
+    .status-shipped { background: #d4edda; color: #155724; }
+    .status-delivered { background: #d1ecf1; color: #0c5460; }
+    .status-cancelled { background: #f8d7da; color: #721c24; }
+    .status-completed { background: #d4edda; color: #155724; }
+    
+    .action-btn {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        margin: 2px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-view { background: #17a2b8; color: white; }
+    .btn-view:hover { background: #138496; color: white; }
+    
+    .pagination {
+        justify-content: center;
+        margin-top: 30px;
+    }
+    
+    .user-info-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="admin-container">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Admin Navigation Sidebar -->
+            <div class="col-md-2">
+                <div class="card admin-sidebar">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Admin Panel</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="@Url.Action("Dashboard", "Admin")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                        <a href="@Url.Action("Orders", "Admin")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-shopping-cart me-2"></i>Orders
+                        </a>
+                        <a href="@Url.Action("Products", "Admin")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-box me-2"></i>Products
+                        </a>
+                        <a href="@Url.Action("Users", "Admin")" class="list-group-item list-group-item-action active">
+                            <i class="fas fa-users me-2"></i>Users
+                        </a>
+                        <a href="@Url.Action("Inventory", "Admin")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-warehouse me-2"></i>Inventory
+                        </a>
+                        <a href="@Url.Action("Reports", "Admin")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-chart-bar me-2"></i>Reports
+                        </a>
+                        <a href="@Url.Action("Settings", "Admin")" class="list-group-item list-group-item-action">
+                            <i class="fas fa-cog me-2"></i>Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10">
+                <div class="main-content">
+                    <!-- Page Header -->
+                    <div class="page-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2><i class="fas fa-shopping-bag me-2"></i>Order History</h2>
+                            <p class="text-muted mb-0">Manage user order history and track customer activity</p>
+                        </div>
+                        <div>
+                            <a href="@Url.Action("Users", "Admin")" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Back to Users
+                            </a>
+                            <button class="btn btn-primary" onclick="exportOrders()">
+                                <i class="fas fa-download me-2"></i>Export Orders
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- User Information Card -->
+                    <div class="user-info-card">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h4 class="mb-1"><i class="fas fa-user me-2"></i>@userName</h4>
+                                <p class="mb-0"><i class="fas fa-envelope me-2"></i>@userEmail</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <div class="text-center">
+                                        <h5 class="mb-0" id="totalOrders">@ViewBag.TotalOrders</h5>
+                                        <small>Total Orders</small>
+                                    </div>
+                                    <div class="text-center ms-3">
+                                        <h5 class="mb-0" id="totalSpent">R @ViewBag.TotalSpent?.ToString("N2")</h5>
+                                        <small>Total Spent</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Section -->
+                    <div class="filter-section">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label class="form-label">Search Orders</label>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Order number, product...">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="statusFilter">
+                                    <option value="">All Status</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Processing">Processing</option>
+                                    <option value="Shipped">Shipped</option>
+                                    <option value="Delivered">Delivered</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Fulfillment</label>
+                                <select class="form-select" id="fulfillmentFilter">
+                                    <option value="">All Methods</option>
+                                    <option value="DELIVERY">Delivery</option>
+                                    <option value="PICKUP">Pickup</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="startDate">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="endDate">
+                            </div>
+                            <div class="col-md-1 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" onclick="filterOrders()">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stats-card text-center">
+                                <h3 id="pendingCount">@ViewBag.PendingOrders</h3>
+                                <p class="mb-0">Pending Orders</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card text-center">
+                                <h3 id="processingCount">@ViewBag.ProcessingOrders</h3>
+                                <p class="mb-0">Processing Orders</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card text-center">
+                                <h3 id="completedCount">@ViewBag.CompletedOrders</h3>
+                                <p class="mb-0">Completed Orders</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card text-center">
+                                <h3 id="totalValue">R @ViewBag.TotalOrderValue?.ToString("N2")</h3>
+                                <p class="mb-0">Total Value</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Orders Table -->
+                    <div class="order-table">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="ordersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Fulfillment</th>
+                                        <th>Items</th>
+                                        <th>Total</th>
+                                        <th>Tracking</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model != null && Model.Any())
+                                    {
+                                        @foreach (var order in Model)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <strong>@order.OrderNumber</strong>
+                                                </td>
+                                                <td>
+                                                    <div>@order.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                                    <small class="text-muted">@order.CreatedAt.ToString("HH:mm")</small>
+                                                </td>
+                                                <td>
+                                                    <span class="status-badge status-@order.Status.ToLower()">@order.Status</span>
+                                                </td>
+                                                <td>
+                                                    <i class="fas fa-@(order.FulfilmentMethod == "DELIVERY" ? "truck" : "store") me-1"></i>
+                                                    @order.FulfilmentMethod
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-secondary">@order.ItemCount items</span>
+                                                </td>
+                                                <td>
+                                                    <strong>@order.Currency @order.Total.ToString("N2")</strong>
+                                                </td>
+                                                <td>
+                                                    @if (!string.IsNullOrEmpty(order.TrackingNumber))
+                                                    {
+                                                        <span class="badge bg-info">@order.TrackingNumber</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">-</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <button class="btn btn-sm action-btn btn-view" onclick="viewOrderDetails(@order.Id)" title="View Details">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4">
+                                                <div class="text-muted">
+                                                    <i class="fas fa-shopping-bag fa-3x mb-3"></i>
+                                                    <h5>No Orders Found</h5>
+                                                    <p>This user hasn't placed any orders yet.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    @if (ViewBag.TotalPages > 1)
+                    {
+                        <nav aria-label="Orders pagination">
+                            <ul class="pagination">
+                                @if (ViewBag.CurrentPage > 1)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="javascript:void(0)" onclick="loadPage(@(ViewBag.CurrentPage - 1))">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                }
+
+                                @for (int i = Math.Max(1, ViewBag.CurrentPage - 2); i <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link" href="javascript:void(0)" onclick="loadPage(@i)">@i</a>
+                                    </li>
+                                }
+
+                                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="javascript:void(0)" onclick="loadPage(@(ViewBag.CurrentPage + 1))">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Initialize tooltips
+        $('[data-bs-toggle="tooltip"]').tooltip();
+        
+        // Auto-filter on input change
+        $('#searchInput').on('input', debounce(filterOrders, 500));
+        $('#statusFilter, #fulfillmentFilter').on('change', filterOrders);
+        $('#startDate, #endDate').on('change', filterOrders);
+    });
+
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function filterOrders() {
+        const search = $('#searchInput').val();
+        const status = $('#statusFilter').val();
+        const fulfillment = $('#fulfillmentFilter').val();
+        const startDate = $('#startDate').val();
+        const endDate = $('#endDate').val();
+        const userId = '@userId';
+
+        const params = new URLSearchParams({
+            userId: userId,
+            search: search,
+            status: status,
+            fulfillmentMethod: fulfillment,
+            startDate: startDate,
+            endDate: endDate,
+            page: 1
+        });
+
+        window.location.href = `@Url.Action("UserOrderHistory", "Admin")?${params.toString()}`;
+    }
+
+    function loadPage(page) {
+        const search = $('#searchInput').val();
+        const status = $('#statusFilter').val();
+        const fulfillment = $('#fulfillmentFilter').val();
+        const startDate = $('#startDate').val();
+        const endDate = $('#endDate').val();
+        const userId = '@userId';
+
+        const params = new URLSearchParams({
+            userId: userId,
+            search: search,
+            status: status,
+            fulfillmentMethod: fulfillment,
+            startDate: startDate,
+            endDate: endDate,
+            page: page
+        });
+
+        window.location.href = `@Url.Action("UserOrderHistory", "Admin")?${params.toString()}`;
+    }
+
+    function viewOrderDetails(orderId) {
+        window.open(`@Url.Action("OrderDetails", "Admin")/${orderId}`, '_blank');
+    }
+
+    function exportOrders() {
+        const search = $('#searchInput').val();
+        const status = $('#statusFilter').val();
+        const fulfillment = $('#fulfillmentFilter').val();
+        const startDate = $('#startDate').val();
+        const endDate = $('#endDate').val();
+        const userId = '@userId';
+
+        const params = new URLSearchParams({
+            userId: userId,
+            search: search,
+            status: status,
+            fulfillmentMethod: fulfillment,
+            startDate: startDate,
+            endDate: endDate
+        });
+
+        window.location.href = `@Url.Action("ExportUserOrders", "Admin")?${params.toString()}`;
+    }
+</script>

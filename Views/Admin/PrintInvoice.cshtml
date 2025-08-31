@@ -1,0 +1,269 @@
+@model AccessoryWorld.Models.Order
+@{
+    ViewData["Title"] = "Invoice - Order #" + Model.OrderNumber;
+    Layout = null; // Remove layout for printing
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            body {
+                font-size: 12px;
+            }
+            
+            .container {
+                max-width: none;
+                margin: 0;
+                padding: 0;
+            }
+            
+            .card {
+                border: none;
+                box-shadow: none;
+            }
+        }
+        
+        .invoice-header {
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .company-info {
+            text-align: right;
+        }
+        
+        .invoice-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .table th {
+            background-color: #007bff;
+            color: white;
+            border: none;
+        }
+        
+        .table td {
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .total-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            text-align: center;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <!-- Print Button -->
+        <div class="no-print mb-3">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print me-1"></i>Print Invoice
+            </button>
+            <button onclick="window.close()" class="btn btn-secondary ms-2">
+                <i class="fas fa-times me-1"></i>Close
+            </button>
+        </div>
+
+        <!-- Invoice Header -->
+        <div class="invoice-header">
+            <div class="row">
+                <div class="col-md-6">
+                    <h1 class="text-primary mb-3">INVOICE</h1>
+                    <h4>AccessoryWorld</h4>
+                    <p class="mb-1">123 Commerce Street</p>
+                    <p class="mb-1">Business District, City 12345</p>
+                    <p class="mb-1">Phone: (555) 123-4567</p>
+                    <p class="mb-0">Email: info@accessoryworld.com</p>
+                </div>
+                <div class="col-md-6 company-info">
+                    <h2 class="text-primary">#@Model.OrderNumber</h2>
+                    <p class="mb-1"><strong>Invoice Date:</strong> @DateTime.Now.ToString("MMM dd, yyyy")</p>
+                    <p class="mb-1"><strong>Order Date:</strong> @Model.CreatedAt.ToString("MMM dd, yyyy")</p>
+                    <p class="mb-0"><strong>Status:</strong> <span class="badge bg-@GetStatusBadgeClass(Model.Status)">@Model.Status</span></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer & Order Details -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="invoice-details">
+                    <h5 class="mb-3">Bill To:</h5>
+                    <p class="mb-1"><strong>@Model.User.FirstName @Model.User.LastName</strong></p>
+                    <p class="mb-1">@Model.User.Email</p>
+                    @if (!string.IsNullOrEmpty(Model.User.PhoneNumber))
+                    {
+                        <p class="mb-0">@Model.User.PhoneNumber</p>
+                    }
+                </div>
+            </div>
+            <div class="col-md-6">
+                @if (Model.ShippingAddress != null)
+                {
+                    <div class="invoice-details">
+                        <h5 class="mb-3">Ship To:</h5>
+                        <address class="mb-0">
+                            @Model.ShippingAddress.AddressLine1<br>
+                            @if (!string.IsNullOrEmpty(Model.ShippingAddress.AddressLine2))
+                            {
+                                @Model.ShippingAddress.AddressLine2<br>
+                            }
+                            @Model.ShippingAddress.City, @Model.ShippingAddress.Province @Model.ShippingAddress.PostalCode<br>
+                            @Model.ShippingAddress.Country
+                        </address>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Order Items Table -->
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>SKU</th>
+                        <th class="text-center">Qty</th>
+                        <th class="text-end">Unit Price</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.OrderItems)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-bold">@item.SKU.Product.Name</div>
+                                @if (!string.IsNullOrEmpty(item.SKU.Variant))
+                                {
+                                    <small class="text-muted">@item.SKU.Variant</small>
+                                }
+                            </td>
+                            <td>@item.SKU.SKUCode</td>
+                            <td class="text-center">@item.Quantity</td>
+                            <td class="text-end">@item.UnitPrice.ToString("C")</td>
+                            <td class="text-end">@item.LineTotal.ToString("C")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="row">
+            <div class="col-md-6">
+                <!-- Payment Information -->
+                <div class="invoice-details">
+                    <h5 class="mb-3">Payment Information:</h5>
+                    <p class="mb-1"><strong>Fulfillment Method:</strong> @Model.FulfilmentMethod</p>
+                    <p class="mb-1"><strong>Payment Status:</strong> 
+                        @if (Model.Payments.Any(p => p.Status == "COMPLETED"))
+                        {
+                            <span class="badge bg-success">Paid</span>
+                        }
+                        else if (Model.Payments.Any(p => p.Status == "PENDING"))
+                        {
+                            <span class="badge bg-warning">Pending</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger">Unpaid</span>
+                        }
+                    </p>
+                    @if (Model.Shipment != null && !string.IsNullOrEmpty(Model.Shipment.TrackingNumber))
+                    {
+                        <p class="mb-0"><strong>Tracking Number:</strong> @Model.Shipment.TrackingNumber</p>
+                    }
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="total-section">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>@Model.SubTotal.ToString("C")</span>
+                    </div>
+                    @if (Model.DiscountAmount > 0)
+                    {
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>Discount:</span>
+                            <span>-@Model.DiscountAmount.ToString("C")</span>
+                        </div>
+                    }
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping:</span>
+                        <span>@Model.ShippingFee.ToString("C")</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Tax:</span>
+                        <span>@Model.TaxAmount.ToString("C")</span>
+                    </div>
+                    @if (Model.CreditNoteAmount > 0)
+                    {
+                        <div class="d-flex justify-content-between mb-2 text-info">
+                            <span>Credit Note:</span>
+                            <span>-@Model.CreditNoteAmount.ToString("C")</span>
+                        </div>
+                    }
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold fs-4">
+                        <span>Total:</span>
+                        <span>@Model.Total.ToString("C")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p class="mb-1">Thank you for your business!</p>
+            <p class="mb-1">For questions about this invoice, contact us at info@accessoryworld.com or (555) 123-4567</p>
+            <p class="mb-0">AccessoryWorld - Your trusted accessory partner</p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-print when page loads (optional)
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>
+
+@functions {
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "warning",
+            "Processing" => "info",
+            "Shipped" => "primary",
+            "Delivered" => "success",
+            "Cancelled" => "danger",
+            "Refunded" => "secondary",
+            _ => "light"
+        };
+    }
+}

@@ -1,0 +1,913 @@
+@model AccessoryWorld.ViewModels.ProductPromotionsViewModel
+@{
+    ViewData["Title"] = "Product Promotions";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Product Promotions</h4>
+                    <div>
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addPromotionModal">
+                            <i class="fas fa-plus"></i> Add Promotion
+                        </button>
+                        <button type="button" class="btn btn-info" onclick="exportPromotions()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Promotion Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0" id="totalPromotions">@Model.TotalPromotions</h3>
+                                    <small>Total Promotions</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0" id="activePromotions">@Model.ActivePromotions</h3>
+                                    <small>Active Promotions</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0" id="expiringPromotions">@Model.ExpiringPromotions</h3>
+                                    <small>Expiring Soon</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0" id="totalSavings">$@Model.TotalSavings</h3>
+                                    <small>Total Savings</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filter -->
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <div class="input-group">
+                                <input type="text" id="searchPromotions" class="form-control" placeholder="Search promotions...">
+                                <button class="btn btn-outline-secondary" type="button" onclick="searchPromotions()">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="statusFilter" class="form-select">
+                                <option value="">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="expired">Expired</option>
+                                <option value="scheduled">Scheduled</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="typeFilter" class="form-select">
+                                <option value="">All Types</option>
+                                <option value="percentage">Percentage</option>
+                                <option value="fixed">Fixed Amount</option>
+                                <option value="bogo">Buy One Get One</option>
+                                <option value="bundle">Bundle Deal</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select id="sortBy" class="form-select">
+                                <option value="created">Sort by Created</option>
+                                <option value="name">Sort by Name</option>
+                                <option value="discount">Sort by Discount</option>
+                                <option value="usage">Sort by Usage</option>
+                                <option value="expiry">Sort by Expiry</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" id="dateFilter" class="form-control" placeholder="Filter by date">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-primary" onclick="applyFilters()">
+                                <i class="fas fa-filter"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Promotions Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="promotionsTable">
+                            <thead>
+                                <tr>
+                                    <th width="5%">
+                                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th width="20%">Promotion Name</th>
+                                    <th width="10%">Type</th>
+                                    <th width="10%">Discount</th>
+                                    <th width="15%">Valid Period</th>
+                                    <th width="10%">Usage</th>
+                                    <th width="10%">Status</th>
+                                    <th width="10%">Performance</th>
+                                    <th width="10%">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="promotionsTableBody">
+                                <!-- Promotions will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Bulk Actions -->
+                    <div class="row mt-3" id="bulkActions" style="display: none;">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <span id="selectedCount">0</span> promotions selected
+                                <div class="float-end">
+                                    <button type="button" class="btn btn-sm btn-success" onclick="bulkActivate()">
+                                        <i class="fas fa-play"></i> Activate
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-warning" onclick="bulkDeactivate()">
+                                        <i class="fas fa-pause"></i> Deactivate
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="bulkDelete()">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav aria-label="Promotions pagination">
+                        <ul class="pagination justify-content-center" id="promotionsPagination">
+                            <!-- Pagination will be generated here -->
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Promotion Modal -->
+<div class="modal fade" id="addPromotionModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Promotion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addPromotionForm">
+                    <!-- Basic Information -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Basic Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="promotionName" class="form-label">Promotion Name *</label>
+                                        <input type="text" id="promotionName" class="form-control" placeholder="Enter promotion name" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="promotionCode" class="form-label">Promotion Code</label>
+                                        <div class="input-group">
+                                            <input type="text" id="promotionCode" class="form-control" placeholder="Enter or generate code">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="generateCode()">
+                                                <i class="fas fa-random"></i> Generate
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group mb-3">
+                                <label for="promotionDescription" class="form-label">Description</label>
+                                <textarea id="promotionDescription" class="form-control" rows="3" placeholder="Enter promotion description"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Discount Settings -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Discount Settings</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="discountType" class="form-label">Discount Type *</label>
+                                        <select id="discountType" class="form-select" onchange="toggleDiscountFields()" required>
+                                            <option value="">Select Type</option>
+                                            <option value="percentage">Percentage Off</option>
+                                            <option value="fixed">Fixed Amount Off</option>
+                                            <option value="bogo">Buy One Get One</option>
+                                            <option value="bundle">Bundle Deal</option>
+                                            <option value="free_shipping">Free Shipping</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4" id="discountValueField">
+                                    <div class="form-group mb-3">
+                                        <label for="discountValue" class="form-label">Discount Value *</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text" id="discountSymbol">%</span>
+                                            <input type="number" id="discountValue" class="form-control" placeholder="0" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4" id="maxDiscountField" style="display: none;">
+                                    <div class="form-group mb-3">
+                                        <label for="maxDiscount" class="form-label">Maximum Discount</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" id="maxDiscount" class="form-control" placeholder="0" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row" id="bogoFields" style="display: none;">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="buyQuantity" class="form-label">Buy Quantity</label>
+                                        <input type="number" id="buyQuantity" class="form-control" placeholder="1" min="1">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="getQuantity" class="form-label">Get Quantity</label>
+                                        <input type="number" id="getQuantity" class="form-control" placeholder="1" min="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Conditions -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Conditions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="minOrderAmount" class="form-label">Minimum Order Amount</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" id="minOrderAmount" class="form-control" placeholder="0" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="maxOrderAmount" class="form-label">Maximum Order Amount</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" id="maxOrderAmount" class="form-control" placeholder="No limit" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="applicableProducts" class="form-label">Applicable Products</label>
+                                        <select id="applicableProducts" class="form-select" multiple>
+                                            <!-- Products will be loaded here -->
+                                        </select>
+                                        <small class="text-muted">Leave empty for all products</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="applicableCategories" class="form-label">Applicable Categories</label>
+                                        <select id="applicableCategories" class="form-select" multiple>
+                                            <!-- Categories will be loaded here -->
+                                        </select>
+                                        <small class="text-muted">Leave empty for all categories</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Usage Limits -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Usage Limits</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="totalUsageLimit" class="form-label">Total Usage Limit</label>
+                                        <input type="number" id="totalUsageLimit" class="form-control" placeholder="Unlimited" min="1">
+                                        <small class="text-muted">Leave empty for unlimited</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="perUserLimit" class="form-label">Per User Limit</label>
+                                        <input type="number" id="perUserLimit" class="form-control" placeholder="Unlimited" min="1">
+                                        <small class="text-muted">Leave empty for unlimited</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="perOrderLimit" class="form-label">Per Order Limit</label>
+                                        <input type="number" id="perOrderLimit" class="form-control" placeholder="1" min="1" value="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Validity Period -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Validity Period</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="startDate" class="form-label">Start Date *</label>
+                                        <input type="datetime-local" id="startDate" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="endDate" class="form-label">End Date</label>
+                                        <input type="datetime-local" id="endDate" class="form-control">
+                                        <small class="text-muted">Leave empty for no expiry</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Settings -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Additional Settings</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" id="isActive" class="form-check-input" checked>
+                                        <label for="isActive" class="form-check-label">Active</label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" id="isPublic" class="form-check-input" checked>
+                                        <label for="isPublic" class="form-check-label">Public (Show on website)</label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" id="stackable" class="form-check-input">
+                                        <label for="stackable" class="form-check-label">Stackable with other promotions</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" id="requiresCode" class="form-check-input">
+                                        <label for="requiresCode" class="form-check-label">Requires promotion code</label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" id="autoApply" class="form-check-input">
+                                        <label for="autoApply" class="form-check-label">Auto-apply (no code needed)</label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" id="excludeSaleItems" class="form-check-input">
+                                        <label for="excludeSaleItems" class="form-check-label">Exclude sale items</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="savePromotion()">
+                    <i class="fas fa-save"></i> Save Promotion
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Promotion Details Modal -->
+<div class="modal fade" id="promotionDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Promotion Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="promotionDetailsContent">
+                <!-- Details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let selectedPromotions = [];
+        let currentPage = 1;
+        let pageSize = 10;
+
+        $(document).ready(function() {
+            loadPromotions();
+            loadProducts();
+            loadCategories();
+            setupEventHandlers();
+            setDefaultDates();
+        });
+
+        function setupEventHandlers() {
+            $('#searchPromotions').on('keypress', function(e) {
+                if (e.which === 13) {
+                    searchPromotions();
+                }
+            });
+
+            $('#requiresCode').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#autoApply').prop('checked', false);
+                }
+            });
+
+            $('#autoApply').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#requiresCode').prop('checked', false);
+                }
+            });
+        }
+
+        function setDefaultDates() {
+            const now = new Date();
+            const startDate = now.toISOString().slice(0, 16);
+            $('#startDate').val(startDate);
+        }
+
+        function toggleDiscountFields() {
+            const type = $('#discountType').val();
+            
+            $('#discountValueField').show();
+            $('#maxDiscountField').hide();
+            $('#bogoFields').hide();
+            
+            switch(type) {
+                case 'percentage':
+                    $('#discountSymbol').text('%');
+                    $('#maxDiscountField').show();
+                    $('#discountValue').attr('max', '100');
+                    break;
+                case 'fixed':
+                    $('#discountSymbol').text('$');
+                    $('#discountValue').removeAttr('max');
+                    break;
+                case 'bogo':
+                    $('#discountValueField').hide();
+                    $('#bogoFields').show();
+                    break;
+                case 'bundle':
+                    $('#discountSymbol').text('%');
+                    $('#discountValue').attr('max', '100');
+                    break;
+                case 'free_shipping':
+                    $('#discountValueField').hide();
+                    break;
+            }
+        }
+
+        function generateCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 8; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            $('#promotionCode').val(code);
+        }
+
+        function loadPromotions(page = 1) {
+            currentPage = page;
+            const filters = {
+                search: $('#searchPromotions').val(),
+                status: $('#statusFilter').val(),
+                type: $('#typeFilter').val(),
+                sortBy: $('#sortBy').val(),
+                date: $('#dateFilter').val(),
+                page: page,
+                pageSize: pageSize
+            };
+
+            $.ajax({
+                url: '/Admin/GetPromotions',
+                type: 'GET',
+                data: filters,
+                success: function(response) {
+                    if (response.success) {
+                        displayPromotions(response.data.promotions);
+                        updatePagination(response.data.totalPages, response.data.currentPage);
+                        updateStatistics(response.data.statistics);
+                    } else {
+                        toastr.error('Failed to load promotions');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while loading promotions');
+                }
+            });
+        }
+
+        function displayPromotions(promotions) {
+            const tbody = $('#promotionsTableBody');
+            tbody.empty();
+
+            if (promotions.length === 0) {
+                tbody.append(`
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="fas fa-percentage fa-2x mb-2"></i><br>
+                            No promotions found
+                        </td>
+                    </tr>
+                `);
+                return;
+            }
+
+            promotions.forEach(function(promotion) {
+                const statusBadge = getStatusBadge(promotion.status);
+                const typeBadge = getTypeBadge(promotion.type);
+                const discountText = getDiscountText(promotion);
+                const validPeriod = getValidPeriod(promotion);
+                const usageText = getUsageText(promotion);
+                const performanceText = getPerformanceText(promotion);
+                
+                const row = `
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="promotion-checkbox" value="${promotion.id}" onchange="updateSelection()">
+                        </td>
+                        <td>
+                            <div>
+                                <strong>${promotion.name}</strong>
+                                ${promotion.code ? `<br><small class="text-muted">Code: ${promotion.code}</small>` : ''}
+                            </div>
+                        </td>
+                        <td>${typeBadge}</td>
+                        <td>${discountText}</td>
+                        <td><small>${validPeriod}</small></td>
+                        <td>${usageText}</td>
+                        <td>${statusBadge}</td>
+                        <td><small>${performanceText}</small></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-info" onclick="viewPromotion(${promotion.id})" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" onclick="editPromotion(${promotion.id})" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-success" onclick="duplicatePromotion(${promotion.id})" title="Duplicate">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" onclick="deletePromotion(${promotion.id})" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                'active': '<span class="badge bg-success">Active</span>',
+                'inactive': '<span class="badge bg-secondary">Inactive</span>',
+                'expired': '<span class="badge bg-danger">Expired</span>',
+                'scheduled': '<span class="badge bg-info">Scheduled</span>'
+            };
+            return badges[status] || '<span class="badge bg-secondary">Unknown</span>';
+        }
+
+        function getTypeBadge(type) {
+            const badges = {
+                'percentage': '<span class="badge bg-primary">Percentage</span>',
+                'fixed': '<span class="badge bg-success">Fixed Amount</span>',
+                'bogo': '<span class="badge bg-warning">BOGO</span>',
+                'bundle': '<span class="badge bg-info">Bundle</span>',
+                'free_shipping': '<span class="badge bg-secondary">Free Ship</span>'
+            };
+            return badges[type] || '<span class="badge bg-secondary">Unknown</span>';
+        }
+
+        function getDiscountText(promotion) {
+            switch(promotion.type) {
+                case 'percentage':
+                    return `${promotion.discountValue}%`;
+                case 'fixed':
+                    return `$${promotion.discountValue}`;
+                case 'bogo':
+                    return `Buy ${promotion.buyQuantity} Get ${promotion.getQuantity}`;
+                case 'free_shipping':
+                    return 'Free Shipping';
+                default:
+                    return promotion.discountValue || '-';
+            }
+        }
+
+        function getValidPeriod(promotion) {
+            const start = new Date(promotion.startDate).toLocaleDateString();
+            const end = promotion.endDate ? new Date(promotion.endDate).toLocaleDateString() : 'No expiry';
+            return `${start} - ${end}`;
+        }
+
+        function getUsageText(promotion) {
+            const used = promotion.usedCount || 0;
+            const limit = promotion.totalUsageLimit || '∞';
+            return `${used} / ${limit}`;
+        }
+
+        function getPerformanceText(promotion) {
+            const orders = promotion.orderCount || 0;
+            const savings = promotion.totalSavings || 0;
+            return `${orders} orders<br>$${savings.toFixed(2)} saved`;
+        }
+
+        function loadProducts() {
+            $.ajax({
+                url: '/Admin/GetProductsForPromotion',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        const select = $('#applicableProducts');
+                        select.empty();
+                        response.data.forEach(function(product) {
+                            select.append(`<option value="${product.id}">${product.name}</option>`);
+                        });
+                    }
+                }
+            });
+        }
+
+        function loadCategories() {
+            $.ajax({
+                url: '/Admin/GetCategoriesForPromotion',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        const select = $('#applicableCategories');
+                        select.empty();
+                        response.data.forEach(function(category) {
+                            select.append(`<option value="${category.id}">${category.name}</option>`);
+                        });
+                    }
+                }
+            });
+        }
+
+        function savePromotion() {
+            const formData = {
+                name: $('#promotionName').val(),
+                code: $('#promotionCode').val(),
+                description: $('#promotionDescription').val(),
+                type: $('#discountType').val(),
+                discountValue: $('#discountValue').val(),
+                maxDiscount: $('#maxDiscount').val(),
+                buyQuantity: $('#buyQuantity').val(),
+                getQuantity: $('#getQuantity').val(),
+                minOrderAmount: $('#minOrderAmount').val(),
+                maxOrderAmount: $('#maxOrderAmount').val(),
+                applicableProducts: $('#applicableProducts').val(),
+                applicableCategories: $('#applicableCategories').val(),
+                totalUsageLimit: $('#totalUsageLimit').val(),
+                perUserLimit: $('#perUserLimit').val(),
+                perOrderLimit: $('#perOrderLimit').val(),
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                isActive: $('#isActive').is(':checked'),
+                isPublic: $('#isPublic').is(':checked'),
+                stackable: $('#stackable').is(':checked'),
+                requiresCode: $('#requiresCode').is(':checked'),
+                autoApply: $('#autoApply').is(':checked'),
+                excludeSaleItems: $('#excludeSaleItems').is(':checked')
+            };
+
+            $.ajax({
+                url: '/Admin/CreatePromotion',
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success('Promotion created successfully!');
+                        $('#addPromotionModal').modal('hide');
+                        loadPromotions();
+                        resetAddForm();
+                    } else {
+                        toastr.error(response.message || 'Failed to create promotion');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while creating the promotion');
+                }
+            });
+        }
+
+        function viewPromotion(promotionId) {
+            $.ajax({
+                url: `/Admin/GetPromotionDetails/${promotionId}`,
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        displayPromotionDetails(response.data);
+                        $('#promotionDetailsModal').modal('show');
+                    } else {
+                        toastr.error('Failed to load promotion details');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while loading promotion details');
+                }
+            });
+        }
+
+        function displayPromotionDetails(promotion) {
+            // Implementation for displaying promotion details
+        }
+
+        function editPromotion(promotionId) {
+            // Implementation for editing promotion
+        }
+
+        function duplicatePromotion(promotionId) {
+            $.ajax({
+                url: `/Admin/DuplicatePromotion/${promotionId}`,
+                type: 'POST',
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success('Promotion duplicated successfully!');
+                        loadPromotions();
+                    } else {
+                        toastr.error(response.message || 'Failed to duplicate promotion');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while duplicating the promotion');
+                }
+            });
+        }
+
+        function deletePromotion(promotionId) {
+            if (confirm('Are you sure you want to delete this promotion?')) {
+                $.ajax({
+                    url: `/Admin/DeletePromotion/${promotionId}`,
+                    type: 'DELETE',
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success('Promotion deleted successfully!');
+                            loadPromotions();
+                        } else {
+                            toastr.error(response.message || 'Failed to delete promotion');
+                        }
+                    },
+                    error: function() {
+                        toastr.error('An error occurred while deleting the promotion');
+                    }
+                });
+            }
+        }
+
+        function updateSelection() {
+            selectedPromotions = $('.promotion-checkbox:checked').map(function() {
+                return parseInt($(this).val());
+            }).get();
+            
+            $('#selectedCount').text(selectedPromotions.length);
+            
+            if (selectedPromotions.length > 0) {
+                $('#bulkActions').show();
+            } else {
+                $('#bulkActions').hide();
+            }
+        }
+
+        function toggleSelectAll() {
+            const isChecked = $('#selectAll').is(':checked');
+            $('.promotion-checkbox').prop('checked', isChecked);
+            updateSelection();
+        }
+
+        function bulkActivate() {
+            bulkAction('activate');
+        }
+
+        function bulkDeactivate() {
+            bulkAction('deactivate');
+        }
+
+        function bulkDelete() {
+            if (confirm('Are you sure you want to delete the selected promotions?')) {
+                bulkAction('delete');
+            }
+        }
+
+        function bulkAction(action) {
+            $.ajax({
+                url: '/Admin/BulkPromotionAction',
+                type: 'POST',
+                data: { promotionIds: selectedPromotions, action: action },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(`Promotions ${action}d successfully!`);
+                        loadPromotions();
+                        selectedPromotions = [];
+                        $('#bulkActions').hide();
+                        $('#selectAll').prop('checked', false);
+                    } else {
+                        toastr.error(response.message || `Failed to ${action} promotions`);
+                    }
+                },
+                error: function() {
+                    toastr.error(`An error occurred while ${action}ing promotions`);
+                }
+            });
+        }
+
+        function searchPromotions() {
+            loadPromotions(1);
+        }
+
+        function applyFilters() {
+            loadPromotions(1);
+        }
+
+        function exportPromotions() {
+            window.open('/Admin/ExportPromotions', '_blank');
+        }
+
+        function resetAddForm() {
+            $('#addPromotionForm')[0].reset();
+            $('#isActive').prop('checked', true);
+            $('#isPublic').prop('checked', true);
+            $('#perOrderLimit').val('1');
+            setDefaultDates();
+        }
+
+        function updateStatistics(stats) {
+            $('#totalPromotions').text(stats.total);
+            $('#activePromotions').text(stats.active);
+            $('#expiringPromotions').text(stats.expiring);
+            $('#totalSavings').text(stats.totalSavings.toFixed(2));
+        }
+
+        function updatePagination(totalPages, currentPage) {
+            // Implementation similar to other pagination functions
+        }
+    </script>
+}
+
+<style>
+    .form-control-sm {
+        font-size: 0.875rem;
+    }
+    
+    .card-header h6 {
+        color: #495057;
+        font-weight: 600;
+    }
+    
+    .badge {
+        font-size: 0.75em;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+</style>

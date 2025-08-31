@@ -1,0 +1,289 @@
+@using AccessoryWorld.ViewModels
+@model CheckoutViewModel
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Checkout</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="PlaceOrder" method="post" id="checkoutForm">
+                        @Html.AntiForgeryToken()
+                        
+                        <!-- Delivery Method Selection -->
+                        <div class="mb-4">
+                            <h5>Delivery Method</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="FulfilmentMethod" id="delivery" value="DELIVERY" checked>
+                                        <label class="form-check-label" for="delivery">
+                                            <strong>Delivery</strong><br>
+                                            <small class="text-muted">Delivered to your address</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="FulfilmentMethod" id="pickup" value="PICKUP">
+                                        <label class="form-check-label" for="pickup">
+                                            <strong>Store Pickup</strong><br>
+                                            <small class="text-muted">Collect from our store</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Address Selection (for delivery) -->
+                        <div id="addressSection" class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>Delivery Address</h5>
+                                <a href="@Url.Action("AddAddress")" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-plus"></i> Add New Address
+                                </a>
+                            </div>
+                            
+                            @if (Model.UserAddresses.Any())
+                            {
+                                <div class="row">
+                                    @foreach (var address in Model.UserAddresses)
+                                    {
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card address-card" data-address-id="@address.Id">
+                                                <div class="card-body">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="radio" name="SelectedAddressId" 
+                                                               id="address_@address.Id" value="@address.Id" 
+                                                               @(address.IsDefault ? "checked" : "")>
+                                                        <label class="form-check-label" for="address_@address.Id">
+                                                            <strong>@address.AddressLine1</strong><br>
+                                                            @if (!string.IsNullOrEmpty(address.AddressLine2))
+                                                            {
+                                                                @address.AddressLine2<br>
+                                                            }
+                                                            @address.City, @address.Province @address.PostalCode<br>
+                                                            @address.Country
+                                                            @if (address.IsDefault)
+                                                            {
+                                                                <span class="badge bg-primary ms-2">Default</span>
+                                                            }
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i>
+                                    You don't have any saved addresses. <a href="@Url.Action("AddAddress")">Add an address</a> to continue.
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Store Pickup Information (hidden by default) -->
+                        <div id="pickupSection" class="mb-4" style="display: none;">
+                            <h5>Store Pickup Information</h5>
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-store"></i> AccessoryWorld Store</h6>
+                                <p class="mb-1"><strong>Address:</strong> 123 Main Street, Johannesburg, Gauteng 2000</p>
+                                <p class="mb-1"><strong>Hours:</strong> Monday - Friday: 9:00 AM - 6:00 PM, Saturday: 9:00 AM - 4:00 PM</p>
+                                <p class="mb-0"><strong>Phone:</strong> +27 11 123 4567</p>
+                                <hr>
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle"></i>
+                                    You will receive an OTP via SMS when your order is ready for pickup.
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Order Notes -->
+                        <div class="mb-4">
+                            <h5>Order Notes (Optional)</h5>
+                            <textarea class="form-control" name="Notes" rows="3" 
+                                      placeholder="Any special instructions for your order..."></textarea>
+                        </div>
+
+                        <!-- Hidden fields for totals -->
+                        <input type="hidden" name="SubTotal" value="@Model.SubTotal" />
+                        <input type="hidden" name="VATAmount" value="@Model.VATAmount" />
+                        <input type="hidden" name="ShippingFee" id="hiddenShippingFee" value="@Model.ShippingFee" />
+                        <input type="hidden" name="Total" id="hiddenTotal" value="@Model.Total" />
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="placeOrderBtn">
+                                <i class="fas fa-credit-card"></i> Place Order
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Cart Items -->
+                    @foreach (var item in Model.CartItems)
+                    {
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">@item.Product.Name</h6>
+                                <small class="text-muted">@item.SKU.Variant</small><br>
+                                <small class="text-muted">Qty: @item.Quantity</small>
+                            </div>
+                            <div class="text-end">
+                                <strong>R @((item.UnitPrice * item.Quantity).ToString("N2"))</strong>
+                            </div>
+                        </div>
+                    }
+                    
+                    <hr>
+                    
+                    <!-- Order Totals -->
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>R @Model.SubTotal.ToString("N2")</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>VAT (15%):</span>
+                        <span>R @Model.VATAmount.ToString("N2")</span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2" id="shippingRow">
+                        <span>Shipping:</span>
+                        <span id="shippingAmount">R @Model.ShippingFee.ToString("N2")</span>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between">
+                        <strong>Total:</strong>
+                        <strong id="totalAmount">R @Model.Total.ToString("N2")</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Handle delivery method change
+            $('input[name="FulfilmentMethod"]').change(function() {
+                var method = $(this).val();
+                if (method === 'DELIVERY') {
+                    $('#addressSection').show();
+                    $('#pickupSection').hide();
+                } else {
+                    $('#addressSection').hide();
+                    $('#pickupSection').show();
+                }
+                calculateShipping();
+            });
+
+            // Handle address selection change
+            $('input[name="SelectedAddressId"]').change(function() {
+                calculateShipping();
+            });
+
+            // Calculate shipping when page loads
+            calculateShipping();
+
+            function calculateShipping() {
+                var method = $('input[name="FulfilmentMethod"]:checked').val();
+                var addressId = $('input[name="SelectedAddressId"]:checked').val();
+                
+                if (method === 'PICKUP') {
+                    updateShipping(0);
+                    return;
+                }
+                
+                if (method === 'DELIVERY' && addressId) {
+                    $.ajax({
+                        url: '@Url.Action("CalculateShipping")',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            addressId: parseInt(addressId),
+                            fulfilmentMethod: method
+                        }),
+                        success: function(response) {
+                            if (response.success) {
+                                updateShipping(response.shippingFee);
+                            }
+                        },
+                        error: function() {
+                            console.error('Failed to calculate shipping');
+                        }
+                    });
+                } else {
+                    updateShipping(0);
+                }
+            }
+
+            function updateShipping(shippingFee) {
+                var subtotal = @Model.SubTotal;
+                var tax = @Model.VATAmount;
+                var total = subtotal + tax + shippingFee;
+                
+                $('#shippingAmount').text('R ' + shippingFee.toFixed(2));
+                $('#totalAmount').text('R ' + total.toFixed(2));
+                $('#hiddenShippingFee').val(shippingFee);
+                $('#hiddenTotal').val(total);
+                
+                if (shippingFee === 0) {
+                    $('#shippingRow').hide();
+                } else {
+                    $('#shippingRow').show();
+                }
+            }
+
+            // Form validation
+            $('#checkoutForm').submit(function(e) {
+                var method = $('input[name="FulfilmentMethod"]:checked').val();
+                
+                if (method === 'DELIVERY') {
+                    var addressSelected = $('input[name="SelectedAddressId"]:checked').length > 0;
+                    if (!addressSelected) {
+                        e.preventDefault();
+                        alert('Please select a delivery address.');
+                        return false;
+                    }
+                }
+                
+                $('#placeOrderBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+            });
+        });
+    </script>
+}
+
+<style>
+    .address-card {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .address-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .address-card .form-check-input:checked ~ .form-check-label {
+        color: #0d6efd;
+    }
+</style>

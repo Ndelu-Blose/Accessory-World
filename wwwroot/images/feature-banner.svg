@@ -1,0 +1,43 @@
+<svg width="300" height="200" viewBox="0 0 300 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="featureGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#BFE0FF" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#5AA7FF" stop-opacity="0.6"/>
+    </linearGradient>
+    <radialGradient id="deviceGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  
+  <rect width="300" height="200" rx="16" fill="url(#featureGrad)"/>
+  
+  <!-- Multiple devices composition -->
+  <!-- Smartphone -->
+  <rect x="80" y="40" width="50" height="90" rx="12" fill="#1F2937" stroke="#374151" stroke-width="1.5"/>
+  <rect x="85" y="50" width="40" height="70" rx="4" fill="#3B82F6"/>
+  <circle cx="105" cy="125" r="4" fill="#6B7280"/>
+  
+  <!-- Tablet -->
+  <rect x="150" y="30" width="80" height="110" rx="8" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="1.5"/>
+  <rect x="160" y="40" width="60" height="90" rx="4" fill="#111827"/>
+  <circle cx="190" cy="145" r="3" fill="#9CA3AF"/>
+  
+  <!-- Laptop (partial view) -->
+  <rect x="200" y="60" width="90" height="60" rx="6" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="1"/>
+  <rect x="210" y="70" width="70" height="40" rx="2" fill="#1F2937"/>
+  
+  <!-- Connecting lines/waves -->
+  <path d="M105 80 Q125 70 150 80" stroke="#FF37B9" stroke-width="2" fill="none" opacity="0.6"/>
+  <path d="M190 90 Q210 85 230 90" stroke="#1399FF" stroke-width="2" fill="none" opacity="0.6"/>
+  
+  <!-- Floating elements -->
+  <circle cx="50" cy="50" r="3" fill="#FF37B9" opacity="0.4"/>
+  <circle cx="260" cy="40" r="2" fill="#10B981" opacity="0.5"/>
+  <circle cx="40" cy="120" r="4" fill="#F59E0B" opacity="0.3"/>
+  <circle cx="270" cy="160" r="3" fill="#EF4444" opacity="0.4"/>
+  
+  <!-- Glow effect -->
+  <ellipse cx="150" cy="100" rx="120" ry="80" fill="url(#deviceGlow)"/>
+</svg>

@@ -1,0 +1,1021 @@
+@model AccessoryWorld.ViewModels.ManageInventoryViewModel
+@{
+    ViewData["Title"] = "Manage Inventory";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+<style>
+    :root {
+        --primary: #2563eb;
+        --primary-dark: #1d4ed8;
+        --accent: #7c3aed;
+        --accent-magenta: #d946ef;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #06b6d4;
+        --text-dark: #1f2937;
+        --text-muted: #6b7280;
+        --bg-light: #f8fafc;
+        --border: #e5e7eb;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    .admin-container {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+
+    .admin-sidebar {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+    }
+
+    .admin-sidebar .sidebar-header {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .admin-sidebar .sidebar-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .admin-nav {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .admin-nav-item {
+        border-bottom: 1px solid var(--border);
+    }
+
+    .admin-nav-item:last-child {
+        border-bottom: none;
+    }
+
+    .admin-nav-link {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        color: var(--text-dark);
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .admin-nav-link:hover {
+        background: var(--bg-light);
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    .admin-nav-link.active {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+    }
+
+    .admin-nav-link i {
+        width: 20px;
+        margin-right: 0.75rem;
+        text-align: center;
+    }
+
+    .admin-content {
+        padding: 0;
+    }
+
+    .admin-content-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+
+    .card {
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        margin-bottom: 1rem;
+    }
+
+    .card-header {
+        background: var(--bg-light);
+        border-bottom: 1px solid var(--border);
+        border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+        padding: 1rem 1.5rem;
+    }
+
+    .card-header h4, .card-header h5 {
+        color: var(--text-dark);
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+    }
+
+    .btn-outline-success {
+        border: 2px solid var(--success);
+        color: var(--success);
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline-success:hover {
+        background: var(--success);
+        border-color: var(--success);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-danger {
+        border: 2px solid var(--danger);
+        color: var(--danger);
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline-danger:hover {
+        background: var(--danger);
+        border-color: var(--danger);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-warning {
+        border: 2px solid var(--warning);
+        color: var(--warning);
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline-warning:hover {
+        background: var(--warning);
+        border-color: var(--warning);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-info {
+        border: 2px solid var(--info);
+        color: var(--info);
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+    }
+
+    .btn-outline-info:hover {
+        background: var(--info);
+        border-color: var(--info);
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .bg-primary {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+    }
+
+    .bg-success {
+        background: linear-gradient(135deg, var(--success), #059669) !important;
+    }
+
+    .bg-warning {
+        background: linear-gradient(135deg, var(--warning), #d97706) !important;
+    }
+
+    .bg-info {
+        background: linear-gradient(135deg, var(--info), #0891b2) !important;
+    }
+
+    .table {
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .table th {
+        background: var(--bg-light);
+        border-bottom: 2px solid var(--border);
+        color: var(--text-dark);
+        font-weight: 600;
+        padding: 1rem;
+    }
+
+    .table td {
+        padding: 0.75rem 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        padding: 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+    }
+
+    .modal-content {
+        border-radius: var(--border-radius);
+        border: none;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .modal-header {
+        background: var(--bg-light);
+        border-bottom: 1px solid var(--border);
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+    }
+
+    .pagination .page-link {
+        border-radius: 8px;
+        margin: 0 2px;
+        border: 1px solid var(--border);
+        color: var(--text-dark);
+    }
+
+    .pagination .page-link:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: var(--primary);
+        border-color: var(--primary);
+    }
+
+    /* Responsive improvements */
+    @@media (max-width: 768px) {
+        .admin-container {
+            padding: 1rem;
+        }
+        
+        .card-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .card-header .btn {
+            width: 100%;
+        }
+        
+        .table-responsive {
+            font-size: 0.875rem;
+        }
+        
+        .btn {
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+        }
+        
+        .col-md-3 {
+            margin-bottom: 1rem;
+        }
+    }
+
+    @@media (max-width: 576px) {
+        .admin-container {
+            padding: 0.5rem;
+        }
+        
+        .card {
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .table th, .table td {
+            padding: 0.5rem;
+            font-size: 0.8rem;
+        }
+    }
+}
+
+<div class="admin-container">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Admin Navigation Sidebar -->
+            <div class="admin-sidebar">
+                <div class="sidebar-header">
+                    <h5><i class="fas fa-tachometer-alt me-2"></i>Admin Panel</h5>
+                </div>
+                <nav>
+                    <ul class="admin-nav">
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Dashboard", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Products", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-box"></i>
+                                <span>Products</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Orders", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Orders</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Users", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-users"></i>
+                                <span>Users</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Inventory", "Admin")" class="admin-nav-link active">
+                                <i class="fas fa-warehouse"></i>
+                                <span>Inventory</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Reports", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-chart-bar"></i>
+                                <span>Reports</span>
+                            </a>
+                        </li>
+                        <li class="admin-nav-item">
+                            <a href="@Url.Action("Settings", "Admin")" class="admin-nav-link">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="admin-content">
+<div class="admin-content-card">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Manage Inventory - @Model.ProductName</h4>
+                    <div>
+                        <button type="button" class="btn btn-secondary" onclick="window.history.back()">
+                            <i class="fas fa-arrow-left"></i> Back to Products
+                        </button>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#stockAdjustmentModal">
+                            <i class="fas fa-plus-minus"></i> Stock Adjustment
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Product Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0">@Model.CurrentStock</h3>
+                                    <small>Current Stock</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0">@Model.LowStockThreshold</h3>
+                                    <small>Low Stock Alert</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0">@Model.ReservedStock</h3>
+                                    <small>Reserved Stock</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0">@Model.AvailableStock</h3>
+                                    <small>Available Stock</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">Quick Actions</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <button type="button" class="btn btn-outline-success w-100 mb-2" onclick="quickAdjustment('restock')">
+                                                <i class="fas fa-plus"></i> Restock
+                                            </button>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button type="button" class="btn btn-outline-danger w-100 mb-2" onclick="quickAdjustment('damage')">
+                                                <i class="fas fa-exclamation-triangle"></i> Mark Damaged
+                                            </button>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button type="button" class="btn btn-outline-warning w-100 mb-2" onclick="quickAdjustment('return')">
+                                                <i class="fas fa-undo"></i> Customer Return
+                                            </button>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button type="button" class="btn btn-outline-info w-100 mb-2" onclick="quickAdjustment('transfer')">
+                                                <i class="fas fa-exchange-alt"></i> Transfer
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stock Movement History -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Stock Movement History</h5>
+                                    <div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportMovements()">
+                                            <i class="fas fa-download"></i> Export
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshMovements()">
+                                            <i class="fas fa-sync"></i> Refresh
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Filters -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-3">
+                                            <select id="movementTypeFilter" class="form-select">
+                                                <option value="">All Movement Types</option>
+                                                <option value="restock">Restock</option>
+                                                <option value="sale">Sale</option>
+                                                <option value="return">Return</option>
+                                                <option value="damage">Damage</option>
+                                                <option value="transfer">Transfer</option>
+                                                <option value="adjustment">Manual Adjustment</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="date" id="dateFromFilter" class="form-control" placeholder="From Date">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="date" id="dateToFilter" class="form-control" placeholder="To Date">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <button type="button" class="btn btn-primary" onclick="filterMovements()">
+                                                <i class="fas fa-filter"></i> Filter
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="clearFilters()">
+                                                <i class="fas fa-times"></i> Clear
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Movement Table -->
+                                    <div class="table-responsive">
+                                        <table class="table table-striped" id="movementsTable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date & Time</th>
+                                                    <th>Type</th>
+                                                    <th>Quantity</th>
+                                                    <th>Before</th>
+                                                    <th>After</th>
+                                                    <th>Reference</th>
+                                                    <th>User</th>
+                                                    <th>Notes</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="movementsTableBody">
+                                                <!-- Movement data will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Pagination -->
+                                    <nav aria-label="Movement history pagination">
+                                        <ul class="pagination justify-content-center" id="movementsPagination">
+                                            <!-- Pagination will be generated here -->
+                                        </ul>
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Adjustment Modal -->
+<div class="modal fade" id="stockAdjustmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Stock Adjustment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="stockAdjustmentForm">
+                    <input type="hidden" id="productId" value="@Model.ProductId" />
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="adjustmentType" class="form-label">Adjustment Type *</label>
+                                <select id="adjustmentType" class="form-select" required>
+                                    <option value="">Select Type</option>
+                                    <option value="restock">Restock (Increase)</option>
+                                    <option value="damage">Damage/Loss (Decrease)</option>
+                                    <option value="return">Customer Return (Increase)</option>
+                                    <option value="transfer_out">Transfer Out (Decrease)</option>
+                                    <option value="transfer_in">Transfer In (Increase)</option>
+                                    <option value="manual">Manual Adjustment</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="adjustmentQuantity" class="form-label">Quantity *</label>
+                                <div class="input-group">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="changeQuantity(-1)">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="number" id="adjustmentQuantity" class="form-control text-center" value="1" min="1" required />
+                                    <button type="button" class="btn btn-outline-secondary" onclick="changeQuantity(1)">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="referenceNumber" class="form-label">Reference Number</label>
+                                <input type="text" id="referenceNumber" class="form-control" placeholder="PO#, Invoice#, etc." />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="adjustmentDate" class="form-label">Date</label>
+                                <input type="datetime-local" id="adjustmentDate" class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="adjustmentNotes" class="form-label">Notes</label>
+                        <textarea id="adjustmentNotes" class="form-control" rows="3" placeholder="Enter reason for adjustment..."></textarea>
+                    </div>
+                    
+                    <!-- Stock Preview -->
+                    <div class="alert alert-info">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <strong>Current Stock</strong><br>
+                                <span id="currentStockPreview">@Model.CurrentStock</span>
+                            </div>
+                            <div class="col-4">
+                                <strong>Adjustment</strong><br>
+                                <span id="adjustmentPreview">+0</span>
+                            </div>
+                            <div class="col-4">
+                                <strong>New Stock</strong><br>
+                                <span id="newStockPreview">@Model.CurrentStock</span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitStockAdjustment()">
+                    <i class="fas fa-save"></i> Apply Adjustment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Movement Details Modal -->
+<div class="modal fade" id="movementDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Movement Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="movementDetailsContent">
+                <!-- Movement details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalPages = 1;
+
+        $(document).ready(function() {
+            loadMovements();
+            setupAdjustmentForm();
+            
+            // Set default date to current date/time
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            $('#adjustmentDate').val(now.toISOString().slice(0, 16));
+        });
+
+        function loadMovements(page = 1) {
+            currentPage = page;
+            const productId = '@Model.ProductId';
+            const filters = {
+                type: $('#movementTypeFilter').val(),
+                dateFrom: $('#dateFromFilter').val(),
+                dateTo: $('#dateToFilter').val(),
+                page: page,
+                pageSize: pageSize
+            };
+
+            $.ajax({
+                url: '/Admin/GetStockMovements',
+                type: 'GET',
+                data: { productId: productId, ...filters },
+                success: function(response) {
+                    if (response.success) {
+                        displayMovements(response.data.movements);
+                        updatePagination(response.data.totalPages, response.data.currentPage);
+                        totalPages = response.data.totalPages;
+                    } else {
+                        toastr.error('Failed to load stock movements');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while loading stock movements');
+                }
+            });
+        }
+
+        function displayMovements(movements) {
+            const tbody = $('#movementsTableBody');
+            tbody.empty();
+
+            if (movements.length === 0) {
+                tbody.append(`
+                    <tr>
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                            No stock movements found
+                        </td>
+                    </tr>
+                `);
+                return;
+            }
+
+            movements.forEach(function(movement) {
+                const typeClass = getMovementTypeClass(movement.type);
+                const quantityDisplay = movement.type.includes('decrease') || movement.type === 'damage' || movement.type === 'transfer_out' 
+                    ? `-${movement.quantity}` 
+                    : `+${movement.quantity}`;
+                
+                const row = `
+                    <tr>
+                        <td>${formatDateTime(movement.createdAt)}</td>
+                        <td><span class="badge ${typeClass}">${formatMovementType(movement.type)}</span></td>
+                        <td class="text-center">
+                            <strong class="${movement.quantity > 0 ? 'text-success' : 'text-danger'}">
+                                ${quantityDisplay}
+                            </strong>
+                        </td>
+                        <td class="text-center">${movement.stockBefore}</td>
+                        <td class="text-center">${movement.stockAfter}</td>
+                        <td>${movement.referenceNumber || '-'}</td>
+                        <td>${movement.userName}</td>
+                        <td>${movement.notes ? (movement.notes.length > 30 ? movement.notes.substring(0, 30) + '...' : movement.notes) : '-'}</td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-outline-info" onclick="viewMovementDetails(${movement.id})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        }
+
+        function getMovementTypeClass(type) {
+            const classes = {
+                'restock': 'bg-success',
+                'sale': 'bg-primary',
+                'return': 'bg-info',
+                'damage': 'bg-danger',
+                'transfer_in': 'bg-success',
+                'transfer_out': 'bg-warning',
+                'manual': 'bg-secondary'
+            };
+            return classes[type] || 'bg-secondary';
+        }
+
+        function formatMovementType(type) {
+            const types = {
+                'restock': 'Restock',
+                'sale': 'Sale',
+                'return': 'Return',
+                'damage': 'Damage',
+                'transfer_in': 'Transfer In',
+                'transfer_out': 'Transfer Out',
+                'manual': 'Manual'
+            };
+            return types[type] || type;
+        }
+
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function updatePagination(totalPages, currentPage) {
+            const pagination = $('#movementsPagination');
+            pagination.empty();
+
+            if (totalPages <= 1) return;
+
+            // Previous button
+            pagination.append(`
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="loadMovements(${currentPage - 1})">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            `);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    pagination.append(`
+                        <li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="loadMovements(${i})">${i}</a>
+                        </li>
+                    `);
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    pagination.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
+                }
+            }
+
+            // Next button
+            pagination.append(`
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="loadMovements(${currentPage + 1})">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            `);
+        }
+
+        function setupAdjustmentForm() {
+            $('#adjustmentType, #adjustmentQuantity').on('change input', updateStockPreview);
+        }
+
+        function updateStockPreview() {
+            const currentStock = @Model.CurrentStock;
+            const type = $('#adjustmentType').val();
+            const quantity = parseInt($('#adjustmentQuantity').val()) || 0;
+            
+            let adjustment = 0;
+            if (type === 'restock' || type === 'return' || type === 'transfer_in') {
+                adjustment = quantity;
+            } else if (type === 'damage' || type === 'transfer_out') {
+                adjustment = -quantity;
+            } else if (type === 'manual') {
+                adjustment = quantity; // Can be positive or negative
+            }
+            
+            const newStock = currentStock + adjustment;
+            
+            $('#adjustmentPreview').text((adjustment >= 0 ? '+' : '') + adjustment);
+            $('#newStockPreview').text(newStock);
+            
+            // Color coding
+            if (adjustment > 0) {
+                $('#adjustmentPreview').removeClass('text-danger').addClass('text-success');
+            } else if (adjustment < 0) {
+                $('#adjustmentPreview').removeClass('text-success').addClass('text-danger');
+            } else {
+                $('#adjustmentPreview').removeClass('text-success text-danger');
+            }
+        }
+
+        function changeQuantity(delta) {
+            const input = $('#adjustmentQuantity');
+            const currentValue = parseInt(input.val()) || 0;
+            const newValue = Math.max(1, currentValue + delta);
+            input.val(newValue);
+            updateStockPreview();
+        }
+
+        function quickAdjustment(type) {
+            $('#adjustmentType').val(type);
+            $('#adjustmentQuantity').val(1);
+            updateStockPreview();
+            $('#stockAdjustmentModal').modal('show');
+        }
+
+        function submitStockAdjustment() {
+            const formData = {
+                productId: $('#productId').val(),
+                type: $('#adjustmentType').val(),
+                quantity: parseInt($('#adjustmentQuantity').val()),
+                referenceNumber: $('#referenceNumber').val(),
+                notes: $('#adjustmentNotes').val(),
+                adjustmentDate: $('#adjustmentDate').val()
+            };
+
+            if (!formData.type || !formData.quantity) {
+                toastr.error('Please fill in all required fields');
+                return;
+            }
+
+            $.ajax({
+                url: '/Admin/AdjustStock',
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success('Stock adjustment applied successfully!');
+                        $('#stockAdjustmentModal').modal('hide');
+                        location.reload(); // Refresh to show updated stock levels
+                    } else {
+                        toastr.error(response.message || 'Failed to apply stock adjustment');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while applying stock adjustment');
+                }
+            });
+        }
+
+        function filterMovements() {
+            loadMovements(1);
+        }
+
+        function clearFilters() {
+            $('#movementTypeFilter').val('');
+            $('#dateFromFilter').val('');
+            $('#dateToFilter').val('');
+            loadMovements(1);
+        }
+
+        function refreshMovements() {
+            loadMovements(currentPage);
+        }
+
+        function exportMovements() {
+            const productId = '@Model.ProductId';
+            const filters = {
+                type: $('#movementTypeFilter').val(),
+                dateFrom: $('#dateFromFilter').val(),
+                dateTo: $('#dateToFilter').val()
+            };
+            
+            const queryString = new URLSearchParams({ productId: productId, ...filters }).toString();
+            window.open(`/Admin/ExportStockMovements?${queryString}`, '_blank');
+        }
+
+        function viewMovementDetails(movementId) {
+            $.ajax({
+                url: `/Admin/GetMovementDetails/${movementId}`,
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        displayMovementDetails(response.data);
+                        $('#movementDetailsModal').modal('show');
+                    } else {
+                        toastr.error('Failed to load movement details');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while loading movement details');
+                }
+            });
+        }
+
+        function displayMovementDetails(movement) {
+            const content = `
+                <div class="row">
+                    <div class="col-6"><strong>Movement ID:</strong></div>
+                    <div class="col-6">${movement.id}</div>
+                </div>
+                <div class="row">
+                    <div class="col-6"><strong>Type:</strong></div>
+                    <div class="col-6"><span class="badge ${getMovementTypeClass(movement.type)}">${formatMovementType(movement.type)}</span></div>
+                </div>
+                <div class="row">
+                    <div class="col-6"><strong>Quantity:</strong></div>
+                    <div class="col-6">${movement.quantity}</div>
+                </div>
+                <div class="row">
+                    <div class="col-6"><strong>Stock Before:</strong></div>
+                    <div class="col-6">${movement.stockBefore}</div>
+                </div>
+                <div class="row">
+                    <div class="col-6"><strong>Stock After:</strong></div>
+                    <div class="col-6">${movement.stockAfter}</div>
+                </div>
+                <div class="row">
+                    <div class="col-6"><strong>Reference:</strong></div>
+                    <div class="col-6">${movement.referenceNumber || 'N/A'}</div>
+                </div>
+                <div class="row">
+                    <div class="col-6"><strong>Date & Time:</strong></div>
+                    <div class="col-6">${formatDateTime(movement.createdAt)}</div>
+                </div>
+                <div class="row">
+                    <div class="col-6"><strong>User:</strong></div>
+                    <div class="col-6">${movement.userName}</div>
+                </div>
+                ${movement.notes ? `
+                <div class="row">
+                    <div class="col-12"><strong>Notes:</strong></div>
+                    <div class="col-12 mt-2">
+                        <div class="alert alert-light">${movement.notes}</div>
+                    </div>
+                </div>
+                ` : ''}
+            `;
+            
+            $('#movementDetailsContent').html(content);
+        }
+    </script>
+}
+
+            </div>
+        </div>
+    </div>
+</div>

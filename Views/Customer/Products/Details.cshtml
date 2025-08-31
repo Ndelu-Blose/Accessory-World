@@ -1,0 +1,540 @@
+@model AccessoryWorld.Models.Product
+@{
+    ViewData["Title"] = Model.Name;
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+    var relatedProducts = ViewBag.RelatedProducts as List<AccessoryWorld.Models.Product>;
+    var currentPrice = Model.IsOnSale && Model.SalePrice.HasValue ? Model.SalePrice.Value : Model.Price;
+    var originalPrice = Model.Price;
+}
+
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Home</a></li>
+            <li class="breadcrumb-item"><a href="@Url.Action("Index")">Products</a></li>
+            <li class="breadcrumb-item"><a href="@Url.Action("Index", new { category = Model.Category?.Name })">@Model.Category?.Name</a></li>
+            <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-lg-6">
+            @if (Model.ProductImages.Any())
+            {
+                <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                    <div class="carousel-inner">
+                        @for (int i = 0; i < Model.ProductImages.Count; i++)
+                        {
+                            <div class="carousel-item @(i == 0 ? "active" : "")">
+                                <img src="@Model.ProductImages.ElementAt(i).ImageUrl" class="d-block w-100 rounded" alt="@Model.Name" style="height: 500px; object-fit: cover;">
+                            </div>
+                        }
+                    </div>
+                    @if (Model.ProductImages.Count > 1)
+                    {
+                        <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                        </button>
+                        <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                        </button>
+                    }
+                </div>
+                
+                <!-- Thumbnail Images -->
+                @if (Model.ProductImages.Count > 1)
+                {
+                    <div class="row mt-3">
+                        @for (int i = 0; i < Model.ProductImages.Count; i++)
+                        {
+                            <div class="col-3">
+                                <img src="@Model.ProductImages.ElementAt(i).ImageUrl" 
+                                     class="img-thumbnail cursor-pointer thumbnail-img @(i == 0 ? "active" : "")" 
+                                     alt="@Model.Name" 
+                                     data-bs-target="#productCarousel" 
+                                     data-bs-slide-to="@i"
+                                     style="height: 80px; object-fit: cover;">
+                            </div>
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 500px;">
+                    <i class="fas fa-image fa-5x text-muted"></i>
+                </div>
+            }
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-lg-6">
+            <div class="ps-lg-4">
+                <h1 class="display-5 fw-bold mb-3">@Model.Name</h1>
+                
+                @if (Model.Brand != null)
+                {
+                    <p class="text-muted mb-3"><strong>Brand:</strong> @Model.Brand.Name</p>
+                }
+                
+                @if (Model.Category != null)
+                {
+                    <p class="text-muted mb-3"><strong>Category:</strong> @Model.Category.Name</p>
+                }
+
+                <!-- Price -->
+                <div class="mb-4">
+                    @if (Model.IsOnSale && Model.SalePrice.HasValue)
+                    {
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="display-6 fw-bold text-danger">R@Model.SalePrice.Value.ToString("N2")</span>
+                            <span class="h4 text-decoration-line-through text-muted">R@Model.Price.ToString("N2")</span>
+                            <span class="badge bg-danger">@(((originalPrice - Model.SalePrice.Value) / originalPrice * 100).ToString("F0"))% OFF</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="display-6 fw-bold">R@Model.Price.ToString("N2")</span>
+                    }
+                </div>
+
+                <!-- Stock Status -->
+                <div class="mb-4">
+                    @{
+                        var totalStock = Model.SKUs.Sum(s => s.StockQuantity);
+                    }
+                    @if (totalStock > 0)
+                    {
+                        <span class="badge bg-success fs-6"><i class="fas fa-check"></i> In Stock (@totalStock available)</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger fs-6"><i class="fas fa-times"></i> Out of Stock</span>
+                    }
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                    <h5>Description</h5>
+                    <p class="text-muted">@Html.Raw(Model.Description)</p>
+                </div>
+
+                <!-- Specifications -->
+                @if (Model.ProductSpecifications.Any())
+                {
+                    <div class="mb-4">
+                        <h5>Specifications</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                @foreach (var spec in Model.ProductSpecifications)
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@spec.SpecificationName</td>
+                                        <td>@spec.SpecificationValue</td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                    </div>
+                }
+
+                <!-- Add to Cart Section -->
+                <div class="mb-4">
+                    @if (totalStock > 0)
+                    {
+                        <form id="addToCartForm">
+                            @if (Model.SKUs.Count > 1)
+                            {
+                                <div class="mb-3">
+                                    <label for="skuSelect" class="form-label">Options</label>
+                                    <select class="form-select" id="skuSelect" name="skuId" required>
+                                        <option value="">Select an option</option>
+                                        @foreach (var sku in Model.SKUs.Where(s => s.StockQuantity > 0))
+                                        {
+                                            <option value="@sku.Id" data-stock="@sku.StockQuantity">
+                                                @if (!string.IsNullOrEmpty(sku.Variant))
+                                                {
+                                                    @($"{sku.Variant} (Stock: {sku.StockQuantity})")
+                                                }
+                                                else
+                                                {
+                                                    @($"Default (Stock: {sku.StockQuantity})")
+                                                }
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                            }
+                            else
+                            {
+                                <input type="hidden" id="skuSelect" name="skuId" value="@Model.SKUs.First().Id">
+                            }
+                            <div class="row align-items-end">
+                                <div class="col-md-4">
+                                    <label for="quantity" class="form-label">Quantity</label>
+                                    <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" max="@totalStock">
+                                </div>
+                                <div class="col-md-8">
+                                    <button type="submit" class="btn btn-primary btn-lg w-100" id="addToCartBtn">
+                                        <i class="fas fa-shopping-cart"></i> Add to Cart
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <button class="btn btn-secondary btn-lg w-100" disabled>
+                            <i class="fas fa-times"></i> Out of Stock
+                        </button>
+                    }
+                </div>
+
+                <!-- Additional Actions -->
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary" onclick="addToWishlist(@Model.Id)">
+                        <i class="far fa-heart"></i> Add to Wishlist
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="shareProduct()">
+                        <i class="fas fa-share"></i> Share
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    @if (relatedProducts != null && relatedProducts.Any())
+    {
+        <div class="mt-5">
+            <h3 class="mb-4">Related Products</h3>
+            <div class="row">
+                @foreach (var product in relatedProducts)
+                {
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="card h-100 product-card">
+                            <div class="position-relative">
+                                @if (product.ProductImages.Any())
+                                {
+                                    <img src="@product.ProductImages.First().ImageUrl" class="card-img-top" alt="@product.Name" style="height: 200px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
+                                        <i class="fas fa-image fa-2x text-muted"></i>
+                                    </div>
+                                }
+                                @if (product.IsOnSale)
+                                {
+                                    <span class="badge bg-danger position-absolute top-0 start-0 m-2">Sale</span>
+                                }
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title">@product.Name</h6>
+                                <p class="card-text text-muted small">@product.Brand?.Name</p>
+                                <div class="mt-auto">
+                                    <div class="mb-2">
+                                        @if (product.IsOnSale && product.SalePrice.HasValue)
+                                        {
+                                            <div>
+                                                <span class="text-decoration-line-through text-muted small">R@product.Price.ToString("N2")</span>
+                                                <span class="fw-bold text-danger">R@product.SalePrice.Value.ToString("N2")</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="fw-bold">R@product.Price.ToString("N2")</span>
+                                        }
+                                    </div>
+                                    <a href="@Url.Action("Details", new { id = product.Id })" class="btn btn-sm btn-primary w-100">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Add to cart functionality
+        document.getElementById('addToCartForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const skuSelect = document.getElementById('skuSelect');
+            const skuId = parseInt(skuSelect.value);
+            const addToCartBtn = document.getElementById('addToCartBtn');
+            
+            // Validate SKU selection for products with multiple options
+            if (!skuId || isNaN(skuId)) {
+                alert('Please select an option before adding to cart.');
+                return;
+            }
+            
+            // Validate quantity
+            if (!quantity || quantity < 1) {
+                alert('Please enter a valid quantity.');
+                return;
+            }
+            
+            // Check stock availability
+            const selectedOption = skuSelect.querySelector(`option[value="${skuId}"]`);
+            const availableStock = parseInt(selectedOption?.getAttribute('data-stock') || '0');
+            
+            if (quantity > availableStock) {
+                alert(`Only ${availableStock} items available in stock.`);
+                return;
+            }
+            
+            // Disable button and show loading state
+            addToCartBtn.disabled = true;
+            addToCartBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+            
+            // Send AJAX request to add item to cart
+            fetch('/Cart/AddItem', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: JSON.stringify({
+                    productId: @Model.Id,
+                    skuId: skuId,
+                    quantity: quantity
+                })
+            })
+            .then(response => {
+                // Check if user needs to login
+                if (response.status === 401 || response.redirected && response.url.includes('/Account/Login')) {
+                    // Show login prompt and redirect
+                    showNotification('Please login to add items to your cart.', 'info');
+                    setTimeout(() => {
+                        window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+                    }, 1500);
+                    return null;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.success) {
+                    // Update cart count in navigation
+                    updateCartCount(data.cartCount);
+                    
+                    // Show success message
+                    showNotification('Item added to cart successfully!', 'success');
+                    
+                    // Reset form
+                    document.getElementById('quantity').value = '1';
+                } else if (data) {
+                    showNotification(data.message || 'Failed to add item to cart.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while adding item to cart.', 'error');
+            })
+            .finally(() => {
+                // Re-enable button
+                addToCartBtn.disabled = false;
+                addToCartBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
+            });
+        });
+        
+        // Update quantity max based on selected SKU
+        document.getElementById('skuSelect')?.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const stock = selectedOption.getAttribute('data-stock');
+            const quantityInput = document.getElementById('quantity');
+            
+            if (stock) {
+                quantityInput.max = stock;
+                if (parseInt(quantityInput.value) > parseInt(stock)) {
+                    quantityInput.value = stock;
+                }
+            }
+        });
+        
+        // Helper function to update cart count in navigation
+        function updateCartCount(count) {
+            const cartCountElement = document.querySelector('.cart-count');
+            if (cartCountElement) {
+                cartCountElement.textContent = count;
+                cartCountElement.style.display = count > 0 ? 'inline' : 'none';
+            }
+        }
+        
+        // Helper function to show notifications
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Wishlist functionality
+        function addToWishlist(productId) {
+            fetch('/Wishlist/Add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: `productId=${productId}`
+            })
+            .then(response => {
+                if (response.status === 401 || response.redirected && response.url.includes('/Account/Login')) {
+                    showNotification('Please login to add items to your wishlist.', 'info');
+                    setTimeout(() => {
+                        window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+                    }, 1500);
+                    return null;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.success) {
+                    showNotification(data.message, 'success');
+                    // Update wishlist button state
+                    const wishlistBtn = document.querySelector(`button[onclick="addToWishlist(${productId})"]`);
+                    if (wishlistBtn) {
+                        wishlistBtn.innerHTML = '<i class="fas fa-heart"></i> Added to Wishlist';
+                        wishlistBtn.classList.remove('btn-outline-primary');
+                        wishlistBtn.classList.add('btn-success');
+                        wishlistBtn.onclick = () => removeFromWishlist(productId);
+                    }
+                    // Update wishlist count in navigation if exists
+                    updateWishlistCount(data.count);
+                } else if (data) {
+                    showNotification(data.message || 'Failed to add to wishlist.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while adding to wishlist.', 'error');
+            });
+        }
+
+        function removeFromWishlist(productId) {
+            fetch('/Wishlist/Remove', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                },
+                body: `productId=${productId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    // Update wishlist button state
+                    const wishlistBtn = document.querySelector(`button[onclick="removeFromWishlist(${productId})"]`);
+                    if (wishlistBtn) {
+                        wishlistBtn.innerHTML = '<i class="far fa-heart"></i> Add to Wishlist';
+                        wishlistBtn.classList.remove('btn-success');
+                        wishlistBtn.classList.add('btn-outline-primary');
+                        wishlistBtn.onclick = () => addToWishlist(productId);
+                    }
+                    // Update wishlist count in navigation if exists
+                    updateWishlistCount(data.count);
+                } else {
+                    showNotification(data.message || 'Failed to remove from wishlist.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('An error occurred while removing from wishlist.', 'error');
+            });
+        }
+
+        function updateWishlistCount(count) {
+            const wishlistCountElement = document.querySelector('.wishlist-count');
+            if (wishlistCountElement) {
+                wishlistCountElement.textContent = count;
+                wishlistCountElement.style.display = count > 0 ? 'inline' : 'none';
+            }
+        }
+
+        // Check if product is already in wishlist on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch(`/Wishlist/IsInWishlist?productId=@Model.Id`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.isInWishlist) {
+                    const wishlistBtn = document.querySelector(`button[onclick="addToWishlist(@Model.Id)"]`);
+                    if (wishlistBtn) {
+                        wishlistBtn.innerHTML = '<i class="fas fa-heart"></i> Added to Wishlist';
+                        wishlistBtn.classList.remove('btn-outline-primary');
+                        wishlistBtn.classList.add('btn-success');
+                        wishlistBtn.onclick = () => removeFromWishlist(@Model.Id);
+                    }
+                }
+            })
+            .catch(error => console.error('Error checking wishlist status:', error));
+        });
+
+        // Share functionality
+        function shareProduct() {
+            if (navigator.share) {
+                navigator.share({
+                    title: '@Model.Name',
+                    text: '@Model.Name - @Model.Description',
+                    url: window.location.href
+                });
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(window.location.href).then(() => {
+                    alert('Product link copied to clipboard!');
+                });
+            }
+        }
+
+        // Thumbnail click handling
+        document.querySelectorAll('.thumbnail-img').forEach(img => {
+            img.addEventListener('click', function() {
+                document.querySelectorAll('.thumbnail-img').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+}
+
+<style>
+    .product-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .thumbnail-img.active {
+        border-color: #0d6efd;
+        border-width: 2px;
+    }
+</style>

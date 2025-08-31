@@ -1,0 +1,856 @@
+@model AccessoryWorld.ViewModels.FeaturedProductsViewModel
+@{
+    ViewData["Title"] = "Featured Products";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Featured Products Management</h4>
+                    <div>
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addFeaturedModal">
+                            <i class="fas fa-plus"></i> Add Featured Product
+                        </button>
+                        <button type="button" class="btn btn-info" onclick="exportFeatured()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Featured Product Statistics -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0" id="totalFeatured">@Model.TotalFeatured</h3>
+                                    <small>Total Featured</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0" id="activeFeatured">@Model.ActiveFeatured</h3>
+                                    <small>Active Featured</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0" id="bestSellers">@Model.BestSellers</h3>
+                                    <small>Best Sellers</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h3 class="mb-0" id="todayDeals">@Model.TodayDeals</h3>
+                                    <small>Today's Deals</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabs for Different Featured Types -->
+                    <ul class="nav nav-tabs mb-3" id="featuredTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
+                                All Featured
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="bestsellers-tab" data-bs-toggle="tab" data-bs-target="#bestsellers" type="button" role="tab">
+                                Best Sellers
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="newproducts-tab" data-bs-toggle="tab" data-bs-target="#newproducts" type="button" role="tab">
+                                New Products
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="hotproducts-tab" data-bs-toggle="tab" data-bs-target="#hotproducts" type="button" role="tab">
+                                Hot Products
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="todaydeals-tab" data-bs-toggle="tab" data-bs-target="#todaydeals" type="button" role="tab">
+                                Today's Deals
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="featuredTabContent">
+                        <!-- All Featured Tab -->
+                        <div class="tab-pane fade show active" id="all" role="tabpanel">
+                            <!-- Search and Filter -->
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <input type="text" id="searchFeatured" class="form-control" placeholder="Search products...">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="searchFeatured()">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <select id="categoryFilter" class="form-select">
+                                        <option value="">All Categories</option>
+                                        <!-- Categories will be loaded here -->
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select id="statusFilter" class="form-select">
+                                        <option value="">All Status</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select id="typeFilter" class="form-select">
+                                        <option value="">All Types</option>
+                                        <option value="bestseller">Best Seller</option>
+                                        <option value="new">New</option>
+                                        <option value="hot">Hot</option>
+                                        <option value="todaydeal">Today's Deal</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <select id="sortBy" class="form-select">
+                                        <option value="order">Sort by Order</option>
+                                        <option value="name">Sort by Name</option>
+                                        <option value="sales">Sort by Sales</option>
+                                        <option value="created">Sort by Created</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="button" class="btn btn-primary" onclick="applyFilters()">
+                                        <i class="fas fa-filter"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Featured Products Grid -->
+                            <div class="row" id="featuredProductsGrid">
+                                <!-- Products will be loaded here -->
+                            </div>
+
+                            <!-- Bulk Actions -->
+                            <div class="row mt-3" id="bulkActions" style="display: none;">
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <span id="selectedCount">0</span> products selected
+                                        <div class="float-end">
+                                            <button type="button" class="btn btn-sm btn-success" onclick="bulkActivate()">
+                                                <i class="fas fa-play"></i> Activate
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-warning" onclick="bulkDeactivate()">
+                                                <i class="fas fa-pause"></i> Deactivate
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="bulkRemove()">
+                                                <i class="fas fa-times"></i> Remove Featured
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pagination -->
+                            <nav aria-label="Featured products pagination">
+                                <ul class="pagination justify-content-center" id="featuredPagination">
+                                    <!-- Pagination will be generated here -->
+                                </ul>
+                            </nav>
+                        </div>
+
+                        <!-- Other tabs content would be similar with filtered data -->
+                        <div class="tab-pane fade" id="bestsellers" role="tabpanel">
+                            <div id="bestSellersContent"></div>
+                        </div>
+                        <div class="tab-pane fade" id="newproducts" role="tabpanel">
+                            <div id="newProductsContent"></div>
+                        </div>
+                        <div class="tab-pane fade" id="hotproducts" role="tabpanel">
+                            <div id="hotProductsContent"></div>
+                        </div>
+                        <div class="tab-pane fade" id="todaydeals" role="tabpanel">
+                            <div id="todayDealsContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Featured Product Modal -->
+<div class="modal fade" id="addFeaturedModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Featured Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addFeaturedForm">
+                    <!-- Product Selection -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Product Selection</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group mb-3">
+                                        <label for="productSearch" class="form-label">Search Products *</label>
+                                        <div class="input-group">
+                                            <input type="text" id="productSearch" class="form-control" placeholder="Type to search products...">
+                                            <button type="button" class="btn btn-outline-secondary" onclick="searchProducts()">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                        <div id="productSearchResults" class="mt-2" style="max-height: 200px; overflow-y: auto;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row" id="selectedProductInfo" style="display: none;">
+                                <div class="col-md-12">
+                                    <div class="alert alert-info">
+                                        <strong>Selected Product:</strong>
+                                        <div id="selectedProductDetails"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Featured Settings -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Featured Settings</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label class="form-label">Featured Types</label>
+                                        <div class="form-check">
+                                            <input type="checkbox" id="isBestSeller" class="form-check-input">
+                                            <label for="isBestSeller" class="form-check-label">Best Seller</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="checkbox" id="isNew" class="form-check-input">
+                                            <label for="isNew" class="form-check-label">New Product</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="checkbox" id="isHot" class="form-check-input">
+                                            <label for="isHot" class="form-check-label">Hot Product</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="checkbox" id="isTodayDeal" class="form-check-input">
+                                            <label for="isTodayDeal" class="form-check-label">Today's Deal</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="displayOrder" class="form-label">Display Order</label>
+                                        <input type="number" id="displayOrder" class="form-control" placeholder="0" min="0" value="0">
+                                        <small class="text-muted">Lower numbers appear first</small>
+                                    </div>
+                                    
+                                    <div class="form-group mb-3">
+                                        <label for="featuredSection" class="form-label">Featured Section</label>
+                                        <select id="featuredSection" class="form-select">
+                                            <option value="homepage">Homepage</option>
+                                            <option value="category">Category Page</option>
+                                            <option value="sidebar">Sidebar</option>
+                                            <option value="banner">Banner Section</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scheduling -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Scheduling (Optional)</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="startDate" class="form-label">Start Date</label>
+                                        <input type="datetime-local" id="startDate" class="form-control">
+                                        <small class="text-muted">Leave empty to start immediately</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="endDate" class="form-label">End Date</label>
+                                        <input type="datetime-local" id="endDate" class="form-control">
+                                        <small class="text-muted">Leave empty for no expiry</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Settings -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Additional Settings</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" id="isActive" class="form-check-input" checked>
+                                        <label for="isActive" class="form-check-label">Active</label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" id="showOnHomepage" class="form-check-input" checked>
+                                        <label for="showOnHomepage" class="form-check-label">Show on Homepage</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" id="showInCategory" class="form-check-input">
+                                        <label for="showInCategory" class="form-check-label">Show in Category</label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" id="showInSidebar" class="form-check-input">
+                                        <label for="showInSidebar" class="form-check-label">Show in Sidebar</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group mb-3">
+                                <label for="featuredNote" class="form-label">Notes</label>
+                                <textarea id="featuredNote" class="form-control" rows="2" placeholder="Optional notes about this featured product"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveFeaturedProduct()">
+                    <i class="fas fa-save"></i> Save Featured Product
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Featured Product Modal -->
+<div class="modal fade" id="editFeaturedModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Featured Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editFeaturedForm">
+                    <!-- Similar form structure as add modal -->
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="updateFeaturedProduct()">
+                    <i class="fas fa-save"></i> Update Featured Product
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let selectedProducts = [];
+        let selectedProductId = null;
+        let currentPage = 1;
+        let pageSize = 12;
+        let currentTab = 'all';
+
+        $(document).ready(function() {
+            loadFeaturedProducts();
+            loadCategories();
+            setupEventHandlers();
+        });
+
+        function setupEventHandlers() {
+            $('#searchFeatured').on('keypress', function(e) {
+                if (e.which === 13) {
+                    searchFeatured();
+                }
+            });
+
+            $('#productSearch').on('input', function() {
+                const query = $(this).val();
+                if (query.length >= 2) {
+                    searchProducts();
+                } else {
+                    $('#productSearchResults').empty();
+                }
+            });
+
+            // Tab change handler
+            $('#featuredTabs button[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+                currentTab = e.target.id.replace('-tab', '');
+                loadFeaturedProducts();
+            });
+        }
+
+        function loadFeaturedProducts(page = 1) {
+            currentPage = page;
+            const filters = {
+                search: $('#searchFeatured').val(),
+                category: $('#categoryFilter').val(),
+                status: $('#statusFilter').val(),
+                type: $('#typeFilter').val(),
+                sortBy: $('#sortBy').val(),
+                tab: currentTab,
+                page: page,
+                pageSize: pageSize
+            };
+
+            $.ajax({
+                url: '/Admin/GetFeaturedProducts',
+                type: 'GET',
+                data: filters,
+                success: function(response) {
+                    if (response.success) {
+                        displayFeaturedProducts(response.data.products);
+                        updatePagination(response.data.totalPages, response.data.currentPage);
+                        updateStatistics(response.data.statistics);
+                    } else {
+                        toastr.error('Failed to load featured products');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while loading featured products');
+                }
+            });
+        }
+
+        function displayFeaturedProducts(products) {
+            const grid = $('#featuredProductsGrid');
+            grid.empty();
+
+            if (products.length === 0) {
+                grid.append(`
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-star fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No featured products found</h5>
+                        <p class="text-muted">Add some products to featured list to get started.</p>
+                    </div>
+                `);
+                return;
+            }
+
+            products.forEach(function(product) {
+                const badges = getFeaturedBadges(product);
+                const statusBadge = product.isActive ? 
+                    '<span class="badge bg-success">Active</span>' : 
+                    '<span class="badge bg-secondary">Inactive</span>';
+                
+                const card = `
+                    <div class="col-md-4 col-lg-3 mb-4">
+                        <div class="card h-100 featured-product-card" data-product-id="${product.id}">
+                            <div class="position-relative">
+                                <img src="${product.imageUrl || '/images/no-image.png'}" class="card-img-top" alt="${product.name}" style="height: 200px; object-fit: cover;">
+                                <div class="position-absolute top-0 start-0 p-2">
+                                    <input type="checkbox" class="product-checkbox" value="${product.id}" onchange="updateSelection()">
+                                </div>
+                                <div class="position-absolute top-0 end-0 p-2">
+                                    ${statusBadge}
+                                </div>
+                                <div class="position-absolute bottom-0 start-0 p-2">
+                                    ${badges}
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="card-title">${product.name}</h6>
+                                <p class="card-text text-muted small">${product.category}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>$${product.price}</strong>
+                                        ${product.compareAtPrice ? `<small class="text-muted text-decoration-line-through">$${product.compareAtPrice}</small>` : ''}
+                                    </div>
+                                    <small class="text-muted">Order: ${product.displayOrder}</small>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">Sales: ${product.salesCount || 0}</small>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="btn-group w-100" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="editFeaturedProduct(${product.id})" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-info" onclick="reorderProduct(${product.id})" title="Reorder">
+                                        <i class="fas fa-sort"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="toggleFeaturedStatus(${product.id})" title="Toggle Status">
+                                        <i class="fas fa-toggle-${product.isActive ? 'on' : 'off'}"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFeatured(${product.id})" title="Remove">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.append(card);
+            });
+
+            // Make cards sortable
+            if (typeof Sortable !== 'undefined') {
+                new Sortable(grid[0], {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost',
+                    onEnd: function(evt) {
+                        updateProductOrder();
+                    }
+                });
+            }
+        }
+
+        function getFeaturedBadges(product) {
+            let badges = [];
+            if (product.isBestSeller) badges.push('<span class="badge bg-warning">Best Seller</span>');
+            if (product.isNew) badges.push('<span class="badge bg-info">New</span>');
+            if (product.isHot) badges.push('<span class="badge bg-danger">Hot</span>');
+            if (product.isTodayDeal) badges.push('<span class="badge bg-success">Deal</span>');
+            return badges.join(' ');
+        }
+
+        function searchProducts() {
+            const query = $('#productSearch').val();
+            if (query.length < 2) return;
+
+            $.ajax({
+                url: '/Admin/SearchProductsForFeatured',
+                type: 'GET',
+                data: { query: query },
+                success: function(response) {
+                    if (response.success) {
+                        displayProductSearchResults(response.data);
+                    }
+                },
+                error: function() {
+                    toastr.error('Error searching products');
+                }
+            });
+        }
+
+        function displayProductSearchResults(products) {
+            const results = $('#productSearchResults');
+            results.empty();
+
+            if (products.length === 0) {
+                results.append('<div class="text-muted">No products found</div>');
+                return;
+            }
+
+            products.forEach(function(product) {
+                const item = `
+                    <div class="border rounded p-2 mb-2 product-search-item" style="cursor: pointer;" onclick="selectProduct(${product.id}, '${product.name}', '${product.imageUrl}', ${product.price})">
+                        <div class="d-flex align-items-center">
+                            <img src="${product.imageUrl || '/images/no-image.png'}" alt="${product.name}" style="width: 40px; height: 40px; object-fit: cover;" class="me-2">
+                            <div>
+                                <strong>${product.name}</strong><br>
+                                <small class="text-muted">${product.category} - $${product.price}</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                results.append(item);
+            });
+        }
+
+        function selectProduct(id, name, imageUrl, price) {
+            selectedProductId = id;
+            $('#selectedProductDetails').html(`
+                <div class="d-flex align-items-center">
+                    <img src="${imageUrl || '/images/no-image.png'}" alt="${name}" style="width: 50px; height: 50px; object-fit: cover;" class="me-3">
+                    <div>
+                        <strong>${name}</strong><br>
+                        <small class="text-muted">Price: $${price}</small>
+                    </div>
+                </div>
+            `);
+            $('#selectedProductInfo').show();
+            $('#productSearchResults').empty();
+            $('#productSearch').val('');
+        }
+
+        function saveFeaturedProduct() {
+            if (!selectedProductId) {
+                toastr.error('Please select a product first');
+                return;
+            }
+
+            const formData = {
+                productId: selectedProductId,
+                isBestSeller: $('#isBestSeller').is(':checked'),
+                isNew: $('#isNew').is(':checked'),
+                isHot: $('#isHot').is(':checked'),
+                isTodayDeal: $('#isTodayDeal').is(':checked'),
+                displayOrder: $('#displayOrder').val(),
+                featuredSection: $('#featuredSection').val(),
+                startDate: $('#startDate').val(),
+                endDate: $('#endDate').val(),
+                isActive: $('#isActive').is(':checked'),
+                showOnHomepage: $('#showOnHomepage').is(':checked'),
+                showInCategory: $('#showInCategory').is(':checked'),
+                showInSidebar: $('#showInSidebar').is(':checked'),
+                notes: $('#featuredNote').val()
+            };
+
+            $.ajax({
+                url: '/Admin/AddFeaturedProduct',
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success('Featured product added successfully!');
+                        $('#addFeaturedModal').modal('hide');
+                        loadFeaturedProducts();
+                        resetAddForm();
+                    } else {
+                        toastr.error(response.message || 'Failed to add featured product');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while adding the featured product');
+                }
+            });
+        }
+
+        function editFeaturedProduct(productId) {
+            // Load product data and show edit modal
+            $.ajax({
+                url: `/Admin/GetFeaturedProduct/${productId}`,
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        populateEditForm(response.data);
+                        $('#editFeaturedModal').modal('show');
+                    } else {
+                        toastr.error('Failed to load product data');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while loading product data');
+                }
+            });
+        }
+
+        function toggleFeaturedStatus(productId) {
+            $.ajax({
+                url: `/Admin/ToggleFeaturedStatus/${productId}`,
+                type: 'POST',
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success('Status updated successfully!');
+                        loadFeaturedProducts();
+                    } else {
+                        toastr.error(response.message || 'Failed to update status');
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while updating status');
+                }
+            });
+        }
+
+        function removeFeatured(productId) {
+            if (confirm('Are you sure you want to remove this product from featured list?')) {
+                $.ajax({
+                    url: `/Admin/RemoveFeaturedProduct/${productId}`,
+                    type: 'DELETE',
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success('Product removed from featured list!');
+                            loadFeaturedProducts();
+                        } else {
+                            toastr.error(response.message || 'Failed to remove product');
+                        }
+                    },
+                    error: function() {
+                        toastr.error('An error occurred while removing the product');
+                    }
+                });
+            }
+        }
+
+        function updateSelection() {
+            selectedProducts = $('.product-checkbox:checked').map(function() {
+                return parseInt($(this).val());
+            }).get();
+            
+            $('#selectedCount').text(selectedProducts.length);
+            
+            if (selectedProducts.length > 0) {
+                $('#bulkActions').show();
+            } else {
+                $('#bulkActions').hide();
+            }
+        }
+
+        function bulkActivate() {
+            bulkAction('activate');
+        }
+
+        function bulkDeactivate() {
+            bulkAction('deactivate');
+        }
+
+        function bulkRemove() {
+            if (confirm('Are you sure you want to remove the selected products from featured list?')) {
+                bulkAction('remove');
+            }
+        }
+
+        function bulkAction(action) {
+            $.ajax({
+                url: '/Admin/BulkFeaturedAction',
+                type: 'POST',
+                data: { productIds: selectedProducts, action: action },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success(`Products ${action}d successfully!`);
+                        loadFeaturedProducts();
+                        selectedProducts = [];
+                        $('#bulkActions').hide();
+                    } else {
+                        toastr.error(response.message || `Failed to ${action} products`);
+                    }
+                },
+                error: function() {
+                    toastr.error(`An error occurred while ${action}ing products`);
+                }
+            });
+        }
+
+        function loadCategories() {
+            $.ajax({
+                url: '/Admin/GetCategoriesForFilter',
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        const select = $('#categoryFilter');
+                        response.data.forEach(function(category) {
+                            select.append(`<option value="${category.id}">${category.name}</option>`);
+                        });
+                    }
+                }
+            });
+        }
+
+        function searchFeatured() {
+            loadFeaturedProducts(1);
+        }
+
+        function applyFilters() {
+            loadFeaturedProducts(1);
+        }
+
+        function exportFeatured() {
+            window.open('/Admin/ExportFeaturedProducts', '_blank');
+        }
+
+        function resetAddForm() {
+            $('#addFeaturedForm')[0].reset();
+            selectedProductId = null;
+            $('#selectedProductInfo').hide();
+            $('#productSearchResults').empty();
+            $('#isActive').prop('checked', true);
+            $('#showOnHomepage').prop('checked', true);
+            $('#displayOrder').val('0');
+        }
+
+        function updateStatistics(stats) {
+            $('#totalFeatured').text(stats.total);
+            $('#activeFeatured').text(stats.active);
+            $('#bestSellers').text(stats.bestSellers);
+            $('#todayDeals').text(stats.todayDeals);
+        }
+
+        function updatePagination(totalPages, currentPage) {
+            // Implementation similar to other pagination functions
+        }
+
+        function updateProductOrder() {
+            const productIds = [];
+            $('#featuredProductsGrid .featured-product-card').each(function(index) {
+                productIds.push({
+                    id: $(this).data('product-id'),
+                    order: index
+                });
+            });
+
+            $.ajax({
+                url: '/Admin/UpdateFeaturedProductOrder',
+                type: 'POST',
+                data: { products: productIds },
+                success: function(response) {
+                    if (response.success) {
+                        toastr.success('Product order updated successfully!');
+                    } else {
+                        toastr.error('Failed to update product order');
+                        loadFeaturedProducts(); // Reload to reset order
+                    }
+                },
+                error: function() {
+                    toastr.error('An error occurred while updating product order');
+                    loadFeaturedProducts(); // Reload to reset order
+                }
+            });
+        }
+    </script>
+}
+
+<style>
+    .featured-product-card {
+        transition: transform 0.2s;
+    }
+    
+    .featured-product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .product-search-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .sortable-ghost {
+        opacity: 0.4;
+    }
+    
+    .badge {
+        font-size: 0.7em;
+    }
+    
+    .card-img-top {
+        transition: transform 0.2s;
+    }
+    
+    .featured-product-card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+</style>
