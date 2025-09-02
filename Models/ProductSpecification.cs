@@ -19,6 +19,10 @@ namespace AccessoryWorld.Models
         
         public int DisplayOrder { get; set; } = 0;
         
+        // Computed properties for backward compatibility
+        public string Name => SpecificationName;
+        public string Value => SpecificationValue;
+        
         // Navigation properties
         public virtual Product Product { get; set; } = null!;
     }
