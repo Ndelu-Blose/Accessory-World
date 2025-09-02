@@ -8,41 +8,334 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/AccessoryWorld.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    
+    <style>
+        /* Admin Navigation Styles */
+        .admin-navbar {
+            background: linear-gradient(135deg, #1399FF 0%, #FF37B9 100%);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            border-bottom: none;
+            padding: 0.75rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+        }
+        
+        .admin-navbar .container-fluid {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .admin-nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .admin-nav-brand .brand-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: color 0.3s ease;
+        }
+        
+        .admin-nav-brand .brand-link:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .admin-badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        
+        .admin-nav-center {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .admin-quick-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .quick-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .quick-action:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .quick-action i {
+            font-size: 1.2rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .admin-nav-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .admin-user-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        
+        .admin-user-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #1399FF, #FF37B9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .user-role {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+        
+        .admin-dropdown-menu {
+            border: none;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            border-radius: 20px;
+            padding: 0.75rem 0;
+            min-width: 180px;
+            background: white;
+        }
+        
+        .admin-dropdown-menu .dropdown-item {
+            padding: 0.75rem 1.25rem;
+            transition: all 0.2s ease;
+            border-radius: 0;
+            font-weight: 500;
+            color: #111111;
+        }
+        
+        .admin-dropdown-menu .dropdown-item:hover {
+            background: #F8FAFC;
+            color: #1399FF;
+        }
+        
+        .logout-btn {
+            color: #EF4444 !important;
+            font-weight: 500;
+        }
+        
+        .logout-btn:hover {
+            background: #FEF2F2 !important;
+            color: #DC2626 !important;
+        }
+        
+        /* Responsive Design */
+        @@media (max-width: 768px) {
+            .admin-quick-actions {
+                display: none;
+            }
+            
+            .admin-nav-brand .brand-link span {
+                display: none;
+            }
+            
+            .user-info {
+                display: none;
+            }
+        }
+        
+        @@media (max-width: 576px) {
+            .admin-badge {
+                display: none;
+            }
+        }
+    </style>
+    
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">AccessoryWorld</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Products" asp-action="Index">Products</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" href="#">Trade In</a>
-                        </li>
-                        @if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Admin" asp-action="Dashboard">Admin</a>
-                            </li>
-                        }
-                    </ul>
-                    <div class="navbar-nav ms-auto">
-                        <partial name="_LoginPartial" />
+        @{
+            var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+            var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+            var isAdminController = currentController == "Admin";
+            var isAdminUser = User.IsInRole("Admin");
+            var isAdminArea = ViewContext.RouteData.Values["area"]?.ToString() == "Admin";
+            
+            // Show admin nav for admin users on admin pages or when explicitly accessing admin functions
+            var showAdminNav = isAdminUser && (isAdminController || isAdminArea);
+            
+            // Also show admin nav if user is admin and on any admin-related page
+            if (!showAdminNav && isAdminUser)
+            {
+                var adminPages = new[] { "Dashboard", "Orders", "Products", "Users", "Inventory", "Settings", "Reports" };
+                showAdminNav = adminPages.Contains(currentAction) || Context.Request.Path.StartsWithSegments("/Admin");
+            }
+        }
+        
+        @if (showAdminNav)
+        {
+            <!-- Admin Navigation Bar -->
+            <nav class="admin-navbar">
+                <div class="container-fluid">
+                    <div class="admin-nav-brand">
+                        <a href="@Url.Action("Index", "Home")" class="brand-link">
+                            <i class="fas fa-arrow-left me-2"></i>AccessoryWorld
+                        </a>
+                        <div class="admin-badge">
+                            <i class="fas fa-shield-alt me-1"></i>Admin Panel
+                        </div>
+                    </div>
+                    
+                    <div class="admin-nav-center">
+                        <div class="admin-quick-actions">
+                            <a href="@Url.Action("Dashboard", "Admin")" class="quick-action" title="Dashboard">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                            <a href="@Url.Action("Orders", "Admin")" class="quick-action" title="Orders">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span>Orders</span>
+                            </a>
+                            <a href="@Url.Action("Products", "Admin")" class="quick-action" title="Products">
+                                <i class="fas fa-box"></i>
+                                <span>Products</span>
+                            </a>
+                            <a href="@Url.Action("Users", "Admin")" class="quick-action" title="Users">
+                                <i class="fas fa-users"></i>
+                                <span>Users</span>
+                            </a>
+                            <a href="@Url.Action("Inventory", "Admin")" class="quick-action" title="Inventory">
+                                <i class="fas fa-warehouse"></i>
+                                <span>Inventory</span>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-nav-user">
+                        <div class="admin-user-dropdown dropdown">
+                            <button class="admin-user-btn dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <div class="user-avatar">
+                                    <i class="fas fa-user-shield"></i>
+                                </div>
+                                <div class="user-info">
+                                    <span class="user-name">@User.Identity?.Name</span>
+                                    <span class="user-role">Administrator</span>
+                                </div>
+                            </button>
+                            <ul class="dropdown-menu admin-dropdown-menu">
+                                <li>
+                                    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home")" method="post" class="d-inline">
+                                        <button type="submit" class="dropdown-item logout-btn">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
+            
+            <!-- Admin Toggle for Admin Users on Regular Pages -->
+            @if (isAdminUser && !showAdminNav)
+            {
+                <div class="admin-toggle-bar" style="background: linear-gradient(135deg, #2c3e50, #34495e); padding: 0.5rem 0; text-align: center;">
+                    <div class="container-fluid">
+                        <span style="color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-right: 1rem;">
+                            <i class="fas fa-shield-alt me-1"></i>Admin Access Available
+                        </span>
+                        <a href="@Url.Action("Dashboard", "Admin")" class="btn btn-sm" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 0.25rem 1rem; text-decoration: none; transition: all 0.3s ease;" 
+                           onmouseover="this.style.background='rgba(255,255,255,0.2)'" 
+                           onmouseout="this.style.background='rgba(255,255,255,0.1)'">
+                            <i class="fas fa-tachometer-alt me-1"></i>Switch to Admin Panel
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <!-- Regular Navigation Bar -->
+            <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+                <div class="container-fluid">
+                    <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">AccessoryWorld</a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                        <ul class="navbar-nav flex-grow-1">
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Products" asp-action="Index">Products</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" href="#">Trade In</a>
+                            </li>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Admin" asp-action="Dashboard">Admin</a>
+                                </li>
+                            }
+                        </ul>
+                        <div class="navbar-nav ms-auto">
+                            <partial name="_LoginPartial" />
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        }
     </header>
     <div class="container-fluid">
         <main role="main" class="pb-3">

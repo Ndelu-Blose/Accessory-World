@@ -33,73 +33,109 @@
     .admin-container {
         background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         min-height: 100vh;
-        padding: 2rem;
+        padding: 1.5rem;
     }
 
     .admin-sidebar {
         background: white;
-        border-radius: var(--border-radius);
-        box-shadow: var(--shadow-md);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
         overflow: hidden;
         position: sticky;
-        top: 2rem;
+        top: 1.5rem;
         height: fit-content;
+        width: 280px;
+        min-height: calc(100vh - 3rem);
     }
 
     .admin-sidebar .sidebar-header {
-        background: linear-gradient(135deg, var(--primary), var(--accent));
+        background: linear-gradient(135deg, #1399FF, #FF37B9);
         color: white;
-        padding: 1.5rem;
+        padding: 2rem 1.5rem;
         text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .admin-sidebar .sidebar-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
     }
 
     .admin-sidebar .sidebar-header h5 {
         margin: 0;
         font-weight: 700;
-        font-size: 1.1rem;
+        font-size: 1.25rem;
+        position: relative;
+        z-index: 1;
+        letter-spacing: 0.5px;
+    }
+
+    .admin-sidebar .sidebar-header .admin-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        display: inline-block;
+        position: relative;
+        z-index: 1;
     }
 
     .admin-nav {
         list-style: none;
-        padding: 0;
+        padding: 1rem 0;
         margin: 0;
     }
 
     .admin-nav-item {
-        border-bottom: 1px solid var(--border);
-    }
-
-    .admin-nav-item:last-child {
-        border-bottom: none;
+        margin: 0.25rem 0;
     }
 
     .admin-nav-link {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
         padding: 1rem 1.5rem;
-        color: var(--text-dark);
+        color: #374151;
         text-decoration: none;
         transition: all 0.3s ease;
         font-weight: 500;
+        border-radius: 12px;
+        margin: 0 1rem;
+        position: relative;
     }
 
     .admin-nav-link:hover {
-        background: var(--bg-light);
-        color: var(--primary);
+        background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+        color: #1399FF;
         text-decoration: none;
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(19, 153, 255, 0.15);
     }
 
     .admin-nav-link.active {
-        background: linear-gradient(135deg, var(--primary), var(--accent));
+        background: linear-gradient(135deg, #1399FF, #FF37B9);
         color: white;
-        border-left: 4px solid var(--accent-magenta);
+        box-shadow: 0 8px 24px rgba(19, 153, 255, 0.3);
+        transform: translateX(4px);
     }
 
     .admin-nav-link i {
-        font-size: 1.1rem;
-        width: 20px;
+        width: 24px;
+        margin-right: 1rem;
         text-align: center;
+        font-size: 1.1rem;
+    }
+
+    .admin-nav-link span {
+        font-size: 0.95rem;
+        letter-spacing: 0.25px;
     }
 
     .dashboard-header {
@@ -677,16 +713,62 @@
             font-size: 1.5rem;
         }
     }
+
+    .product-image-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 12px;
+        background: #f8f9fa;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+
+    .product-image-container:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+
+    .carousel-inner {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .carousel-item img {
+        transition: transform 0.3s ease;
+    }
+
+    .carousel-item:hover img {
+        transform: scale(1.02);
+    }
+
+    .thumbnail-img {
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .thumbnail-img:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .thumbnail-img.active {
+        border: 2px solid #1399FF;
+        box-shadow: 0 0 0 2px rgba(19, 153, 255, 0.2);
+    }
 </style>
 }
 
 <div class="admin-container">
-    <div class="row">
-        <div class="col-md-3">
+    <div class="row g-4">
+        <div class="col-xl-3 col-lg-4">
             <!-- Admin Navigation Sidebar -->
             <div class="admin-sidebar">
                 <div class="sidebar-header">
                     <h5>Admin Panel</h5>
+                    <div class="admin-badge">
+                        <i class="fas fa-shield-alt me-1"></i>Management
+                    </div>
                 </div>
                 <nav>
                     <ul class="admin-nav">
@@ -715,19 +797,13 @@
                             </a>
                         </li>
                         <li class="admin-nav-item">
-                            <a href="#" class="admin-nav-link">
+                            <a href="@Url.Action("Inventory", "Admin")" class="admin-nav-link">
                                 <i class="fas fa-warehouse"></i>
                                 <span>Inventory</span>
                             </a>
                         </li>
                         <li class="admin-nav-item">
-                            <a href="#" class="admin-nav-link">
-                                <i class="fas fa-chart-bar"></i>
-                                <span>Reports</span>
-                            </a>
-                        </li>
-                        <li class="admin-nav-item">
-                            <a href="#" class="admin-nav-link">
+                            <a href="@Url.Action("Settings", "Admin")" class="admin-nav-link">
                                 <i class="fas fa-cog"></i>
                                 <span>Settings</span>
                             </a>
@@ -738,12 +814,24 @@
         </div>
 
         <!-- Main Content -->
-        <div class="col-md-9">
-            <!-- Dashboard Header -->
-            <div class="dashboard-header">
-                <h2>@Model.Name</h2>
-                <div class="last-updated">Product ID: @Model.Id | Last updated: @Model.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</div>
-                <div class="mt-3">
+        <div class="col-xl-9 col-lg-8">
+            <div class="main-content">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h2 class="mb-2">@Model.Name</h2>
+                            <div class="text-muted">Product ID: @Model.Id | Last updated: @Model.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</div>
+                        </div>
+                        <div class="btn-group" role="group">
+                            <a href="@Url.Action("EditProduct", "Admin", new { id = Model.Id })" class="btn btn-primary">
+                                <i class="fas fa-edit me-1"></i>Edit Product
+                            </a>
+                            <a href="@Url.Action("Products", "Admin")" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Products
+                            </a>
+                        </div>
+                    </div>
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-0">
                             <li class="breadcrumb-item"><a href="@Url.Action("Dashboard", "Admin")">Admin Dashboard</a></li>
@@ -752,82 +840,17 @@
                         </ol>
                     </nav>
                 </div>
-                <div class="mt-3">
-                    <div class="btn-group" role="group">
-                        <a href="@Url.Action("EditProduct", "Admin", new { id = Model.Id })" class="btn btn-primary">
-                            <i class="fas fa-edit me-1"></i>Edit Product
-                        </a>
-                        <a href="@Url.Action("Products", "Admin")" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>Back to Products
-                        </a>
-                    </div>
-                </div>
-            </div>
 
             <div class="admin-content">
 
+                <!-- Expanded Product Details Container -->
                 <div class="row">
-                    <!-- Product Images -->
-                    <div class="col-lg-6">
-                        @if (Model.ProductImages.Any())
-                        {
-                            <div id="adminProductCarousel" class="carousel slide" data-bs-ride="carousel">
-                                <div class="carousel-inner">
-                                    @{ int imageIndex = 0; }
-                                    @foreach (var image in Model.ProductImages)
-                                    {
-                                        <div class="carousel-item @(imageIndex == 0 ? "active" : "")">
-                                            <img src="@image.ImageUrl" 
-                                                 class="d-block w-100 rounded" 
-                                                 alt="@Model.Name" 
-                                                 style="height: 400px; object-fit: cover;">
-                                        </div>
-                                        imageIndex++;
-                                    }
-                                </div>
-                                @if (Model.ProductImages.Count > 1)
-                                {
-                                    <button class="carousel-control-prev" type="button" data-bs-target="#adminProductCarousel" data-bs-slide="prev">
-                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                        <span class="visually-hidden">Previous</span>
-                                    </button>
-                                    <button class="carousel-control-next" type="button" data-bs-target="#adminProductCarousel" data-bs-slide="next">
-                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                        <span class="visually-hidden">Next</span>
-                                    </button>
-                                }
-                            </div>
-                            
-                            @if (Model.ProductImages.Count > 1)
-                            {
-                                <div class="d-flex mt-3 gap-2">
-                                    @{ int thumbIndex = 0; }
-                                    @foreach (var image in Model.ProductImages)
-                                    {
-                                        <div class="flex-shrink-0">
-                                            <img src="@image.ImageUrl" 
-                                                 class="img-thumbnail cursor-pointer thumbnail-img @(thumbIndex == 0 ? "active" : "")" 
-                                                 alt="@Model.Name" 
-                                                 data-bs-target="#adminProductCarousel" 
-                                                 data-bs-slide-to="@thumbIndex"
-                                                 style="height: 80px; object-fit: cover;">
-                                        </div>
-                                        thumbIndex++;
-                                    }
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            <div class="d-flex align-items-center justify-content-center bg-light rounded" style="height: 400px;">
-                                <i class="fas fa-image fa-5x text-muted"></i>
-                            </div>
-                        }
-                    </div>
-
-                    <!-- Admin Product Details -->
-                    <div class="col-lg-6">
-                        <div class="ps-lg-4">
+                    <div class="col-12">
+                        <div class="expanded-product-container">
+                            <div class="row g-4">
+                                <!-- Product Details -->
+                                <div class="col-12">
+                                    <div class="product-details-section">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <h1 class="display-6 fw-bold mb-0">@Model.Name</h1>
                                 <div class="badge-container">
@@ -1274,7 +1297,12 @@
                             </div>
                         </div>
                     </div>
-                }
+                }                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1290,23 +1318,23 @@
     padding: 2rem;
 }
 
+.expanded-product-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.product-details-section {
+    height: 100%;
+}
+
 .badge-container .badge {
     margin-left: 0.25rem;
 }
 
-.thumbnail-img {
-    cursor: pointer;
-    transition: opacity 0.3s ease;
-}
 
-.thumbnail-img:hover {
-    opacity: 0.8;
-}
-
-.thumbnail-img.active {
-    border-color: var(--primary);
-    border-width: 2px;
-}
 
 .related-product-card {
     display: block;
@@ -1322,23 +1350,7 @@
     box-shadow: var(--shadow-lg) !important;
 }
 
-.carousel-control-prev,
-.carousel-control-next {
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    top: 50%;
-    transform: translateY(-50%);
-}
 
-.carousel-control-prev {
-    left: 10px;
-}
-
-.carousel-control-next {
-    right: 10px;
-}
 
 .breadcrumb {
     background: transparent;
@@ -1360,5 +1372,70 @@
 
 .breadcrumb-item.active {
     color: var(--text-muted);
+}
+
+/* Main Content Styling */
+.main-content {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    padding: 2rem;
+    min-height: calc(100vh - 4rem);
+    margin-bottom: 2rem;
+}
+
+.page-header {
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.page-header h2 {
+    font-weight: 700;
+    color: var(--text-dark);
+    font-size: 1.75rem;
+}
+
+.page-header .btn {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.page-header .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive Design */
+@@media (max-width: 992px) {
+    .main-content {
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .page-header .d-flex {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .page-header .btn-group {
+        align-self: stretch;
+    }
+}
+
+@@media (max-width: 768px) {
+    .admin-container {
+        padding: 1rem;
+    }
+    
+    .main-content {
+        padding: 1rem;
+    }
+    
+    .page-header h2 {
+        font-size: 1.5rem;
+    }
 }
 </style>

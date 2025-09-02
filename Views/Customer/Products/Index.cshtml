@@ -7,138 +7,9 @@
 <div class="products-page">
 <div class="container-fluid py-4">
     <div class="row g-0">
-        <!-- Sidebar Filters -->
-        <div class="col-lg-3 col-md-4">
-            <div class="filter-sidebar">
-                <div class="filter-header">
-                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filters</h5>
-                </div>
-                <div class="card-body">
-                    <form method="get" id="filterForm">
-                        <!-- Search -->
-                        <div class="mb-3">
-                            <label for="searchTerm" class="form-label">Search</label>
-                            <input type="text" class="form-control" id="searchTerm" name="searchTerm" value="@Model.SearchTerm" placeholder="Search products...">
-                        </div>
-
-                        <!-- Categories -->
-                        <div class="mb-3">
-                            <label for="categoryId" class="form-label">Category</label>
-                            <select class="form-select" id="categoryId" name="categoryId">
-                                <option value="">All Categories</option>
-                                @if (Model.Categories != null)
-                                {
-                                    @foreach (var cat in Model.Categories)
-                                    {
-                                        <option value="@cat.Id" @(Model.CategoryId == cat.Id ? "selected" : "")>@cat.Name</option>
-                                    }
-                                }
-                            </select>
-                        </div>
-
-                        <!-- Price Range -->
-                        <div class="mb-3">
-                            <label class="form-label">Price Range</label>
-                            <div class="row">
-                                <div class="col-6">
-                                    <input type="number" class="form-control" name="minPrice" value="@Model.MinPrice" placeholder="Min" step="0.01">
-                                </div>
-                                <div class="col-6">
-                                    <input type="number" class="form-control" name="maxPrice" value="@Model.MaxPrice" placeholder="Max" step="0.01">
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Brand Filter -->
-                        <div class="mb-3">
-                            <label for="brandId" class="form-label">Brand</label>
-                            <select class="form-select" id="brandId" name="brandId">
-                                <option value="">All Brands</option>
-                                @if (Model.Brands != null)
-                                {
-                                    @foreach (var brand in Model.Brands)
-                                    {
-                                        <option value="@brand.Id" @(Model.BrandId == brand.Id ? "selected" : "")>@brand.Name</option>
-                                    }
-                                }
-                            </select>
-                        </div>
-
-                        <!-- Condition Filter -->
-                        <div class="mb-3">
-                            <label for="condition" class="form-label">Condition</label>
-                            <select class="form-select" id="condition" name="condition">
-                                <option value="">All Conditions</option>
-                                <option value="New" @(Model.Condition == "New" ? "selected" : "")>New</option>
-                                <option value="C.P.O" @(Model.Condition == "C.P.O" ? "selected" : "")>C.P.O</option>
-                            </select>
-                        </div>
-
-                        <!-- In Stock Filter -->
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="inStock" name="inStock" value="true" @(Model.InStock == true ? "checked" : "")>
-                                <label class="form-check-label" for="inStock">
-                                    In Stock Only
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <!-- Feature Filters -->
-                        <div class="mb-3">
-                            <label class="form-label">Special Offers</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="isOnSale" name="isOnSale" value="true" @(Model.IsOnSale == true ? "checked" : "")>
-                                <label class="form-check-label" for="isOnSale">On Sale</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="isBestSeller" name="isBestSeller" value="true" @(Model.IsBestSeller == true ? "checked" : "")>
-                                <label class="form-check-label" for="isBestSeller">Best Seller</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="isNew" name="isNew" value="true" @(Model.IsNew == true ? "checked" : "")>
-                                <label class="form-check-label" for="isNew">New Arrivals</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="isHot" name="isHot" value="true" @(Model.IsHot == true ? "checked" : "")>
-                                <label class="form-check-label" for="isHot">Hot Items</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="isTodayDeal" name="isTodayDeal" value="true" @(Model.IsTodayDeal == true ? "checked" : "")>
-                                <label class="form-check-label" for="isTodayDeal">Today's Deals</label>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
-                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary w-100 mt-2">Clear Filters</a>
-                    </form>
-                </div>
-            </div>
-        </div>
-
         <!-- Products Grid -->
-        <div class="col-lg-9 col-md-8 products-grid">
-            <!-- Results Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2>Products</h2>
-                    <p class="text-muted mb-0">Showing @((Model.CurrentPage - 1) * Model.PageSize + 1)-@Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalProducts) of @Model.TotalProducts products</p>
-                </div>
-                <div class="d-flex align-items-center sort-controls">
-                    <label for="sortBy" class="form-label me-2 mb-0">Sort by:</label>
-                    <select class="form-select" id="sortBy" name="sortBy" style="width: auto;" onchange="updateSort(this.value)">
-                        <option value="name" @(Model.SortBy == "name" ? "selected" : "")>Name A-Z</option>
-                        <option value="price" @(Model.SortBy == "price" ? "selected" : "")>Price Low-High</option>
-                        <option value="newest" @(Model.SortBy == "newest" ? "selected" : "")>Newest First</option>
-                        <option value="bestseller" @(Model.SortBy == "bestseller" ? "selected" : "")>Best Sellers</option>
-                        <option value="sales" @(Model.SortBy == "sales" ? "selected" : "")>Most Popular</option>
-                    </select>
-                    <select class="form-select ms-2" id="sortOrder" name="sortOrder" style="width: auto;" onchange="updateSort()">
-                        <option value="asc" @(Model.SortOrder == "asc" ? "selected" : "")>Ascending</option>
-                        <option value="desc" @(Model.SortOrder == "desc" ? "selected" : "")>Descending</option>
-                    </select>
-                </div>
-            </div>
+        <div class="col-12 products-grid">
+
 
             <!-- Products Grid -->
             @if (Model.Products.Any())
@@ -173,7 +44,7 @@
                                     {
                                         <span class="badge badge-new">New</span>
                                     }
-                                    @if (product.IsOnSale)
+                                    @if (product.IsOnSale && product.SalePrice.HasValue && product.SalePrice.Value < product.Price)
                                     {
                                         <span class="badge badge-sale">Sale</span>
                                     }
@@ -183,36 +54,42 @@
                             <div class="product-card-body">
                                 <div class="product-brand">@product.Brand?.Name</div>
                                 <h5 class="product-title">@product.Name</h5>
-                                <p class="product-description">@Html.Raw(product.Description?.Length > 120 ? product.Description.Substring(0, 120) + "..." : product.Description ?? "No description available")</p>
                                 
                                 <div class="product-pricing">
-                                    @if (product.IsOnSale && product.SalePrice.HasValue)
+                                    @if (product.IsOnSale && product.SalePrice.HasValue && product.SalePrice.Value < product.Price)
                                     {
-                                        <div class="product-price">
-                                            <span class="product-compare-price">R@product.Price.ToString("N2")</span>
-                                            R@product.SalePrice.Value.ToString("N2")
+                                        <div class="price-container">
+                                            <span class="sale-price">R@product.SalePrice.Value.ToString("N2")</span>
+                                            <span class="original-price">R@product.Price.ToString("N2")</span>
                                             @{
                                                 var discount = Math.Round(((product.Price - product.SalePrice.Value) / product.Price) * 100);
                                             }
-                                            <span class="product-discount">(@discount% off)</span>
+                                            <span class="discount-percent">-@discount%</span>
                                         </div>
                                     }
                                     else
                                     {
-                                        <div class="product-price">R@product.Price.ToString("N2")</div>
+                                        <div class="price-container">
+                                            <span class="current-price">R@product.Price.ToString("N2")</span>
+                                        </div>
                                     }
                                     
                                     @if (product.CompareAtPrice.HasValue && product.CompareAtPrice > product.Price)
                                     {
-                                        <small class="text-muted">Compare at: R@product.CompareAtPrice.Value.ToString("N2")</small>
+                                        <div class="compare-price">
+                                            <small class="text-muted">Compare at: R@product.CompareAtPrice.Value.ToString("N2")</small>
+                                        </div>
                                     }
                                 </div>
                                 
                                 <div class="product-stock">
-                                    @if (product.InStock)
+                                    @{
+                                        var totalStock = product.SKUs?.Sum(s => s.StockQuantity - s.ReservedQuantity) ?? 0;
+                                        var skuCount = product.SKUs?.Count() ?? 0;
+                                    }
+                                    @if (totalStock > 0)
                                     {
-                                        var totalStock = product.SKUs.Sum(s => s.AvailableQuantity);
-                                        @if (totalStock <= 5 && totalStock > 0)
+                                        @if (totalStock <= 5)
                                         {
                                             <span class="stock-low"><i class="fas fa-exclamation-triangle"></i> Only @totalStock left!</span>
                                         }
@@ -225,6 +102,7 @@
                                     {
                                         <span class="stock-out"><i class="fas fa-times-circle"></i> Out of Stock</span>
                                     }
+
                                     
                                     @if (product.SalesCount > 0)
                                     {
@@ -233,7 +111,7 @@
                                 </div>
                                 
                                 <div class="product-actions">
-                                    @if (product.InStock)
+                                    @if (totalStock > 0)
                                     {
                                         <button class="btn btn-add-cart" onclick="addToCart(@product.Id)">
                                             <i class="fas fa-shopping-cart me-2"></i>Add to Cart
@@ -299,26 +177,7 @@
 
 @section Scripts {
     <script>
-        function updateSort() {
-            const sortBy = document.getElementById('sortBy').value;
-            const sortOrder = document.getElementById('sortOrder').value;
-            const url = new URL(window.location);
-            
-            if (sortBy) {
-                url.searchParams.set('sortBy', sortBy);
-            } else {
-                url.searchParams.delete('sortBy');
-            }
-            
-            if (sortOrder) {
-                url.searchParams.set('sortOrder', sortOrder);
-            } else {
-                url.searchParams.delete('sortOrder');
-            }
-            
-            url.searchParams.set('page', '1'); // Reset to first page
-            window.location.href = url.toString();
-        }
+        // Sort functionality removed as sort controls have been hidden
 
         // Auto-submit form when filters change
         document.getElementById('categoryId')?.addEventListener('change', function() {
