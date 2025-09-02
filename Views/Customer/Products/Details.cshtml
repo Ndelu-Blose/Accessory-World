@@ -91,14 +91,14 @@
                     @if (Model.IsOnSale && Model.SalePrice.HasValue)
                     {
                         <div class="d-flex align-items-center gap-3">
-                            <span class="display-6 fw-bold text-danger">R@Model.SalePrice.Value.ToString("N2")</span>
-                            <span class="h4 text-decoration-line-through text-muted">R@Model.Price.ToString("N2")</span>
+                            <span class="display-6 fw-bold text-danger">R@(Model.SalePrice.Value.ToString("N2"))</span>
+                            <span class="h4 text-decoration-line-through text-muted">R@(Model.Price.ToString("N2"))</span>
                             <span class="badge bg-danger">@(((originalPrice - Model.SalePrice.Value) / originalPrice * 100).ToString("F0"))% OFF</span>
                         </div>
                     }
                     else
                     {
-                        <span class="display-6 fw-bold">R@Model.Price.ToString("N2")</span>
+                        <span class="display-6 fw-bold">R@(Model.Price.ToString("N2"))</span>
                     }
                 </div>
 
@@ -173,17 +173,27 @@
                             {
                                 <input type="hidden" id="skuSelect" name="skuId" value="@Model.SKUs.First().Id">
                             }
-                            <div class="row align-items-end">
-                                <div class="col-md-4">
-                                    <label for="quantity" class="form-label">Quantity</label>
-                                    <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" max="@totalStock">
+                            @if (!User.IsInRole("Admin"))
+                            {
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label for="quantity" class="form-label fw-bold">Quantity:</label>
+                                        <div class="input-group" style="max-width: 150px;">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="decreaseQuantity()">-</button>
+                                            <input type="number" class="form-control text-center" id="quantity" name="quantity" value="1" min="1" max="@Model.StockQuantity">
+                                            <button class="btn btn-outline-secondary" type="button" onclick="increaseQuantity()">+</button>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-8">
-                                    <button type="submit" class="btn btn-primary btn-lg w-100" id="addToCartBtn">
-                                        <i class="fas fa-shopping-cart"></i> Add to Cart
-                                    </button>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-2">
+                                            <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            }
                         </form>
                     }
                     else
@@ -195,14 +205,52 @@
                 </div>
 
                 <!-- Additional Actions -->
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary" onclick="addToWishlist(@Model.Id)">
-                        <i class="far fa-heart"></i> Add to Wishlist
-                    </button>
-                    <button class="btn btn-outline-secondary" onclick="shareProduct()">
-                        <i class="fas fa-share"></i> Share
-                    </button>
-                </div>
+                @if (!User.IsInRole("Admin"))
+                {
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary" onclick="addToWishlist(@Model.Id)">
+                            <i class="far fa-heart"></i> Add to Wishlist
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="shareProduct()">
+                            <i class="fas fa-share"></i> Share
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <!-- Admin-specific Information -->
+                    <div class="card border-warning mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0"><i class="fas fa-user-shield"></i> Admin Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Product ID:</strong> @Model.Id</p>
+                                    <p><strong>Created:</strong> @Model.CreatedAt.ToString("yyyy-MM-dd HH:mm")</p>
+                                    <p><strong>Last Updated:</strong> @Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm")</p>
+                                    <p><strong>View Count:</strong> @Model.ViewCount</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Featured:</strong> @(Model.IsFeatured ? "Yes" : "No")</p>
+                                    <p><strong>On Sale:</strong> @(Model.IsOnSale ? "Yes" : "No")</p>
+                                    @if (Model.IsOnSale && Model.SalePrice.HasValue)
+                                    {
+                                        <p><strong>Sale Price:</strong> R@Model.SalePrice.Value.ToString("N2")</p>
+                                    }
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <a href="@Url.Action("EditProduct", "Admin", new { id = Model.Id })" class="btn btn-warning me-2">
+                                    <i class="fas fa-edit"></i> Edit Product
+                                </a>
+                                <a href="@Url.Action("ManageInventory", "Admin", new { productId = Model.Id })" class="btn btn-info">
+                                    <i class="fas fa-boxes"></i> Manage Inventory
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -241,13 +289,13 @@
                                         @if (product.IsOnSale && product.SalePrice.HasValue)
                                         {
                                             <div>
-                                                <span class="text-decoration-line-through text-muted small">R@product.Price.ToString("N2")</span>
-                                                <span class="fw-bold text-danger">R@product.SalePrice.Value.ToString("N2")</span>
+                                                <span class="text-decoration-line-through text-muted small">R@(product.Price.ToString("N2"))</span>
+                                                <span class="fw-bold text-danger">R@(product.SalePrice.Value.ToString("N2"))</span>
                                             </div>
                                         }
                                         else
                                         {
-                                            <span class="fw-bold">R@product.Price.ToString("N2")</span>
+                                            <span class="fw-bold">R@(product.Price.ToString("N2"))</span>
                                         }
                                     </div>
                                     <a href="@Url.Action("Details", new { id = product.Id })" class="btn btn-sm btn-primary w-100">View Details</a>

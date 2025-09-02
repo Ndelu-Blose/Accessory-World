@@ -309,6 +309,7 @@ namespace AccessoryWorld.ViewModels
         public bool IsHot { get; set; }
         public bool IsTodayDeal { get; set; }
         public bool IsBestSeller { get; set; }
+        public bool IsOnSale { get; set; }
 
         [StringLength(50, ErrorMessage = "SKU code cannot exceed 50 characters")]
         public string? SKUCode { get; set; }

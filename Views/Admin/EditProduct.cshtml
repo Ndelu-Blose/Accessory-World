@@ -303,7 +303,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Edit Product</h4>
+                    <h4 class="mb-0">Edit Product: @Model.Name</h4>
                     <div>
                         <button type="button" class="btn btn-secondary" onclick="window.history.back()">
                             <i class="fas fa-arrow-left"></i> Back
@@ -336,9 +336,9 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group mb-3">
-                                                    <label asp-for="SKU" class="form-label">SKU Code *</label>
-                                                    <input asp-for="SKU" class="form-control" placeholder="Enter SKU code" required />
-                                                    <span asp-validation-for="SKU" class="text-danger"></span>
+                                                    <label asp-for="SKUCode" class="form-label">SKU Code *</label>
+                                                    <input asp-for="SKUCode" class="form-control" placeholder="Enter SKU code" required />
+                                                    <span asp-validation-for="SKUCode" class="text-danger"></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -359,9 +359,15 @@
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-group mb-3">
-                                                    <label asp-for="Brand" class="form-label">Brand</label>
-                                                    <input asp-for="Brand" class="form-control" placeholder="Enter brand name" />
-                                                    <span asp-validation-for="Brand" class="text-danger"></span>
+                                                    <label asp-for="BrandId" class="form-label">Brand *</label>
+                                                    <select asp-for="BrandId" class="form-select" required>
+                                                        <option value="">Select Brand</option>
+                                                        @foreach (var brand in ViewBag.Brands as IEnumerable<dynamic>)
+                                                        {
+                                                            <option value="@brand.Id">@brand.Name</option>
+                                                        }
+                                                    </select>
+                                                    <span asp-validation-for="BrandId" class="text-danger"></span>
                                                 </div>
                                             </div>
                                         </div>

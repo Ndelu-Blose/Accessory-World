@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace AccessoryWorld.Models
 {
@@ -51,6 +52,10 @@ namespace AccessoryWorld.Models
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        
+        // Computed properties
+        public int StockQuantity => SKUs?.Sum(s => s.StockQuantity) ?? 0;
+        public int LowStockThreshold => SKUs?.FirstOrDefault()?.LowStockThreshold ?? 5;
         
         // Navigation properties
         public virtual Brand Brand { get; set; } = null!;

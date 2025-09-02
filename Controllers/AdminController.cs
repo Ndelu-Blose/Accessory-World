@@ -26,6 +26,49 @@ namespace AccessoryWorld.Controllers
             _logger = logger;
         }
 
+        // GET: Admin/ProductDetails/{id}
+        [HttpGet]
+        [Route("Admin/ProductDetails/{id:int}")]
+        public async Task<IActionResult> ProductDetails(int id)
+        {
+            try
+            {
+                var product = await _context.Products
+                    .Include(p => p.Category)
+                    .Include(p => p.Brand)
+                    .Include(p => p.ProductImages)
+                    .Include(p => p.ProductSpecifications)
+                    .Include(p => p.SKUs)
+                        .ThenInclude(s => s.StockMovements)
+                    .FirstOrDefaultAsync(p => p.Id == id);
+
+                if (product == null)
+                {
+                    TempData["ErrorMessage"] = "Product not found";
+                    return RedirectToAction(nameof(Products));
+                }
+
+                // Get related products for admin reference
+                var relatedProducts = await _context.Products
+                    .Include(p => p.Category)
+                    .Include(p => p.Brand)
+                    .Include(p => p.ProductImages)
+                    .Where(p => p.CategoryId == product.CategoryId && p.Id != product.Id)
+                    .Take(4)
+                    .ToListAsync();
+
+                ViewBag.RelatedProducts = relatedProducts;
+
+                return View(product);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading product details for admin");
+                TempData["ErrorMessage"] = "Error loading product details: " + ex.Message;
+                return RedirectToAction(nameof(Products));
+            }
+        }
+
         // GET: Admin/Index - Redirect to Dashboard
         public IActionResult Index()
         {
@@ -1476,6 +1519,7 @@ namespace AccessoryWorld.Controllers
                     Price = product.Price,
                     CompareAtPrice = product.CompareAtPrice,
                     SalePrice = product.SalePrice,
+                    IsOnSale = product.IsOnSale,
                     StockQuantity = product.SKUs.Sum(s => s.StockQuantity),
                     LowStockThreshold = product.SKUs.FirstOrDefault()?.LowStockThreshold ?? 5,
                     ImageUrl = product.ProductImages.FirstOrDefault(pi => pi.IsPrimary)?.ImageUrl,
@@ -1516,7 +1560,7 @@ namespace AccessoryWorld.Controllers
         // POST: Admin/UpdateProduct
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateProduct(EditProductViewModel model)
+        public async Task<IActionResult> UpdateProduct(EditProductViewModel model, List<IFormFile> NewImages)
         {
             try
             {
@@ -1540,6 +1584,7 @@ namespace AccessoryWorld.Controllers
                     product.Price = model.Price;
                     product.CompareAtPrice = model.CompareAtPrice;
                     product.SalePrice = model.SalePrice;
+                    product.IsOnSale = model.IsOnSale;
                     product.IsActive = model.IsActive;
                     product.IsFeatured = model.IsFeatured;
                     product.IsNew = model.IsNew;
@@ -1568,6 +1613,41 @@ namespace AccessoryWorld.Controllers
                     {
                         var imagesToDelete = product.ProductImages.Where(pi => model.ImagesToDelete.Contains(pi.Id)).ToList();
                         _context.ProductImages.RemoveRange(imagesToDelete);
+                    }
+
+                    // Handle new image uploads
+                    if (NewImages != null && NewImages.Any())
+                    {
+                        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "products");
+                        Directory.CreateDirectory(uploadsFolder);
+
+                        var maxSortOrder = product.ProductImages.Any() ? product.ProductImages.Max(pi => pi.SortOrder) : 0;
+                        var isFirstImage = !product.ProductImages.Any();
+
+                        foreach (var file in NewImages)
+                        {
+                            if (file.Length > 0)
+                            {
+                                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                                using (var stream = new FileStream(filePath, FileMode.Create))
+                                {
+                                    await file.CopyToAsync(stream);
+                                }
+
+                                var productImage = new ProductImage
+                                {
+                                    ProductId = product.Id,
+                                    ImageUrl = "/images/products/" + fileName,
+                                    IsPrimary = isFirstImage,
+                                    SortOrder = ++maxSortOrder
+                                };
+
+                                _context.ProductImages.Add(productImage);
+                                isFirstImage = false;
+                            }
+                        }
                     }
 
                     // Handle primary image update

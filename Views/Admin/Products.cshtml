@@ -366,7 +366,7 @@
                                             <td>
                                                 <div class="btn-group btn-group-sm">
                                                     <button class="btn btn-outline-primary" title="View Product" 
-                                                            onclick="viewProduct(@product.Id)">
+                                                            onclick="event.preventDefault(); console.log('View Product button clicked for ID: @product.Id'); viewProduct(@product.Id); return false;">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
                                                     <button class="btn btn-outline-secondary" title="Edit Product" 
@@ -571,8 +571,11 @@
 @section Scripts {
     <script>
         function viewProduct(productId) {
-            // Redirect to product details page
-            window.location.href = '/Products/Details/' + productId;
+            // Debug: Log the URL being generated
+            var url = '/Admin/ProductDetails/' + productId;
+            console.log('Navigating to:', url);
+            // Redirect to admin product details page
+            window.location.href = url;
         }
         
         function editProduct(productId) {
