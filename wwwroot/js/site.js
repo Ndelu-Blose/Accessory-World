@@ -75,3 +75,130 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
+
+// Cart functionality
+function addToCart(productId, skuId = null, quantity = 1) {
+    // Get the anti-forgery token
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+    
+    if (!token) {
+        console.error('Anti-forgery token not found');
+        showCartMessage('Security token missing. Please refresh the page.', 'error');
+        return;
+    }
+    
+    // If no SKU ID provided, try to get the first available SKU for the product
+    if (!skuId) {
+        // For now, we'll use a default SKU ID of 1 or make an assumption
+        // In a real implementation, you'd want to get the actual SKU ID from the product
+        skuId = 1;
+    }
+    
+    const requestData = {
+        ProductId: productId,
+        SKUId: skuId,
+        Quantity: quantity
+    };
+    
+    // Show loading state
+    const button = event?.target;
+    const originalText = button?.innerHTML;
+    if (button) {
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Adding...';
+    }
+    
+    fetch('/Cart/AddItem', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'RequestVerificationToken': token
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showCartMessage('Item added to cart successfully!', 'success');
+            updateCartCount(data.cartCount);
+        } else {
+            showCartMessage(data.message || 'Failed to add item to cart.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding to cart:', error);
+        showCartMessage('An error occurred. Please try again.', 'error');
+    })
+    .finally(() => {
+        // Restore button state
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = originalText;
+        }
+    });
+}
+
+function updateCartCount(count) {
+    const cartCountElements = document.querySelectorAll('.cart-count, .badge');
+    cartCountElements.forEach(element => {
+        element.textContent = count;
+        element.style.display = count > 0 ? 'inline' : 'none';
+    });
+}
+
+function showCartMessage(message, type) {
+    // Create or update cart message element
+    let messageDiv = document.getElementById('cart-message');
+    if (!messageDiv) {
+        messageDiv = document.createElement('div');
+        messageDiv.id = 'cart-message';
+        messageDiv.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 9999;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        `;
+        document.body.appendChild(messageDiv);
+    }
+    
+    messageDiv.textContent = message;
+    messageDiv.className = `cart-message ${type}`;
+    
+    if (type === 'success') {
+        messageDiv.style.backgroundColor = '#d4edda';
+        messageDiv.style.color = '#155724';
+        messageDiv.style.border = '1px solid #c3e6cb';
+    } else {
+        messageDiv.style.backgroundColor = '#f8d7da';
+        messageDiv.style.color = '#721c24';
+        messageDiv.style.border = '1px solid #f5c6cb';
+    }
+    
+    messageDiv.style.display = 'block';
+    messageDiv.style.opacity = '1';
+    
+    // Hide message after 4 seconds
+    setTimeout(() => {
+        messageDiv.style.opacity = '0';
+        setTimeout(() => {
+            messageDiv.style.display = 'none';
+        }, 300);
+    }, 4000);
+}
+
+// Load cart count on page load
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/Cart/GetCount')
+        .then(response => response.json())
+        .then(data => {
+            updateCartCount(data.count);
+        })
+        .catch(error => {
+            console.error('Error loading cart count:', error);
+        });
+});

@@ -1,5 +1,7 @@
-Alright ✅ let’s lay out **wireframe designs** for both **Customer Portal** and **Admin Dashboard**.
-I’ll keep it structured like UI mockups (not final visuals, but layouts you can directly convert into HTML/CSS or Figma).
+Alright ✅ let's lay out **wireframe designs** for both **Customer Portal** and **Admin Dashboard**.
+I'll keep it structured like UI mockups (not final visuals, but layouts you can directly convert into HTML/CSS or Figma).
+
+**Last Updated:** January 2025 - Reflects current application state with improved product cards, pricing display, and enhanced UI components.
 
 ---
 
@@ -66,12 +68,38 @@ I’ll keep it structured like UI mockups (not final visuals, but layouts you ca
 |   - iPhone 13 Pro x1                            |
 |   - Charger Cable x2                            |
 |   Total: R12,500                                |
-|   [ View Details ]                              |
+|   [ View Details ] [ Track Order ]             |
 |-------------------------------------------------|
 | Order #12346 | Date: 22 Aug 2025 | Status: Pending |
 |   - Samsung S23 Ultra x1                        |
 |   Total: R18,000                                |
-|   [ View Details ]                              |
+|   [ View Details ] [ Cancel Order ]            |
+ ------------------------------------------------
+```
+
+### 5. **Products/Shop Page (NEW - Current Implementation)**
+
+```
+ ------------------------------------------------
+| Home > Shop                                     |
+|-------------------------------------------------|
+| [Search ____________] [Category ▼] [Sort ▼]     |
+|-------------------------------------------------|
+| Filters:          | Product Grid (3-4 cols)     |
+| □ Category        | ┌─────────┐ ┌─────────┐     |
+| □ Brand           | │ [Image] │ │ [Image] │     |
+| □ Price Range     | │ Brand   │ │ Brand   │     |
+| □ In Stock        | │ Product │ │ Product │     |
+| [Clear Filters]   | │ R2,850  │ │ R3,999  │     |
+|                   | │[Add Cart]│ │[Add Cart]│     |
+|                   | └─────────┘ └─────────┘     |
+|                   | ┌─────────┐ ┌─────────┐     |
+|                   | │ [Image] │ │ [Image] │     |
+|                   | │ Brand   │ │ Brand   │     |
+|                   | │ Product │ │ Product │     |
+|                   | │ R1,499  │ │ R8,999  │     |
+|                   | │[Add Cart]│ │[Add Cart]│     |
+|                   | └─────────┘ └─────────┘     |
  ------------------------------------------------
 ```
 
@@ -144,10 +172,37 @@ I’ll keep it structured like UI mockups (not final visuals, but layouts you ca
 
 ---
 
-⚡ These wireframes capture **all your requirements**:
+### 6. **Product Detail Page (Enhanced)**
+
+```
+ ------------------------------------------------
+| Home > Shop > iPhone 15 Pro                    |
+|-------------------------------------------------|
+| [Product Images]    | Product Info              |
+| ┌─────────────────┐ | iPhone 15 Pro             |
+| │                 │ | Apple                     |
+| │   Main Image    │ | ★★★★★ (4.8) 124 reviews   |
+| │                 │ |                           |
+| └─────────────────┘ | Price: R2,850             |
+| [thumb][thumb][+]   | (was R3,200)              |
+|                     |                           |
+| Description:        | Quantity: [1] [+] [-]     |
+| Lorem ipsum...      | [ Add to Cart ]           |
+|                     | [ Add to Wishlist ♡ ]    |
+|                     |                           |
+| Specifications:     | Delivery: 2-3 days       |
+| • Screen: 6.1"      | Pickup: Available         |
+| • Storage: 128GB    |                           |
+ ------------------------------------------------
+```
+
+⚡ These wireframes capture **all your requirements** plus **current implementations**:
 
 * Customer must **login before purchase**.
 * Customers get profile editing + order history + status.
+* **Enhanced product browsing** with filters, search, and improved cards.
+* **Professional product cards** with proper pricing display.
+* **Responsive grid layout** for optimal viewing.
 * Admins see sales, users, orders, inventory, and reports.
 
 

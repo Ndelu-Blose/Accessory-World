@@ -1,8 +1,8 @@
-Below is a **clear ready spec** that fully describes the landing page. I’ve included structure, copy, styles, data schema, and acceptance criteria. Where labels/taxonomy come from the live site, I cited them. you make and implement suggestions where needed for work to continue.
+Below is a **clear ready spec** that fully describes the landing page and current design system. I've included structure, copy, styles, data schema, and acceptance criteria. Where labels/taxonomy come from the live site, I cited them. **Updated January 2025** with enhanced product card styling, improved pricing display, and professional UI components.
 
 ---
 
-# Project: Accessory World — Landing Page (Exact Match)
+# Project: Accessory World — Landing Page & Design System (Current Implementation)
 
 ## 1) Page Layout (top → bottom)
 
@@ -112,9 +112,12 @@ Below is a **clear ready spec** that fully describes the landing page. I’ve in
 * `tabs:[{key,label}]` (default: BestSellers, Laptops, Iwatch)
 * `productsByTab:{[key]: Product[]}`
 
-### ProductCard
+### ProductCard (Enhanced - Current Implementation)
 
-* `name`, `brand`, `price`, `image`, `onAddToCart(productId)`
+* `name`, `brand`, `price` (supports single price and price ranges), `image`, `onAddToCart(productId)`
+* **Enhanced styling**: Professional shadows, improved typography, consistent spacing
+* **Price formatting**: Conditional display for single prices vs. price ranges based on SKU availability
+* **Visual improvements**: Better card dimensions, modern shadow effects, enhanced hover states
 
 ### Newsletter
 
@@ -152,7 +155,7 @@ Below is a **clear ready spec** that fully describes the landing page. I’ve in
 
 ---
 
-## 4) Visual System (CSS tokens)
+## 4) Visual System (CSS tokens) - Updated Design System
 
 ```json
 {
@@ -165,22 +168,54 @@ Below is a **clear ready spec** that fully describes the landing page. I’ve in
     "border": "#E5E7EB",
     "cardBg": "#FFFFFF",
     "pageBg": "#F8FAFC",
-    "heroGradient": "linear-gradient(105deg, #BFE0FF, #5AA7FF)"
+    "heroGradient": "linear-gradient(105deg, #BFE0FF, #5AA7FF)",
+    "success": "#10B981",
+    "warning": "#F59E0B",
+    "error": "#EF4444"
   },
-  "radii": { "card": 20, "pill": 999 },
-  "shadow": "0 1px 4px rgba(0,0,0,0.06)",
-  "font": { "family": "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-            "h1Weight": 800, "h2Weight": 800, "bodyWeight": 400 }
+  "radii": { 
+    "card": 12, 
+    "pill": 999,
+    "button": 8,
+    "input": 6
+  },
+  "shadow": {
+    "card": "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+    "cardHover": "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+    "subtle": "0 1px 4px rgba(0,0,0,0.06)"
+  },
+  "font": { 
+    "family": "Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+    "h1Weight": 800, 
+    "h2Weight": 700, 
+    "h3Weight": 600,
+    "bodyWeight": 400,
+    "semiBold": 600
+  },
+  "spacing": {
+    "xs": "0.25rem",
+    "sm": "0.5rem",
+    "md": "1rem",
+    "lg": "1.5rem",
+    "xl": "2rem",
+    "2xl": "3rem"
+  }
 }
 ```
 
-**Sizing & layout rules**
+**Sizing & layout rules (Enhanced)**
 
 * Max content width: **1200px**; global horizontal padding **16px**.
 * Hero: 2 columns (≈60/40), min-height **420px**, vertical padding **48px**.
-* Cards: radius **20px**, shadow **subtle**, internal padding **16–24px**.
-* Product images: fixed height **220px**, `object-fit: contain` (or `cover` for promos).
-* Spacing between sections: **24–32px**.
+* **Product Cards (Enhanced)**: 
+  - Border radius: **12px** (updated from 20px for modern look)
+  - Shadow: **Enhanced multi-layer shadow** with hover effects
+  - Internal padding: **1.5rem** (24px) for consistent spacing
+  - Image container: **aspect-ratio 1/1**, `object-fit: contain`
+  - Typography: **Improved hierarchy** with proper font weights
+* Product images: **Responsive aspect ratio**, `object-fit: contain` (or `cover` for promos).
+* **Grid System**: CSS Grid with **gap: 1.5rem**, responsive columns (4→3→2→1).
+* Spacing between sections: **2rem to 3rem** (32px-48px).
 
 **Responsive**
 
@@ -349,25 +384,30 @@ I checked the live site structure and product templates so these labels and patt
 
 **Behavior**: Filters update results without full page reload (pushState). If you need to start static, reload is fine; keep query string canonicalized.
 
-## 5) Product card spec (grid)
+## 5) Product card spec (grid) - Enhanced Implementation
 
 Each card shows:
 
-* **Image** (contain; fixed box \~ 220px tall; lazy-loaded).
-* **Title** (product name, 2-line clamp).
-* **Brand** (muted).
-* **Price** (`R` + amount; if discounted, show original struck-through + badge).
-* **Badges** (optional): “Today’s Deal”, “Hot”, “New”, “Pre-Order”. (The “Today’s Deal / Hot” labels appear in their UI chrome on product pages.) ([accessoryworldza.com][1])
+* **Image** (responsive aspect ratio; lazy-loaded with proper sizing).
+* **Brand** (muted, smaller text above title).
+* **Title** (product name, 2-line clamp with improved typography).
+* **Price** (Enhanced formatting):
+  - **Single price**: `R` + amount with proper styling
+  - **Price range**: `R` + min `- R` + max for products with multiple SKUs
+  - **Conditional logic**: Shows "Price on request" when no valid pricing available
+  - **Discounted prices**: Original struck-through + current price + badge
+* **Badges** (optional): "Today's Deal", "Hot", "New", "Pre-Order".
 * **CTA**:
+  - Primary: **Add to Cart** (enhanced button styling)
+  - Secondary: **View** (link to PDP)
+* **Quick actions**: Wishlist ♡ with improved positioning.
 
-  * Primary: **Add to Cart** (button)
-  * Secondary: **View** (link to PDP)
-* **Quick actions** (optional): Wishlist ♡.
+**Enhanced hover state** (desktop):
 
-**Hover state** (desktop):
-
-* Slight card lift + shadow increase.
-* Swap image if alternate present.
+* **Professional card lift** with enhanced shadow transition.
+* **Smooth animations** for all interactive elements.
+* **Image zoom effect** (optional alternate image swap).
+* **Button state changes** with proper focus indicators.
 
 ## 6) Sorting rules
 

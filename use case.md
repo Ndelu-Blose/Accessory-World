@@ -1,3 +1,50 @@
+Use Cases - Updated January 2025
+
+0) Browse Products with Enhanced Cards
+
+Primary Actor: Customer (Visitor or Authenticated)
+Stakeholders & Interests:
+
+Customer: clear product information, professional presentation, easy comparison.
+
+Business: effective product showcase, conversion optimization.
+
+Preconditions: Products exist in catalog with valid SKUs and pricing.
+Trigger: Customer visits shop/products page or searches for items.
+
+Main Success Scenario:
+
+System displays responsive product grid with professional card layout.
+
+System validates SKU pricing data for each product.
+
+For single SKU products: displays SKU.Price formatted as currency.
+
+For multiple SKU products: displays price range (min-max) from valid SKUs.
+
+System renders product cards with:
+   - Primary product image with hover effects
+   - Brand name and product title (XSS-safe)
+   - Professional styling with shadows and spacing
+   - Clear "Add to Cart" CTA buttons
+
+Customer can hover over cards for enhanced visual feedback.
+
+Customer can click product cards to view details or add to cart.
+
+Extensions:
+
+2a. No valid SKUs with pricing → hide product or show "Price on request".
+
+4a. Missing primary image → display placeholder with brand logo.
+
+6a. Out of stock → disable CTA and show "Out of Stock" status.
+
+Postconditions: Products displayed with accurate pricing and professional presentation.
+
+Business Rules: Only products with valid pricing data are shown; images must meet aspect ratio requirements.
+NFRs: Grid renders <500ms; responsive design works on all screen sizes; hover effects smooth <100ms.
+
 1) New Customer Signup
 
 Primary Actor: Customer
@@ -36,6 +83,72 @@ Postconditions: Verified customer account exists; audit trail written.
 
 Business Rules: Strong passwords, unique email/phone, max 5 OTP attempts/hour.
 NFRs: Verification <10s; PII encrypted at rest; 99.9% availability.
+
+1.2) Product Price Display Logic
+
+Primary Actor: System
+Stakeholders & Interests:
+
+Customer: accurate, clear pricing information.
+
+Business: consistent pricing display, no pricing errors.
+
+Preconditions: Product exists with associated SKUs.
+Trigger: Product card rendering or detail page load.
+
+Main Success Scenario:
+
+System queries all active SKUs for the product.
+
+System filters SKUs where Price > 0 and IsActive = true.
+
+If single valid SKU: display "R [SKU.Price]" formatted as currency.
+
+If multiple valid SKUs: calculate min/max prices, display "R [min] - R [max]".
+
+System applies consistent currency formatting (ZAR with proper decimals).
+
+Extensions:
+
+2a. No valid SKUs → display "Price on request" or hide product.
+
+4a. All SKUs same price → display as single price, not range.
+
+5a. Currency conversion needed → apply current exchange rates.
+
+Postconditions: Accurate pricing displayed to customer.
+
+Business Rules: Only show products with valid pricing; price ranges must reflect actual SKU prices.
+NFRs: Price calculation <50ms; currency formatting consistent across application.
+
+1.5) Add Product to Cart
+
+Primary Actor: Customer
+Preconditions: Product has valid SKUs with stock; customer viewing product.
+Trigger: Customer clicks "Add to Cart" from product card or detail page.
+
+Main Success Scenario:
+
+System validates product availability and stock levels.
+
+System adds item to cart with current pricing snapshot.
+
+System displays cart confirmation with updated totals.
+
+System maintains cart state across session.
+
+Extensions:
+
+1a. Insufficient stock → show available quantity and adjust.
+
+2a. Price changed since page load → update and notify customer.
+
+4a. Guest user → create temporary cart tied to session.
+
+Postconditions: Item added to cart with locked pricing; cart totals updated.
+
+Business Rules: Cart items reserve stock for limited time; pricing locked until checkout.
+NFRs: Add to cart response <200ms; cart state persists across browser sessions.
 
 2) Place Order (Delivery)
 

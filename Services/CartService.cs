@@ -6,17 +6,6 @@ using System.Security.Claims;
 
 namespace AccessoryWorld.Services
 {
-    public interface ICartService
-    {
-        Task<Cart> GetCartAsync(string sessionId, string? userId = null);
-        Task<bool> AddToCartAsync(string sessionId, int productId, int skuId, int quantity, string? userId = null);
-        Task<bool> UpdateCartItemAsync(string sessionId, int cartItemId, int quantity, string? userId = null);
-        Task<bool> RemoveFromCartAsync(string sessionId, int cartItemId, string? userId = null);
-        Task<bool> ClearCartAsync(string sessionId, string? userId = null);
-        Task<int> GetCartItemCountAsync(string sessionId, string? userId = null);
-        Task MergeCartsAsync(string sessionId, string userId);
-    }
-    
     public class CartService(ApplicationDbContext context) : ICartService
     {
         private readonly ApplicationDbContext _context = context;
@@ -192,7 +181,7 @@ namespace AccessoryWorld.Services
                 .SumAsync(ci => ci.Quantity);
         }
         
-        public async Task MergeCartsAsync(string sessionId, string userId)
+        public async Task<bool> MergeGuestCartAsync(string sessionId, string userId)
         {
             try
             {
@@ -227,11 +216,22 @@ namespace AccessoryWorld.Services
                 }
                 
                 await _context.SaveChangesAsync();
+                return true;
             }
             catch
             {
                 // Log error but don't throw - cart merge is not critical
+                return false;
             }
+        }
+        
+        public async Task<decimal> GetCartTotalAsync(string sessionId, string? userId = null)
+        {
+            var cartItems = await _context.CartItems
+                .Where(ci => ci.SessionId == sessionId || (userId != null && ci.UserId == userId))
+                .ToListAsync();
+            
+            return cartItems.Sum(ci => ci.UnitPrice * ci.Quantity);
         }
     }
 }

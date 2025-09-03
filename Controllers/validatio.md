@@ -1,4 +1,4 @@
-Here’s a detailed, practical description of each validation layer—what it is, what failures it prevents, where to implement it, and a quick .NET pattern you can use right now.
+Here's a detailed, practical description of each validation layer—what it is, what failures it prevents, where to implement it, and a quick .NET pattern you can use right now. **Updated January 2025** with current validation rules, product card validation, and enhanced security measures.
 
 1) Input & Model Validation (syntax/shape)
 
@@ -155,59 +155,104 @@ Metrics: Count 400s per endpoint, top reasons (e.g., invalid SKU, insufficient s
 
 Alerts: Spike in failed payment signatures, file-upload rejections, etc.
 
-Minimal Starter Matrix (tailored to AccessoryWorld)
+Minimal Starter Matrix (tailored to AccessoryWorld) - Current Implementation
 
-Product
+Product (Enhanced Validation)
 
-Name: required, ≤100
+Name: required, ≤100 characters, no HTML/script injection
 
-Price: ≥0 (DB check), currency enforced
+Price: ≥0 (DB check), currency enforced, proper decimal precision
 
-Brand/Category: valid FKs
+Brand/Category: valid FKs, required fields
 
 Images: ≥1; exactly one IsPrimary = true (domain + DB unique filtered index)
 
-SKU
+Description: sanitized HTML, length limits
 
-Unique SKUCode (DB unique)
+SEO fields: meta title/description validation
 
-Stock/Reserved/Threshold ≥0 (checks)
+Product Card Display Validation:
 
-Price rules vs Product (if coupled)
+- Price formatting: validates single price vs. price range logic
+- SKU availability: ensures valid pricing data before display
+- Image aspect ratios: validates proper image dimensions
+- Brand/name display: prevents XSS in product titles
 
-RowVersion for concurrency
+SKU (Enhanced with Price Display Logic)
 
-Cart
+Unique SKUCode (DB unique), alphanumeric format validation
 
-Each line qty ≥ 1
+Stock/Reserved/Threshold ≥0 (checks), integer validation
 
-qty ≤ available stock (domain)
+Price rules vs Product (if coupled), decimal precision validation
 
-Recalculate totals server-side
+Price Display Logic: validates SKU.Price > 0 for proper price formatting
 
-Checkout
+Conditional Pricing: handles single price vs. range display based on valid SKUs
 
-Address required; phone/email formats
+RowVersion for concurrency, optimistic locking
 
-Lock prices/taxes at checkout snapshot
+Cart (Enhanced Validation)
 
-Transaction wraps stock reserve + order create
+Each line qty ≥ 1, maximum quantity limits per product
 
-Payment
+qty ≤ available stock (domain), real-time stock validation
+
+Recalculate totals server-side, tax calculation validation
+
+Product availability: validates product still exists and is active
+
+Price consistency: ensures prices haven't changed since adding to cart
+
+Session validation: prevents cart manipulation across sessions
+
+Checkout (Enhanced Security)
+
+Address required; phone/email formats, postal code validation
+
+Lock prices/taxes at checkout snapshot, currency validation
+
+Transaction wraps stock reserve + order create, atomic operations
+
+Payment method validation: ensures valid payment options
+
+Shipping validation: validates delivery addresses and methods
+
+Order total validation: prevents price manipulation
+
+CSRF protection: anti-forgery tokens on all checkout forms
+
+Payment (Enhanced Security)
 
 Verify signature, amount, currency, merchant IDs
 
-Idempotent ITN handling
+Idempotent ITN handling, duplicate payment prevention
 
-State transition only on verified success
+State transition only on verified success, audit logging
 
-Uploads
+Payfast integration: webhook signature validation
 
-Types: jpeg/png/webp
+Amount tampering protection: server-side amount verification
 
-Size cap (e.g., 2MB)
+Payment status validation: proper state machine implementation
 
-Optional dimensions cap and virus scan
+Refund validation: ensures proper refund authorization
+
+Uploads (Enhanced Security)
+
+Types: jpeg/png/webp, SVG validation for vector graphics
+
+Size cap (2MB for images, 5MB for documents)
+
+Dimensions validation: minimum/maximum image sizes
+
+File content validation: MIME type verification beyond extension
+
+Virus scanning: integration with antivirus services
+
+Path traversal protection: sanitized file names and paths
+
+Image optimization: automatic compression and format conversion
 
 Fast .NET implementation snippets
 

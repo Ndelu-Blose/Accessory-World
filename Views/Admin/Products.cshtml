@@ -481,12 +481,12 @@
                                                 @product.BrandName
                                             </td>
                                             <td>
-                                                <strong>@product.Price.ToString("C")</strong>
-                                                @if (product.CompareAtPrice.HasValue && product.CompareAtPrice > product.Price)
-                                                {
-                                                    <br>
-                                                    <small class="text-muted text-decoration-line-through">@product.CompareAtPrice.Value.ToString("C")</small>
-                                                }
+                                <strong>R@(product.Price.ToString("N2"))</strong>
+                                @if (product.CompareAtPrice.HasValue && product.CompareAtPrice > product.Price)
+                                {
+                                    <br>
+                                    <small class="text-muted text-decoration-line-through">R@(product.CompareAtPrice.Value.ToString("N2"))</small>
+                                }
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center">

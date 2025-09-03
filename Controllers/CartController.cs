@@ -3,6 +3,7 @@ using AccessoryWorld.Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using AccessoryWorld.Security;
+using AccessoryWorld.Models;
 
 namespace AccessoryWorld.Controllers
 {
@@ -15,11 +16,10 @@ namespace AccessoryWorld.Controllers
         
         [HttpPost("AddItem")]
         [ValidateAntiForgeryToken]
-        [Authorize] // Require authentication to add items to cart
         public async Task<IActionResult> AddItem([FromBody] AddToCartRequest request)
         {
             var sessionId = HttpContext.Session.Id;
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!; // User is guaranteed to be authenticated
+            var userId = User.Identity?.IsAuthenticated == true ? User.FindFirstValue(ClaimTypes.NameIdentifier) : null;
             
             var success = await _cartService.AddToCartAsync(sessionId, request.ProductId, request.SKUId, request.Quantity, userId);
             
@@ -34,11 +34,10 @@ namespace AccessoryWorld.Controllers
         
         [HttpPost("UpdateItem")]
         [ValidateAntiForgeryToken]
-        [Authorize] // Require authentication to update cart items
         public async Task<IActionResult> UpdateItem([FromBody] UpdateCartItemRequest request)
         {
             var sessionId = HttpContext.Session.Id;
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!; // User is guaranteed to be authenticated
+            var userId = User.Identity?.IsAuthenticated == true ? User.FindFirstValue(ClaimTypes.NameIdentifier) : null;
             
             var success = await _cartService.UpdateCartItemAsync(sessionId, request.CartItemId, request.Quantity, userId);
             

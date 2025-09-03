@@ -253,6 +253,51 @@ function addToCart(productId, skuId) {
     showNotification('Product added to cart!', 'success');
 }
 
+// Proper API-based add to cart for product cards
+async function addToCartFromCard(productId, skuId) {
+    try {
+        // Get CSRF token
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || 
+                     document.querySelector('meta[name="__RequestVerificationToken"]')?.content || '';
+        
+        // Add to cart via API
+        const response = await fetch('/Cart/AddItem', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': token
+            },
+            body: JSON.stringify({
+                productId: productId,
+                skuId: skuId,
+                quantity: 1
+            })
+        });
+        
+        if (response.status === 401) {
+            // User needs to login
+            showNotification('Please login to add items to your cart.', 'info');
+            setTimeout(() => {
+                window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+            }, 2000);
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Product added to cart successfully!', 'success');
+            updateCartCount(data.cartCount);
+        } else {
+            showNotification(data.message || 'Failed to add item to cart.', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error adding to cart:', error);
+        showNotification('An error occurred while adding to cart.', 'error');
+    }
+}
+
 // Smooth scrolling for anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
@@ -290,6 +335,10 @@ if ('IntersectionObserver' in window) {
 // Export functions for global access
 window.LandingPage = {
     addToCart,
+    addToCartFromCard,
     showNotification,
     updateCartCount
 };
+
+// Make addToCartFromCard globally available
+window.addToCartFromCard = addToCartFromCard;

@@ -207,23 +207,6 @@ namespace AccessoryWorld.Controllers
             ViewBag.RelatedProducts = relatedProducts;
 
             return View("~/Views/Customer/Products/Details.cshtml", product);
-    }
-    
-    // API endpoint to get default SKU for a product
-    [HttpGet("api/products/{productId}/default-sku")]
-    public async Task<IActionResult> GetDefaultSku(int productId)
-    {
-        var sku = await _context.SKUs
-            .Where(s => s.ProductId == productId && s.IsActive)
-            .OrderBy(s => s.Id) // Get the first/default SKU
-            .FirstOrDefaultAsync();
-            
-        if (sku == null)
-        {
-            return NotFound(new { message = "No SKU found for this product" });
         }
-        
-        return Json(new { skuId = sku.Id, skuCode = sku.SKUCode, stockQuantity = sku.AvailableQuantity });
     }
-}
 }

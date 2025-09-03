@@ -1,6 +1,8 @@
-User Flow (High-Level)
+User Flow (High-Level) - Updated January 2025
 [Landing/Home]
-   ├─> Browse Catalog → Search/Filter → Product Detail
+   ├─> Browse Catalog (Enhanced Product Cards) → Search/Filter → Product Detail
+   │        ├─> View Product Cards (Professional Layout, Price Display)
+   │        ├─> Hover Effects & Quick Actions
    │        └─> Add to Cart → View Cart
    └─> Promo/Deep Link → Product Detail → Add to Cart
 
@@ -50,9 +52,20 @@ User Flow (High-Level)
 
 Swimlane-Style Detail (key decisions inline)
 
-Customer
+Customer (Enhanced Product Browsing Experience)
 
-Arrive → Browse/Search → Product Detail → Add to Cart
+Arrive → Browse Enhanced Product Grid (Professional Cards)
+
+├─> View Product Cards with:
+│   ├─ Professional styling with shadows and spacing
+│   ├─ Proper price formatting (single price vs. price ranges)
+│   ├─ Brand and product name display
+│   ├─ Primary product images with hover effects
+│   └─ Clear "Add to Cart" CTAs
+
+Search/Filter → Responsive Grid Layout → Product Detail
+
+Add to Cart (with improved UX feedback)
 
 Checkout → Auth (Sign in / Sign up / Guest)
 
@@ -71,9 +84,22 @@ Post-purchase: track/return/refund as needed
 
 Optional: start Trade-In → accept offer → redeem note next order
 
-System
+System (Enhanced Product Display & Validation)
+
+Product Card Rendering:
+├─> Validates SKU pricing data for proper display
+├─> Formats prices (single vs. range logic)
+├─> Ensures primary images are available
+├─> Applies responsive grid layout
+└─> Handles hover states and interactions
 
 Validates forms, uniqueness (signup), and stock at checkout
+
+Price Display Logic:
+├─> Single SKU: displays SKU.Price
+├─> Multiple SKUs: displays price range (min-max)
+├─> Handles currency formatting
+└─> Validates pricing data integrity
 
 Snapshots prices/taxes/discounts, reserves stock
 
@@ -122,8 +148,13 @@ Payment outcome: Success → fulfilment; Fail → retry/change method
 Trade-in: Accept offer → note issued; Decline/expire → case closed
 
 flowchart TD
-  A[Landing/Home] --> B[Browse/Search]
-  B --> C[Product Detail]
+  A[Landing/Home] --> B[Enhanced Product Grid]
+  B --> B1[Professional Product Cards]
+  B1 --> B2[Price Display Logic]
+  B2 --> B3[Hover Effects & CTAs]
+  B3 --> C[Product Detail]
+  B --> C1[Search/Filter]
+  C1 --> B1
   C --> D[Add to Cart]
   D --> E[Cart]
   E --> F[Checkout]

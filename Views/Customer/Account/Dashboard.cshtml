@@ -1062,11 +1062,11 @@
                                     <h4 class="product-name">@product.Name</h4>
                                     <p class="product-brand">@product.Brand?.Name</p>
                                     <div class="product-price">
-                                        <span class="current-price">R @product.Price.ToString("N2")</span>
-                                        @if (product.CompareAtPrice.HasValue && product.CompareAtPrice > product.Price)
-                                        {
-                                            <span class="original-price">R @product.CompareAtPrice.Value.ToString("N2")</span>
-                                        }
+                                        <span class="current-price">R@(product.Price.ToString("N2"))</span>
+                        @if (product.CompareAtPrice.HasValue && product.CompareAtPrice > product.Price)
+                        {
+                            <span class="original-price">R@(product.CompareAtPrice.Value.ToString("N2"))</span>
+                        }
                                     </div>
                                     <div class="product-actions">
                                         <a href="@Url.Action("Details", "Products", new { id = product.Id })" class="btn-small primary">View Details</a>

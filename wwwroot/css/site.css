@@ -20,3 +20,250 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* Role-Based UI Styling */
+
+/* Admin Interface Styling */
+.admin-body {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  color: #ffffff;
+}
+
+.admin-navbar {
+  background: linear-gradient(90deg, #212529 0%, #343a40 100%) !important;
+  border-bottom: 3px solid #ffc107 !important;
+}
+
+.admin-navbar .navbar-brand {
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+}
+
+.admin-navbar .nav-link:hover {
+  background-color: rgba(255, 193, 7, 0.1);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.admin-card {
+  background: linear-gradient(145deg, #2d2d2d, #1a1a1a);
+  border: 1px solid #495057;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.admin-badge {
+  background: linear-gradient(45deg, #ffc107, #ffca2c) !important;
+  color: #000 !important;
+  font-weight: bold;
+  text-shadow: none;
+  animation: pulse-admin 2s infinite;
+}
+
+@keyframes pulse-admin {
+  0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+}
+
+.admin-dropdown-menu {
+  background-color: #343a40;
+  border: 1px solid #495057;
+}
+
+.admin-dropdown-menu .dropdown-item {
+  color: #ffffff;
+}
+
+.admin-dropdown-menu .dropdown-item:hover {
+  background-color: #495057;
+  color: #ffc107;
+}
+
+.admin-dropdown-header {
+  color: #ffc107 !important;
+  font-weight: bold;
+}
+
+/* Customer Interface Styling */
+.customer-body {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.customer-navbar {
+  background: linear-gradient(90deg, #ffffff 0%, #f8f9fa 100%) !important;
+  border-bottom: 3px solid #0d6efd !important;
+}
+
+.customer-navbar .navbar-brand {
+  color: #0d6efd !important;
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(13, 110, 253, 0.3);
+}
+
+.customer-navbar .nav-link:hover {
+  background-color: rgba(13, 110, 253, 0.1);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  color: #0d6efd !important;
+}
+
+.customer-card {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.customer-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.cart-badge {
+  animation: bounce-cart 1s infinite alternate;
+}
+
+@keyframes bounce-cart {
+  from { transform: scale(1); }
+  to { transform: scale(1.1); }
+}
+
+/* Product Cards */
+.product-card {
+  transition: all 0.3s ease;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.product-card-body {
+  padding: 1rem;
+}
+
+.product-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #212529;
+}
+
+.product-brand {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+}
+
+.product-pricing {
+  margin-bottom: 1rem;
+}
+
+.sale-price {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #dc3545;
+}
+
+.original-price {
+  font-size: 1rem;
+  color: #6c757d;
+  text-decoration: line-through;
+  margin-left: 0.5rem;
+}
+
+.current-price {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #198754;
+}
+
+.discount-percent {
+  background-color: #dc3545;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-left: 0.5rem;
+}
+
+.stock-available {
+  color: #198754;
+  font-weight: 500;
+}
+
+.stock-low {
+  color: #fd7e14;
+  font-weight: 500;
+}
+
+.stock-out {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+.btn-add-cart {
+  background: linear-gradient(45deg, #0d6efd, #0b5ed7);
+  border: none;
+  color: white;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-add-cart:hover {
+  background: linear-gradient(45deg, #0b5ed7, #0a58ca);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}
+
+.btn-view-details {
+  background: transparent;
+  border: 1px solid #6c757d;
+  color: #6c757d;
+  transition: all 0.3s ease;
+}
+
+.btn-view-details:hover {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .admin-navbar .navbar-brand,
+  .customer-navbar .navbar-brand {
+    font-size: 1.1rem;
+  }
+  
+  .admin-badge {
+    font-size: 0.7rem;
+  }
+}
+
+/* Utility Classes */
+.role-indicator {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1050;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.role-indicator.admin {
+  background: linear-gradient(45deg, #ffc107, #ffca2c);
+  color: #000;
+  border: 2px solid #212529;
+}
+
+.role-indicator.customer {
+  background: linear-gradient(45deg, #0d6efd, #0b5ed7);
+  color: #fff;
+  border: 2px solid #ffffff;
+}

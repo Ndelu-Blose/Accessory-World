@@ -4,6 +4,11 @@
     Layout = "~/Pages/Shared/_LandingLayout.cshtml";
 }
 
+@* Anti-forgery token for cart operations *@
+<form style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
+
 <div class="products-page">
 <div class="container-fluid py-4">
     <div class="row g-0">
@@ -59,8 +64,8 @@
                                     @if (product.IsOnSale && product.SalePrice.HasValue && product.SalePrice.Value < product.Price)
                                     {
                                         <div class="price-container">
-                                            <span class="sale-price">R@product.SalePrice.Value.ToString("N2")</span>
-                                            <span class="original-price">R@product.Price.ToString("N2")</span>
+                                            <span class="sale-price">R@(product.SalePrice.Value.ToString("N2"))</span>
+                                            <span class="original-price">R@(product.Price.ToString("N2"))</span>
                                             @{
                                                 var discount = Math.Round(((product.Price - product.SalePrice.Value) / product.Price) * 100);
                                             }
@@ -70,14 +75,14 @@
                                     else
                                     {
                                         <div class="price-container">
-                                            <span class="current-price">R@product.Price.ToString("N2")</span>
+                                            <span class="current-price">R@(product.Price.ToString("N2"))</span>
                                         </div>
                                     }
                                     
                                     @if (product.CompareAtPrice.HasValue && product.CompareAtPrice > product.Price)
                                     {
                                         <div class="compare-price">
-                                            <small class="text-muted">Compare at: R@product.CompareAtPrice.Value.ToString("N2")</small>
+                                            <small class="text-muted">Compare at: R@(product.CompareAtPrice.Value.ToString("N2"))</small>
                                         </div>
                                     }
                                 </div>
@@ -113,9 +118,19 @@
                                 <div class="product-actions">
                                     @if (totalStock > 0)
                                     {
-                                        <button class="btn btn-add-cart" onclick="addToCart(@product.Id)">
-                                            <i class="fas fa-shopping-cart me-2"></i>Add to Cart
-                                        </button>
+                                        var firstAvailableSku = product.SKUs.FirstOrDefault(s => s.AvailableQuantity > 0);
+                                        @if (firstAvailableSku != null)
+                                        {
+                                            <button class="btn btn-add-cart" onclick="addToCart(@product.Id, @firstAvailableSku.Id)">
+                                                <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="btn btn-add-cart" disabled>
+                                                <i class="fas fa-times me-2"></i>Out of Stock
+                                            </button>
+                                        }
                                     }
                                     else
                                     {
