@@ -18,18 +18,30 @@ namespace AccessoryWorld.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddItem([FromBody] AddToCartRequest request)
         {
-            var sessionId = HttpContext.Session.Id;
-            var userId = User.Identity?.IsAuthenticated == true ? User.FindFirstValue(ClaimTypes.NameIdentifier) : null;
-            
-            var success = await _cartService.AddToCartAsync(sessionId, request.ProductId, request.SKUId, request.Quantity, userId);
-            
-            if (success)
+            try
             {
-                var cartCount = await _cartService.GetCartItemCountAsync(sessionId, userId);
-                return Json(new { success = true, cartCount });
+                var sessionId = HttpContext.Session.Id;
+                var userId = User.Identity?.IsAuthenticated == true ? User.FindFirstValue(ClaimTypes.NameIdentifier) : null;
+                
+                var success = await _cartService.AddToCartAsync(sessionId, request.ProductId, request.SKUId, request.Quantity, userId);
+                
+                if (success)
+                {
+                    var cartCount = await _cartService.GetCartItemCountAsync(sessionId, userId);
+                    return Json(new { success = true, cartCount });
+                }
+                
+                return Json(new { success = false, message = "Failed to add item to cart. Please check stock availability." });
             }
-            
-            return Json(new { success = false, message = "Failed to add item to cart. Please check stock availability." });
+            catch (AccessoryWorld.Exceptions.DomainException ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception here if you have logging configured
+                return Json(new { success = false, message = "An unexpected error occurred while adding item to cart." });
+            }
         }
         
         [HttpPost("UpdateItem")]

@@ -78,8 +78,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Cart functionality
 function addToCart(productId, skuId = null, quantity = 1) {
-    // Get the anti-forgery token
-    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+    // Get the anti-forgery token from meta tag or input
+    let token = document.querySelector('meta[name="RequestVerificationToken"]')?.content;
+    if (!token) {
+        token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+    }
     
     if (!token) {
         console.error('Anti-forgery token not found');
@@ -87,11 +90,16 @@ function addToCart(productId, skuId = null, quantity = 1) {
         return;
     }
     
-    // If no SKU ID provided, try to get the first available SKU for the product
+    // If no SKU ID provided, try to get it from the product card data attribute
     if (!skuId) {
-        // For now, we'll use a default SKU ID of 1 or make an assumption
-        // In a real implementation, you'd want to get the actual SKU ID from the product
-        skuId = 1;
+        const productCard = event?.target?.closest('.product-card');
+        const skuIdFromCard = productCard?.dataset?.skuId;
+        if (skuIdFromCard) {
+            skuId = parseInt(skuIdFromCard);
+        } else {
+            // Fallback: assume SKU ID equals Product ID (based on seeder logic)
+            skuId = productId;
+        }
     }
     
     const requestData = {
@@ -112,7 +120,7 @@ function addToCart(productId, skuId = null, quantity = 1) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'RequestVerificationToken': token
+            'X-CSRF-TOKEN': token
         },
         body: JSON.stringify(requestData)
     })

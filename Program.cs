@@ -167,6 +167,7 @@ builder.Services.AddScoped<AccessoryWorld.Services.IOrderWorkflowService, Access
             app.UseRouting();
             
             app.UseAuthentication();
+            app.UseCartSessionManagement(); // Handle cart merging after authentication
             app.UseAuthorization();
 
             app.MapRazorPages();

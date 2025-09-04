@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="~/AccessoryWorld.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     
+    @Html.AntiForgeryToken()
+    <meta name="RequestVerificationToken" content="@Html.AntiForgeryToken()" />
+    
     <style>
         /* Admin Navigation Styles */
         .admin-navbar {
