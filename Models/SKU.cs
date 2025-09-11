@@ -17,6 +17,10 @@ namespace AccessoryWorld.Models
         [MaxLength(100)]
         public string? Variant { get; set; } // e.g., "Black", "64GB", etc.
         
+        [Required]
+        [MaxLength(200)]
+        public string Name { get; set; } = string.Empty; // Display name for the SKU
+        
         [Column(TypeName = "decimal(10,2)")]
         public decimal Price { get; set; }
         

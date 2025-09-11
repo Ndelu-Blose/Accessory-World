@@ -19,7 +19,8 @@ namespace AccessoryWorld.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly CartService _cartService;
+        private readonly ICartService _cartService;
+        private readonly IOrderService _orderService;
         private readonly IPayfastService _payfastService;
         private readonly ISecurityValidationService _securityValidation;
         private readonly ILogger<CheckoutController> _logger;
@@ -27,7 +28,8 @@ namespace AccessoryWorld.Controllers
         public CheckoutController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            CartService cartService,
+            ICartService cartService,
+            IOrderService orderService,
             IPayfastService payfastService,
             ISecurityValidationService securityValidation,
             ILogger<CheckoutController> logger)
@@ -35,6 +37,7 @@ namespace AccessoryWorld.Controllers
             _context = context;
             _userManager = userManager;
             _cartService = cartService;
+            _orderService = orderService;
             _payfastService = payfastService;
             _securityValidation = securityValidation;
             _logger = logger;
@@ -50,12 +53,12 @@ namespace AccessoryWorld.Controllers
 
             // Get cart items
             var cart = await _cartService.GetCartAsync(HttpContext.Session.Id, userId);
-            if (!cart.Items.Any())
+            var cartItems = cart?.Items ?? new List<CartItem>();
+            if (!cartItems.Any())
             {
                 TempData["Error"] = "Your cart is empty. Please add items before checkout.";
                 return RedirectToAction("Index", "Cart");
             }
-            var cartItems = cart.Items;
 
             // Get user addresses
             var user = await _userManager.Users
@@ -64,19 +67,129 @@ namespace AccessoryWorld.Controllers
 
             var viewModel = new CheckoutViewModel
             {
-                CartItems = cartItems,
-                UserAddresses = user?.Addresses.ToList() ?? new List<Address>(),
-                SubTotal = cartItems.Sum(item => item.UnitPrice * item.Quantity),
-                VATAmount = 0, // Calculate based on business rules
+                CartItems = cartItems.Select(item => new CartItemViewModel
+                {
+                    Id = item.Id,
+                    ProductName = item.Product.Name,
+                    SKUName = item.SKU.Name ?? "Standard",
+                    Quantity = item.Quantity,
+                    Price = item.UnitPrice,
+                    LineTotal = item.TotalPrice,
+                    ImageUrl = item.Product.ProductImages.FirstOrDefault()?.ImageUrl
+                }).ToList(),
+                UserAddresses = user?.Addresses.Select(a => new AddressViewModel
+                {
+                    Id = a.Id,
+                    FullName = a.FullName,
+                    AddressLine1 = a.AddressLine1,
+                    AddressLine2 = a.AddressLine2,
+                    City = a.City,
+                    Province = a.Province,
+                    PostalCode = a.PostalCode,
+                    Country = a.Country,
+                    PhoneNumber = a.PhoneNumber,
+                    IsDefault = a.IsDefault
+                }).ToList() ?? new List<AddressViewModel>(),
+                SubTotal = cartItems.Sum(item => item.TotalPrice),
+                TaxAmount = 0, // Will be calculated
                 ShippingFee = 0, // Will be calculated based on delivery method
-                Total = cartItems.Sum(item => item.UnitPrice * item.Quantity)
+                Total = 0 // Will be calculated
             };
 
             // Calculate tax (15% VAT for South Africa)
-            viewModel.VATAmount = Math.Round(viewModel.SubTotal * 0.15m, 2);
-            viewModel.Total = viewModel.SubTotal + viewModel.VATAmount + viewModel.ShippingFee;
+            viewModel.TaxAmount = Math.Round(viewModel.SubTotal * 0.15m, 2);
+            viewModel.Total = viewModel.SubTotal + viewModel.TaxAmount + viewModel.ShippingFee;
 
             return View("~/Views/Customer/Checkout/Index.cshtml", viewModel);
+        }
+
+        // POST: /Checkout/ProcessOrder
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ProcessOrder(CheckoutViewModel model)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null)
+                    return RedirectToAction("Login", "Account");
+
+                if (!ModelState.IsValid)
+                {
+                    // Reload the view with validation errors
+                    var cart = await _cartService.GetCartAsync(HttpContext.Session.Id, userId);
+                    var cartItems = cart?.Items ?? new List<CartItem>();
+                    var user = await _userManager.Users
+                        .Include(u => u.Addresses)
+                        .FirstOrDefaultAsync(u => u.Id == userId);
+
+                    model.CartItems = cartItems.Select(item => new CartItemViewModel
+                    {
+                        Id = item.Id,
+                        ProductName = item.SKU.Product.Name,
+                        SKUName = item.SKU.Name,
+                        Quantity = item.Quantity,
+                        Price = item.SKU.Price,
+                        LineTotal = item.Quantity * item.SKU.Price,
+                        ImageUrl = item.SKU.Product.ProductImages.FirstOrDefault()?.ImageUrl
+                    }).ToList();
+
+                    model.UserAddresses = user?.Addresses.Select(a => new AddressViewModel
+                    {
+                        Id = a.Id,
+                        FullName = a.FullName,
+                        AddressLine1 = a.AddressLine1,
+                        AddressLine2 = a.AddressLine2,
+                        City = a.City,
+                        Province = a.Province,
+                        PostalCode = a.PostalCode,
+                        Country = a.Country,
+                        PhoneNumber = a.PhoneNumber,
+                        IsDefault = a.IsDefault
+                    }).ToList() ?? new List<AddressViewModel>();
+
+                    return View("~/Views/Customer/Checkout/Index.cshtml", model);
+                }
+
+                // Create the order
+                var shippingAddressId = model.ShippingAddressId ?? model.SelectedAddressId ?? 0;
+                var order = await _orderService.CreateOrderAsync(
+                    userId, 
+                    shippingAddressId, 
+                    model.FulfillmentMethod, 
+                    model.Notes);
+
+                TempData["Success"] = $"Order {order.OrderNumber} created successfully!";
+                return RedirectToAction("OrderConfirmation", new { orderId = order.Id });
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing order for user {UserId}", User.FindFirstValue(ClaimTypes.NameIdentifier));
+                TempData["Error"] = "An error occurred while processing your order. Please try again.";
+                return RedirectToAction("Index");
+            }
+        }
+
+        // GET: /Checkout/OrderConfirmation/{orderId}
+        public async Task<IActionResult> OrderConfirmation(int orderId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            var order = await _orderService.GetOrderByIdAsync(orderId);
+            if (order == null || order.UserId != userId)
+            {
+                TempData["Error"] = "Order not found.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            return View("~/Views/Customer/Checkout/OrderConfirmation.cshtml", order);
         }
 
         // POST: /Checkout/CalculateShipping
@@ -385,26 +498,7 @@ namespace AccessoryWorld.Controllers
             return sensitiveFields.Contains(fieldName.ToLower());
         }
 
-        // GET: /Checkout/OrderConfirmation
-        public async Task<IActionResult> OrderConfirmation(int orderId)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.SKU)
-                        .ThenInclude(s => s.Product)
-                .Include(o => o.ShippingAddress)
-                .Include(o => o.Payments)
-                .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
 
-            if (order == null)
-            {
-                TempData["Error"] = "Order not found.";
-                return RedirectToAction("Index", "Home");
-            }
-
-            return View("~/Views/Customer/Checkout/OrderConfirmation.cshtml", order);
-        }
 
         // GET: /Checkout/AddAddress
         public IActionResult AddAddress()

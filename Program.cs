@@ -92,6 +92,7 @@ namespace AccessoryWorld
             builder.Services.AddScoped<AccessoryWorld.Services.RoleSeeder>();
             builder.Services.AddScoped<AccessoryWorld.Services.ProductSeeder>();
             builder.Services.AddScoped<AccessoryWorld.Services.ICartService, AccessoryWorld.Services.CartService>();
+            builder.Services.AddScoped<AccessoryWorld.Services.IOrderService, AccessoryWorld.Services.OrderService>();
             builder.Services.AddScoped<AccessoryWorld.Services.IPayfastService, AccessoryWorld.Services.PayfastService>();
             builder.Services.AddScoped<AccessoryWorld.Services.IWishlistService, AccessoryWorld.Services.WishlistService>();
             builder.Services.AddScoped<AccessoryWorld.Services.IRecommendationService, AccessoryWorld.Services.RecommendationService>();

@@ -120,7 +120,7 @@ function addToCart(productId, skuId = null, quantity = 1) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': token
+            'RequestVerificationToken': token
         },
         body: JSON.stringify(requestData)
     })
@@ -147,10 +147,27 @@ function addToCart(productId, skuId = null, quantity = 1) {
 }
 
 function updateCartCount(count) {
-    const cartCountElements = document.querySelectorAll('.cart-count, .badge');
-    cartCountElements.forEach(element => {
-        element.textContent = count;
-        element.style.display = count > 0 ? 'inline' : 'none';
+    // Update cart count badge in main navigation
+    const cartCountElement = document.getElementById('cart-count');
+    if (cartCountElement) {
+        cartCountElement.textContent = count;
+        cartCountElement.style.display = count > 0 ? 'inline' : 'none';
+    }
+    
+    // Update cart count badge in landing layout
+    const cartCountLandingElement = document.getElementById('cart-count-landing');
+    if (cartCountLandingElement) {
+        cartCountLandingElement.textContent = count;
+        cartCountLandingElement.style.display = count > 0 ? 'inline' : 'none';
+    }
+    
+    // Also update any other cart count elements
+    const otherCartCountElements = document.querySelectorAll('.cart-count, .badge');
+    otherCartCountElements.forEach(element => {
+        if (element.id !== 'cart-count' && element.id !== 'cart-count-landing') {
+            element.textContent = count;
+            element.style.display = count > 0 ? 'inline' : 'none';
+        }
     });
 }
 

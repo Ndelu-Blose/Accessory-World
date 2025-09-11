@@ -34,6 +34,14 @@ namespace AccessoryWorld.Models
         public string UserId { get; set; } = string.Empty;
         
         [Required]
+        [StringLength(100)]
+        public string FullName { get; set; } = string.Empty;
+        
+        [Phone]
+        [StringLength(20)]
+        public string? PhoneNumber { get; set; }
+        
+        [Required]
         [MaxLength(200)]
         public string AddressLine1 { get; set; } = string.Empty;
         

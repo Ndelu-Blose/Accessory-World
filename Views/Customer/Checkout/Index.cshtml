@@ -12,7 +12,7 @@
                     <h4 class="mb-0">Checkout</h4>
                 </div>
                 <div class="card-body">
-                    <form asp-action="PlaceOrder" method="post" id="checkoutForm">
+                    <form asp-action="ProcessOrder" method="post" id="checkoutForm">
                         @Html.AntiForgeryToken()
                         
                         <!-- Delivery Method Selection -->
@@ -21,7 +21,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="FulfilmentMethod" id="delivery" value="DELIVERY" checked>
+                                        <input class="form-check-input" type="radio" name="FulfillmentMethod" id="delivery" value="DELIVERY" checked>
                                         <label class="form-check-label" for="delivery">
                                             <strong>Delivery</strong><br>
                                             <small class="text-muted">Delivered to your address</small>
@@ -30,7 +30,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="FulfilmentMethod" id="pickup" value="PICKUP">
+                                        <input class="form-check-input" type="radio" name="FulfillmentMethod" id="pickup" value="PICKUP">
                                         <label class="form-check-label" for="pickup">
                                             <strong>Store Pickup</strong><br>
                                             <small class="text-muted">Collect from our store</small>
@@ -58,7 +58,7 @@
                                             <div class="card address-card" data-address-id="@address.Id">
                                                 <div class="card-body">
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="SelectedAddressId" 
+                                                        <input class="form-check-input" type="radio" name="ShippingAddressId" 
                                                                id="address_@address.Id" value="@address.Id" 
                                                                @(address.IsDefault ? "checked" : "")>
                                                         <label class="form-check-label" for="address_@address.Id">
@@ -115,7 +115,7 @@
 
                         <!-- Hidden fields for totals -->
                         <input type="hidden" name="SubTotal" value="@Model.SubTotal" />
-                        <input type="hidden" name="VATAmount" value="@Model.VATAmount" />
+                        <input type="hidden" name="TaxAmount" value="@Model.TaxAmount" />
                         <input type="hidden" name="ShippingFee" id="hiddenShippingFee" value="@Model.ShippingFee" />
                         <input type="hidden" name="Total" id="hiddenTotal" value="@Model.Total" />
 
@@ -141,12 +141,12 @@
                     {
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="flex-grow-1">
-                                <h6 class="mb-1">@item.Product.Name</h6>
-                                <small class="text-muted">@item.SKU.Variant</small><br>
+                                <h6 class="mb-1">@item.ProductName</h6>
+                                <small class="text-muted">@item.SKUName</small><br>
                                 <small class="text-muted">Qty: @item.Quantity</small>
                             </div>
                             <div class="text-end">
-                                <strong>R @((item.UnitPrice * item.Quantity).ToString("N2"))</strong>
+                                <strong>R @item.LineTotal.ToString("N2")</strong>
                             </div>
                         </div>
                     }
@@ -161,7 +161,7 @@
                     
                     <div class="d-flex justify-content-between mb-2">
                         <span>VAT (15%):</span>
-                        <span>R @Model.VATAmount.ToString("N2")</span>
+                        <span>R @Model.TaxAmount.ToString("N2")</span>
                     </div>
                     
                     <div class="d-flex justify-content-between mb-2" id="shippingRow">
@@ -185,7 +185,7 @@
     <script>
         $(document).ready(function() {
             // Handle delivery method change
-            $('input[name="FulfilmentMethod"]').change(function() {
+            $('input[name="FulfillmentMethod"]').change(function() {
                 var method = $(this).val();
                 if (method === 'DELIVERY') {
                     $('#addressSection').show();
@@ -198,7 +198,7 @@
             });
 
             // Handle address selection change
-            $('input[name="SelectedAddressId"]').change(function() {
+            $('input[name="ShippingAddressId"]').change(function() {
                 calculateShipping();
             });
 
@@ -206,8 +206,8 @@
             calculateShipping();
 
             function calculateShipping() {
-                var method = $('input[name="FulfilmentMethod"]:checked').val();
-                var addressId = $('input[name="SelectedAddressId"]:checked').val();
+                var method = $('input[name="FulfillmentMethod"]:checked').val();
+                var addressId = $('input[name="ShippingAddressId"]:checked').val();
                 
                 if (method === 'PICKUP') {
                     updateShipping(0);
@@ -221,7 +221,7 @@
                         contentType: 'application/json',
                         data: JSON.stringify({
                             addressId: parseInt(addressId),
-                            fulfilmentMethod: method
+                            fulfillmentMethod: method
                         }),
                         success: function(response) {
                             if (response.success) {
@@ -239,7 +239,7 @@
 
             function updateShipping(shippingFee) {
                 var subtotal = @Model.SubTotal;
-                var tax = @Model.VATAmount;
+                var tax = @Model.TaxAmount;
                 var total = subtotal + tax + shippingFee;
                 
                 $('#shippingAmount').text('R ' + shippingFee.toFixed(2));
@@ -256,10 +256,10 @@
 
             // Form validation
             $('#checkoutForm').submit(function(e) {
-                var method = $('input[name="FulfilmentMethod"]:checked').val();
+                var method = $('input[name="FulfillmentMethod"]:checked').val();
                 
                 if (method === 'DELIVERY') {
-                    var addressSelected = $('input[name="SelectedAddressId"]:checked').length > 0;
+                    var addressSelected = $('input[name="ShippingAddressId"]:checked').length > 0;
                     if (!addressSelected) {
                         e.preventDefault();
                         alert('Please select a delivery address.');

@@ -8,7 +8,6 @@ using AccessoryWorld.Models;
 namespace AccessoryWorld.Controllers
 {
     [Route("[controller]")]
-    [ValidateAntiForgeryToken]
     public class CartController(ICartService cartService, ISecurityValidationService securityValidation) : Controller
     {
         private readonly ICartService _cartService = cartService;
@@ -48,34 +47,44 @@ namespace AccessoryWorld.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateItem([FromBody] UpdateCartItemRequest request)
         {
-            var sessionId = HttpContext.Session.Id;
-            var userId = User.Identity?.IsAuthenticated == true ? User.FindFirstValue(ClaimTypes.NameIdentifier) : null;
-            
-            var success = await _cartService.UpdateCartItemAsync(sessionId, request.CartItemId, request.Quantity, userId);
-            
-            if (success)
+            try
             {
-                var cartCount = await _cartService.GetCartItemCountAsync(sessionId, userId);
-                return Json(new { success = true, cartCount });
+                var sessionId = HttpContext.Session.Id;
+                var userId = User.Identity?.IsAuthenticated == true ? User.FindFirstValue(ClaimTypes.NameIdentifier) : null;
+                
+                var success = await _cartService.UpdateCartItemAsync(sessionId, request.CartItemId, request.Quantity, userId);
+                
+                if (success)
+                {
+                    var cartCount = await _cartService.GetCartItemCountAsync(sessionId, userId);
+                    return Json(new { success = true, message = "Item updated successfully.", cartCount });
+                }
+                
+                return Json(new { success = false, message = "Failed to update item quantity." });
             }
-            
-            return Json(new { success = false, message = "Failed to update item quantity." });
+            catch (DomainException ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "An unexpected error occurred while updating item quantity." });
+            }
         }
         
         [HttpPost("RemoveItem")]
         [ValidateAntiForgeryToken]
-        [Authorize] // Require authentication to remove cart items
         public async Task<IActionResult> RemoveItem([FromBody] RemoveCartItemRequest request)
         {
             var sessionId = HttpContext.Session.Id;
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!; // User is guaranteed to be authenticated
+            var userId = User.Identity?.IsAuthenticated == true ? User.FindFirstValue(ClaimTypes.NameIdentifier) : null;
             
             var success = await _cartService.RemoveFromCartAsync(sessionId, request.CartItemId, userId);
             
             if (success)
             {
                 var cartCount = await _cartService.GetCartItemCountAsync(sessionId, userId);
-                return Json(new { success = true, cartCount });
+                return Json(new { success = true, message = "Item removed from cart successfully.", cartCount });
             }
             
             return Json(new { success = false, message = "Failed to remove item from cart." });
@@ -83,17 +92,16 @@ namespace AccessoryWorld.Controllers
         
         [HttpPost("Clear")]
         [ValidateAntiForgeryToken]
-        [Authorize] // Require authentication to clear cart
         public async Task<IActionResult> Clear()
         {
             var sessionId = HttpContext.Session.Id;
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!; // User is guaranteed to be authenticated
+            var userId = User.Identity?.IsAuthenticated == true ? User.FindFirstValue(ClaimTypes.NameIdentifier) : null;
             
             var success = await _cartService.ClearCartAsync(sessionId, userId);
             
             if (success)
             {
-                return Json(new { success = true, cartCount = 0 });
+                return Json(new { success = true, message = "Cart cleared successfully.", cartCount = 0 });
             }
             
             return Json(new { success = false, message = "Failed to clear cart." });

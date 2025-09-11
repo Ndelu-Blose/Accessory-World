@@ -28,6 +28,11 @@ namespace AccessoryWorld.ViewModels
     public class AddressViewModel
     {
         public int Id { get; set; }
+        
+        [Required]
+        [Display(Name = "Full Name")]
+        [StringLength(100, ErrorMessage = "Full name cannot be longer than 100 characters.")]
+        public string FullName { get; set; } = string.Empty;
 
         [Required]
         [Display(Name = "Address Line 1")]
@@ -57,6 +62,10 @@ namespace AccessoryWorld.ViewModels
         [Display(Name = "Country")]
         [StringLength(100, ErrorMessage = "Country cannot be longer than 100 characters.")]
         public string Country { get; set; } = "South Africa";
+
+        [Phone]
+        [Display(Name = "Phone Number")]
+        public string PhoneNumber { get; set; } = string.Empty;
 
         [Display(Name = "Set as Default Address")]
         public bool IsDefault { get; set; } = false;
@@ -193,17 +202,7 @@ public class OrderDetailsViewModel
     public bool HasActiveRMA { get; set; }
 }
 
-public class OrderItemViewModel
-{
-    public string ProductName { get; set; } = string.Empty;
-    public string SKUCode { get; set; } = string.Empty;
-    public string? Variant { get; set; }
-    public int Quantity { get; set; }
-    public decimal UnitPrice { get; set; }
-    public decimal LineTotal { get; set; }
-    public string Status { get; set; } = string.Empty;
-    public string? ProductImage { get; set; }
-}
+
 
 public class ShipmentViewModel
 {

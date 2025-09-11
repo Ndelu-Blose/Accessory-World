@@ -197,23 +197,29 @@ function showNotification(message, type = 'info') {
     }, 4000);
 }
 
-function updateCartCount() {
-    // This would typically fetch cart data from your backend
-    // For now, we'll use localStorage or a simple counter
-    const cartCountElement = document.querySelector('.cart-count');
-    
+function updateCartCount(count) {
+    // Update cart count badge in main navigation
+    const cartCountElement = document.getElementById('cart-count');
     if (cartCountElement) {
-        // Simulate getting cart count
-        const cartCount = getCartItemCount();
-        cartCountElement.textContent = cartCount;
-        
-        // Update cart total if element exists
-        const cartTotalElement = document.querySelector('.cart-total');
-        if (cartTotalElement) {
-            const cartTotal = getCartTotal();
-            cartTotalElement.textContent = `R ${cartTotal.toFixed(2)}`;
-        }
+        cartCountElement.textContent = count;
+        cartCountElement.style.display = count > 0 ? 'inline' : 'none';
     }
+    
+    // Update cart count badge in landing layout
+    const cartCountLandingElement = document.getElementById('cart-count-landing');
+    if (cartCountLandingElement) {
+        cartCountLandingElement.textContent = count;
+        cartCountLandingElement.style.display = count > 0 ? 'inline' : 'none';
+    }
+    
+    // Also update any other cart count elements
+    const otherCartCountElements = document.querySelectorAll('.cart-count, .badge');
+    otherCartCountElements.forEach(element => {
+        if (element.id !== 'cart-count' && element.id !== 'cart-count-landing') {
+            element.textContent = count;
+            element.style.display = count > 0 ? 'inline' : 'none';
+        }
+    });
 }
 
 function getCartItemCount() {

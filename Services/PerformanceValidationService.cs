@@ -23,8 +23,8 @@ namespace AccessoryWorld.Services
 
     public interface IPerformanceValidationService
     {
-        Task ValidateRateLimitAsync(string clientId, string endpoint);
-        Task ValidateConcurrencyLimitAsync(string clientId);
+        void ValidateRateLimit(string clientId, string endpoint);
+        void ValidateConcurrencyLimit(string clientId);
         void ValidateQueryConstraints(int pageSize, int page, string? sortBy = null);
         void ValidateSearchConstraints(string query, int maxResults);
         void ValidateUploadSize(long fileSize, string fileName);
@@ -57,7 +57,7 @@ namespace AccessoryWorld.Services
             _options = options.Value;
         }
 
-        public async Task ValidateRateLimitAsync(string clientId, string endpoint)
+        public void ValidateRateLimit(string clientId, string endpoint)
         {
             if (!_options.EnableRateLimiting)
                 return;
@@ -67,7 +67,7 @@ namespace AccessoryWorld.Services
             var hourKey = $"rate_limit_hour_{clientId}_{endpoint}";
 
             // Check minute limit
-            var minuteRequests = await GetRequestCountAsync(minuteKey, TimeSpan.FromMinutes(1));
+            var minuteRequests = GetRequestCount(minuteKey, TimeSpan.FromMinutes(1));
             if (minuteRequests >= _options.MaxRequestsPerMinute)
             {
                 _logger.LogWarning("Rate limit exceeded for client {ClientId} on endpoint {Endpoint}: {Count} requests per minute",
@@ -78,7 +78,7 @@ namespace AccessoryWorld.Services
             }
 
             // Check hour limit
-            var hourRequests = await GetRequestCountAsync(hourKey, TimeSpan.FromHours(1));
+            var hourRequests = GetRequestCount(hourKey, TimeSpan.FromHours(1));
             if (hourRequests >= _options.MaxRequestsPerHour)
             {
                 _logger.LogWarning("Rate limit exceeded for client {ClientId} on endpoint {Endpoint}: {Count} requests per hour",
@@ -89,11 +89,11 @@ namespace AccessoryWorld.Services
             }
 
             // Record this request
-            await IncrementRequestCountAsync(minuteKey, TimeSpan.FromMinutes(1));
-            await IncrementRequestCountAsync(hourKey, TimeSpan.FromHours(1));
+            IncrementRequestCount(minuteKey, TimeSpan.FromMinutes(1));
+            IncrementRequestCount(hourKey, TimeSpan.FromHours(1));
         }
 
-        public async Task ValidateConcurrencyLimitAsync(string clientId)
+        public void ValidateConcurrencyLimit(string clientId)
         {
             var currentConcurrent = _concurrentRequests.GetOrAdd(clientId, 0);
             
@@ -309,7 +309,7 @@ namespace AccessoryWorld.Services
                 return false;
 
             var minuteKey = $"rate_limit_minute_{clientId}";
-            var minuteRequests = await GetRequestCountAsync(minuteKey, TimeSpan.FromMinutes(1));
+            var minuteRequests = GetRequestCount(minuteKey, TimeSpan.FromMinutes(1));
             
             return minuteRequests >= _options.MaxRequestsPerMinute;
         }
@@ -361,7 +361,7 @@ namespace AccessoryWorld.Services
             };
         }
 
-        private async Task<int> GetRequestCountAsync(string key, TimeSpan window)
+        private int GetRequestCount(string key, TimeSpan window)
         {
             if (_cache.TryGetValue(key, out int count))
             {
@@ -370,9 +370,9 @@ namespace AccessoryWorld.Services
             return 0;
         }
 
-        private async Task IncrementRequestCountAsync(string key, TimeSpan window)
+        private void IncrementRequestCount(string key, TimeSpan window)
         {
-            var count = await GetRequestCountAsync(key, window);
+            var count = GetRequestCount(key, window);
             _cache.Set(key, count + 1, window);
         }
     }

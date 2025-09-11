@@ -174,7 +174,7 @@ namespace AccessoryWorld.Services
                 if (!ValidatePaymentAmount(amount, order.Total))
                 {
                     _logger.LogWarning($"Payment amount mismatch for order {orderNumber}. Expected: {order.Total:F2}, Received: {amount:F2}");
-                    await CreatePaymentExceptionRecord(order.Id, pfPaymentId, amount, "Amount mismatch");
+                    CreatePaymentExceptionRecord(order.Id, pfPaymentId, amount, "Amount mismatch");
                     await transaction.CommitAsync();
                     return false;
                 }
@@ -202,7 +202,7 @@ namespace AccessoryWorld.Services
                 _context.Payments.Add(payment);
 
                 // 8. Update order status based on payment status
-                await UpdateOrderStatus(order, paymentStatus);
+                UpdateOrderStatus(order, paymentStatus);
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -297,7 +297,7 @@ namespace AccessoryWorld.Services
             return validTransitions[currentOrderStatus.ToUpper()].Contains(paymentStatus.ToUpper());
         }
 
-        private async Task CreatePaymentExceptionRecord(int orderId, string transactionId, decimal amount, string reason)
+        private void CreatePaymentExceptionRecord(int orderId, string transactionId, decimal amount, string reason)
         {
             var payment = new Payment
             {
@@ -315,7 +315,7 @@ namespace AccessoryWorld.Services
             _context.Payments.Add(payment);
         }
 
-        private async Task UpdateOrderStatus(Order order, string paymentStatus)
+        private void UpdateOrderStatus(Order order, string paymentStatus)
         {
             switch (paymentStatus.ToUpper())
             {

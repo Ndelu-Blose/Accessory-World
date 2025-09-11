@@ -4,6 +4,10 @@
     ViewData["Title"] = "Shopping Cart";
 }
 
+<form method="post">
+    @Html.AntiForgeryToken()
+</form>
+
 <div class="container py-4">
     <div class="row">
         <div class="col-lg-8">
@@ -18,29 +22,34 @@
                     </h4>
                 </div>
                 <div class="card-body">
-                    <div id="cart-loading" class="text-center py-4">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="mt-2">Loading cart...</p>
-                    </div>
-                    
-                    <div id="cart-content" style="display: none;">
-                        <div id="cart-items-container">
-                            <!-- Cart items will be loaded here via JavaScript -->
-                        </div>
-                    </div>
-                    
-                    <div id="empty-cart" class="text-center py-5" style="display: none;">
-                        <div class="mb-4">
-                            <i class="fas fa-shopping-cart fa-3x text-muted"></i>
-                        </div>
-                        <h5>Your cart is empty</h5>
-                        <p class="text-muted">Add some products to get started!</p>
-                        <a href="/Products" class="btn btn-primary">
-                            <i class="fas fa-shopping-bag"></i> Start Shopping
-                        </a>
-                    </div>
+                    @if (Model.Cart.Items.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Total</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.Cart.Items)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    @if (!string.IsNullOrEmpty(item.Product.ProductImages.FirstOrDefault()?.ImageUrl))
+                                                    {
+                                                        <img src="@item.Product.ProductImages.FirstOrDefault()?.ImageUrl" alt="@item.Product.Name" 
+                                                             class="me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="me-3 d-flex align-items-center justify-content-center bg-light" 
+                                                             style="width: 60px; height: 60px;">
                                                             <i class="fas fa-image text-muted"></i>
                                                         </div>
                                                     }
@@ -72,7 +81,8 @@
                                                         <i class="fas fa-plus"></i>
                                                     </button>
                                                 </div>
-                                                <small class="text-muted d-block mt-1">@item.SKU.StockQuantity in stock</small>
+                                                @* Hide stock information from customers as requested *@
+                                                @* <small class="text-muted d-block mt-1">@item.SKU.StockQuantity in stock</small> *@
                                             </td>
                                             <td>
                                                 <span class="fw-bold">R @item.TotalPrice.ToString("N2")</span>
@@ -91,10 +101,10 @@
                         </div>
                         
                         <div class="d-flex justify-content-between align-items-center mt-3">
-                            <a href="@Url.Action("Index", "Products")" class="btn btn-outline-primary">
+                            <a href="/Products" class="btn btn-outline-primary">
                                 <i class="fas fa-arrow-left"></i> Continue Shopping
                             </a>
-                            <button class="btn btn-outline-secondary" onclick="clearCart()">
+                            <button class="btn btn-outline-danger" onclick="clearCart()">
                                 <i class="fas fa-trash"></i> Clear Cart
                             </button>
                         </div>
@@ -105,7 +115,7 @@
                             <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
                             <h5>Your cart is empty</h5>
                             <p class="text-muted">Add some products to get started!</p>
-                            <a href="@Url.Action("Index", "Products")" class="btn btn-primary">
+                            <a href="/Products" class="btn btn-primary">
                                 <i class="fas fa-shopping-bag"></i> Start Shopping
                             </a>
                         </div>
@@ -137,7 +147,7 @@
                         </div>
                         
                         <div class="d-grid gap-2">
-                            <a href="@Url.Action("Index", "Checkout")" class="btn btn-primary btn-lg">
+                            <a href="/Checkout" class="btn btn-primary btn-lg">
                                 <i class="fas fa-credit-card"></i> Proceed to Checkout
                             </a>
                             <small class="text-muted text-center mt-2">
@@ -173,11 +183,13 @@
             }
             
             try {
+                const token = $('input[name="__RequestVerificationToken"]').val();
                 const response = await fetch('/Cart/UpdateItem', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'RequestVerificationToken': token
                     },
                     body: JSON.stringify({
                         cartItemId: cartItemId,
@@ -185,57 +197,60 @@
                     })
                 });
                 
-                // Check if user needs to login
-                if (response.status === 401 || response.redirected && response.url.includes('/Account/Login')) {
-                    alert('Please login to update your cart.');
-                    window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
-                    return;
-                }
-                
                 if (response.ok) {
-                    location.reload();
+                    const result = await response.json();
+                    if (result.success) {
+                        updateCartCount(result.cartCount);
+                        location.reload(); // Reload to show updated quantities and totals
+                    } else {
+                        alert(result.message || 'Failed to update quantity. Please try again.');
+                    }
                 } else {
-                    alert('Failed to update quantity. Please try again.');
+                    const result = await response.json();
+                    alert(result.message || 'Failed to update quantity. Please try again.');
                 }
             } catch (error) {
                 console.error('Error updating quantity:', error);
-                alert('An error occurred. Please try again.');
+                alert('Failed to update quantity. Please try again.');
             }
         }
         
         // Remove item from cart
         async function removeFromCart(cartItemId) {
-            if (!confirm('Are you sure you want to remove this item from your cart?')) {
+            if (!confirm('Are you sure you want to remove this item?')) {
                 return;
             }
             
             try {
+                const token = $('input[name="__RequestVerificationToken"]').val();
                 const response = await fetch('/Cart/RemoveItem', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'RequestVerificationToken': token
                     },
-                    body: JSON.stringify({
-                        cartItemId: cartItemId
-                    })
+                    body: JSON.stringify({ cartItemId: cartItemId })
                 });
                 
-                // Check if user needs to login
-                if (response.status === 401 || response.redirected && response.url.includes('/Account/Login')) {
-                    alert('Please login to update your cart.');
-                    window.location.href = '/Account/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
-                    return;
-                }
-                
                 if (response.ok) {
-                    location.reload();
+                    const result = await response.json();
+                    if (result.success) {
+                        updateCartCount(result.cartCount);
+                        location.reload(); // Reload to show updated cart
+                    } else {
+                        alert(result.message || 'Failed to remove item. Please try again.');
+                    }
+                } else if (response.status === 401) {
+                    alert('Please log in to remove items from your cart.');
+                    window.location.href = '/Identity/Account/Login';
                 } else {
-                    alert('Failed to remove item. Please try again.');
+                    const result = await response.json();
+                    alert(result.message || 'Failed to remove item. Please try again.');
                 }
             } catch (error) {
                 console.error('Error removing item:', error);
-                alert('An error occurred. Please try again.');
+                alert('Failed to remove item. Please try again.');
             }
         }
         
@@ -246,217 +261,35 @@
             }
             
             try {
+                const token = $('input[name="__RequestVerificationToken"]').val();
                 const response = await fetch('/Cart/Clear', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'RequestVerificationToken': token
                     }
                 });
                 
                 if (response.ok) {
-                    location.reload();
+                    const result = await response.json();
+                    if (result.success) {
+                        updateCartCount(result.cartCount);
+                        location.reload(); // Reload to show empty cart
+                    } else {
+                        alert(result.message || 'Failed to clear cart. Please try again.');
+                    }
+                } else if (response.status === 401) {
+                    alert('Please log in to clear your cart.');
+                    window.location.href = '/Identity/Account/Login';
                 } else {
-                    alert('Failed to clear cart. Please try again.');
+                    const result = await response.json();
+                    alert(result.message || 'Failed to clear cart. Please try again.');
                 }
             } catch (error) {
                 console.error('Error clearing cart:', error);
-                alert('An error occurred. Please try again.');
+                alert('Failed to clear cart. Please try again.');
             }
-        }
-        
-        // Load cart data dynamically
-        async function loadCartData() {
-            try {
-                const response = await fetch('/Cart/GetCart');
-                const data = await response.json();
-                
-                document.getElementById('cart-loading').style.display = 'none';
-                
-                if (data.items && data.items.length > 0) {
-                    displayCartItems(data);
-                    document.getElementById('cart-content').style.display = 'block';
-                } else {
-                    document.getElementById('empty-cart').style.display = 'block';
-                }
-            } catch (error) {
-                console.error('Error loading cart:', error);
-                document.getElementById('cart-loading').innerHTML = '<p class="text-danger">Error loading cart. Please refresh the page.</p>';
-            }
-        }
-        
-        // Display cart items
-        function displayCartItems(cartData) {
-            const container = document.getElementById('cart-items-container');
-            
-            let html = `
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Price</th>
-                                <th>Quantity</th>
-                                <th>Total</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
-            
-            cartData.items.forEach(item => {
-                html += `
-                    <tr data-cart-item-id="${item.id}">
-                        <td>
-                            <div class="d-flex align-items-center">
-                                ${item.imageUrl ? 
-                                    `<img src="${item.imageUrl}" alt="${item.productName}" class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: cover;">` :
-                                    `<div class="bg-light d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;"><i class="fas fa-image text-muted"></i></div>`
-                                }
-                                <div>
-                                    <h6 class="mb-1">${item.productName}</h6>
-                                    <small class="text-muted">${item.brandName}</small>
-                                    ${item.variant !== 'Standard' ? `<br><small class="text-info">${item.variant}</small>` : ''}
-                                </div>
-                            </div>
-                        </td>
-                        <td>R ${item.unitPrice.toFixed(2)}</td>
-                        <td>
-                            <div class="input-group" style="width: 120px;">
-                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="updateQuantity(${item.id}, ${item.quantity - 1})">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                                <input type="number" class="form-control form-control-sm text-center" value="${item.quantity}" min="1" max="100" onchange="updateQuantity(${item.id}, this.value)">
-                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="updateQuantity(${item.id}, ${item.quantity + 1})">
-                                    <i class="fas fa-plus"></i>
-                                </button>
-                            </div>
-                        </td>
-                        <td><strong>R ${item.totalPrice.toFixed(2)}</strong></td>
-                        <td>
-                            <button class="btn btn-outline-danger btn-sm" onclick="removeItem(${item.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>`;
-            });
-            
-            html += `
-                        </tbody>
-                    </table>
-                </div>`;
-            
-            container.innerHTML = html;
-            
-            // Update cart summary
-            updateCartSummary(cartData);
-        }
-        
-        // Update cart summary
-        function updateCartSummary(cartData) {
-            const summaryContainer = document.querySelector('.card-body .row .col-lg-4');
-            if (summaryContainer) {
-                summaryContainer.innerHTML = `
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">Order Summary</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Subtotal (${cartData.totalItems} items):</span>
-                                <span>R ${cartData.subTotal.toFixed(2)}</span>
-                            </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>VAT (15%):</span>
-                                <span>R ${cartData.vatAmount.toFixed(2)}</span>
-                            </div>
-                            <hr>
-                            <div class="d-flex justify-content-between mb-3">
-                                <strong>Total:</strong>
-                                <strong>R ${cartData.total.toFixed(2)}</strong>
-                            </div>
-                            <div class="d-grid gap-2">
-                                <a href="/Checkout" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-credit-card"></i> Proceed to Checkout
-                                </a>
-                                <button class="btn btn-outline-secondary" onclick="clearCart()">
-                                    <i class="fas fa-trash"></i> Clear Cart
-                                </button>
-                            </div>
-                        </div>
-                    </div>`;
-            }
-        }
-        
-        // Load cart data when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            loadCartData();
-        });
-        
-        // Update item quantity
-        async function updateQuantity(itemId, newQuantity) {
-            if (newQuantity < 1) {
-                removeItem(itemId);
-                return;
-            }
-            
-            try {
-                const response = await fetch('/Cart/UpdateItem', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify({ cartItemId: itemId, quantity: parseInt(newQuantity) })
-                });
-                
-                if (response.ok) {
-                    loadCartData(); // Reload cart data
-                    updateCartCount(); // Update navigation count
-                } else {
-                    alert('Error updating item quantity');
-                }
-            } catch (error) {
-                console.error('Error updating quantity:', error);
-                alert('Error updating item quantity');
-            }
-        }
-        
-        // Remove item from cart
-        async function removeItem(itemId) {
-            if (!confirm('Are you sure you want to remove this item from your cart?')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch('/Cart/RemoveItem', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
-                    },
-                    body: JSON.stringify({ cartItemId: itemId })
-                });
-                
-                if (response.ok) {
-                    loadCartData(); // Reload cart data
-                    updateCartCount(); // Update navigation count
-                } else {
-                    alert('Error removing item from cart');
-                }
-            } catch (error) {
-                console.error('Error removing item:', error);
-                alert('Error removing item from cart');
-            }
-        }
-        
-        // Update cart count in navigation
-        function updateCartCount() {
-            fetch('/Cart/GetCount')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('cart-count').textContent = data.count;
-                })
-                .catch(error => console.error('Error updating cart count:', error));
         }
     </script>
 }

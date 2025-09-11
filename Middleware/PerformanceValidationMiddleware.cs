@@ -29,10 +29,10 @@ namespace AccessoryWorld.Middleware
             try
             {
                 // Validate rate limits
-                await _performanceValidation.ValidateRateLimitAsync(clientId, endpoint);
+                _performanceValidation.ValidateRateLimit(clientId, endpoint);
                 
                 // Validate concurrency limits
-                await _performanceValidation.ValidateConcurrencyLimitAsync(clientId);
+                _performanceValidation.ValidateConcurrencyLimit(clientId);
                 
                 // Record request start
                 _performanceValidation.RecordRequestStart(requestId, clientId);
