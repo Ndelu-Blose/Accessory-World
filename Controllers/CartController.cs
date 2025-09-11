@@ -4,6 +4,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using AccessoryWorld.Security;
 using AccessoryWorld.Models;
+using AccessoryWorld.Exceptions;
 
 namespace AccessoryWorld.Controllers
 {
@@ -32,7 +33,7 @@ namespace AccessoryWorld.Controllers
                 
                 return Json(new { success = false, message = "Failed to add item to cart. Please check stock availability." });
             }
-            catch (AccessoryWorld.Exceptions.DomainException ex)
+            catch (DomainException ex)
             {
                 return Json(new { success = false, message = ex.Message });
             }

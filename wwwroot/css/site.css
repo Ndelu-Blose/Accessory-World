@@ -232,6 +232,70 @@ body {
   color: white;
 }
 
+/* Enhanced Checkout Button Styling */
+.btn-checkout {
+  background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 50%, #0a58ca 100%);
+  border: none;
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 0.875rem 2rem;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-checkout::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-checkout:hover {
+  background: linear-gradient(135deg, #0b5ed7 0%, #0a58ca 50%, #084298 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(13, 110, 253, 0.4);
+  color: white;
+}
+
+.btn-checkout:hover::before {
+  left: 100%;
+}
+
+.btn-checkout:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.btn-checkout i {
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+}
+
+/* Loading state for checkout button */
+.btn-checkout.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.btn-checkout.loading i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .admin-navbar .navbar-brand,
@@ -241,6 +305,29 @@ body {
   
   .admin-badge {
     font-size: 0.7rem;
+  }
+  
+  /* Responsive checkout button */
+  .btn-checkout {
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+  }
+  
+  .btn-checkout i {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-checkout {
+    font-size: 0.9rem;
+    padding: 0.625rem 1.25rem;
+    letter-spacing: 0.3px;
+  }
+  
+  .btn-checkout i {
+    font-size: 1rem;
   }
 }
 
@@ -266,6 +353,399 @@ body {
   background: linear-gradient(45deg, #0d6efd, #0b5ed7);
   color: #fff;
   border: 2px solid #ffffff;
+}
+
+/* Checkout Page Styles */
+.checkout-page {
+  --primary: #1399FF;
+  --accent-magenta: #FF37B9;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --text-dark: #111111;
+  --text-muted: #6B7280;
+  --border: #E5E7EB;
+  --card-bg: #FFFFFF;
+  --page-bg: #F8FAFC;
+  --radius-card: 16px;
+  --radius-button: 8px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--accent-magenta));
+  
+  background-color: var(--page-bg) !important;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+
+.checkout-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.checkout-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.checkout-header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #1399FF, #FF37B9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.checkout-header p {
+  color: #6B7280;
+  font-size: 1.1rem;
+}
+
+.checkout-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #E5E7EB;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.checkout-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+.checkout-card .card-header {
+  background: linear-gradient(135deg, #1399FF, #FF37B9);
+  color: white;
+  border: none;
+  padding: 1.5rem;
+}
+
+.checkout-card .card-header h4,
+.checkout-card .card-header h5 {
+  margin: 0;
+  font-weight: 700;
+}
+
+.checkout-card .card-body {
+  padding: 2rem;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111111;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-title i {
+  color: #1399FF;
+}
+
+.delivery-method-card {
+  border: 2px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: #FFFFFF;
+}
+
+.delivery-method-card:hover {
+  border-color: #1399FF;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.delivery-method-card.selected {
+  border-color: #1399FF;
+  background: linear-gradient(135deg, rgba(19, 153, 255, 0.05), rgba(255, 55, 185, 0.05));
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.delivery-method-card .form-check-input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0;
+}
+
+.delivery-method-card .form-check-input:checked {
+  background-color: #1399FF;
+  border-color: #1399FF;
+}
+
+.delivery-method-card .form-check-label {
+  margin-left: 0.75rem;
+  cursor: pointer;
+}
+
+.delivery-method-card .form-check-label strong {
+  font-size: 1.1rem;
+  color: #111111;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.address-card {
+  border: 2px solid #E5E7EB;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: #FFFFFF;
+  overflow: hidden;
+}
+
+.address-card:hover {
+  border-color: #1399FF;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.address-card.selected {
+  border-color: #1399FF;
+  background: linear-gradient(135deg, rgba(19, 153, 255, 0.05), rgba(255, 55, 185, 0.05));
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.address-card .card-body {
+  padding: 1.5rem;
+}
+
+.address-card .form-check-input {
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0;
+}
+
+.address-card .form-check-input:checked {
+  background-color: #1399FF;
+  border-color: #1399FF;
+}
+
+.address-card .form-check-input:checked ~ .form-check-label {
+  color: #1399FF;
+}
+
+.address-card .form-check-label {
+  margin-left: 0.75rem;
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.checkout-page .badge {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 50px;
+  font-weight: 600;
+}
+
+.checkout-page .bg-primary {
+  background: linear-gradient(135deg, #1399FF, #FF37B9) !important;
+}
+
+.checkout-page .btn {
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.checkout-page .btn-primary {
+  background: linear-gradient(135deg, #1399FF, #FF37B9);
+  color: white;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.checkout-page .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #0f7ae5, #e6339f);
+}
+
+.checkout-page .btn-outline-primary {
+  border: 2px solid #1399FF;
+  color: #1399FF;
+  background: transparent;
+}
+
+.checkout-page .btn-outline-primary:hover {
+  background: #1399FF;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.checkout-page .btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.checkout-page .form-control {
+  border-radius: 8px;
+  border: 2px solid #E5E7EB;
+  padding: 0.75rem 1rem;
+  transition: all 0.3s ease;
+}
+
+.checkout-page .form-control:focus {
+  border-color: #1399FF;
+  box-shadow: 0 0 0 0.2rem rgba(19, 153, 255, 0.25);
+}
+
+.checkout-page .alert {
+  border-radius: 8px;
+  border: none;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.checkout-page .alert-info {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1));
+  color: #1e40af;
+  border-left: 4px solid #3b82f6;
+}
+
+.order-summary-item {
+  padding: 1rem 0;
+  border-bottom: 1px solid #E5E7EB;
+  transition: all 0.3s ease;
+}
+
+.order-summary-item:hover {
+  background: rgba(19, 153, 255, 0.02);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  border-radius: 8px;
+}
+
+.order-summary-item:last-child {
+  border-bottom: none;
+}
+
+.order-summary-item h6 {
+  font-weight: 600;
+  color: #111111;
+  margin-bottom: 0.25rem;
+}
+
+.order-summary-item .text-muted {
+  color: #6B7280 !important;
+  font-size: 0.875rem;
+}
+
+.order-totals {
+  background: linear-gradient(135deg, rgba(19, 153, 255, 0.05), rgba(255, 55, 185, 0.05));
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.order-totals .d-flex {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.order-totals .d-flex:last-child {
+  margin-bottom: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111111;
+  padding-top: 0.75rem;
+  border-top: 2px solid #E5E7EB;
+}
+
+.pickup-info {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1));
+  border-left: 4px solid #10B981;
+  border-radius: 8px;
+  padding: 1.5rem;
+}
+
+.pickup-info h6 {
+  color: #10B981;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.pickup-info p {
+  margin-bottom: 0.5rem;
+  color: #111111;
+}
+
+.pickup-info p:last-child {
+  margin-bottom: 0;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Checkout Responsive Design */
+@media (max-width: 992px) {
+  .checkout-container {
+    padding: 1.5rem 1rem;
+  }
+  
+  .checkout-header h1 {
+    font-size: 2rem;
+  }
+  
+  .checkout-card .card-body {
+    padding: 1.5rem;
+  }
+  
+  .delivery-method-card,
+  .address-card .card-body {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .checkout-container {
+    padding: 1rem 0.5rem;
+  }
+  
+  .checkout-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .section-title {
+    font-size: 1.1rem;
+  }
+  
+  .checkout-page .btn-lg {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
 }
 
 /* Enhanced Product Card Styles */

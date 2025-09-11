@@ -2,14 +2,21 @@
 @model CheckoutViewModel
 @{
     ViewData["Title"] = "Checkout";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-4">
+<div class="checkout-page">
+<div class="checkout-container">
+    <div class="checkout-header">
+        <h1>Secure Checkout</h1>
+        <p>Complete your order safely and securely</p>
+    </div>
+    
     <div class="row">
         <div class="col-lg-8">
-            <div class="card">
+            <div class="checkout-card">
                 <div class="card-header">
-                    <h4 class="mb-0">Checkout</h4>
+                    <h4 class="mb-0"><i class="fas fa-shopping-cart"></i> Order Details</h4>
                 </div>
                 <div class="card-body">
                     <form asp-action="ProcessOrder" method="post" id="checkoutForm">
@@ -17,33 +24,37 @@
                         
                         <!-- Delivery Method Selection -->
                         <div class="mb-4">
-                            <h5>Delivery Method</h5>
+                            <h5 class="section-title"><i class="fas fa-truck"></i> Delivery Method</h5>
                             <div class="row">
                                 <div class="col-md-6">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="FulfillmentMethod" id="delivery" value="DELIVERY" checked>
-                                        <label class="form-check-label" for="delivery">
-                                            <strong>Delivery</strong><br>
-                                            <small class="text-muted">Delivered to your address</small>
-                                        </label>
+                                    <div class="delivery-method-card" data-method="delivery">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="FulfillmentMethod" id="delivery" value="DELIVERY" checked>
+                                            <label class="form-check-label" for="delivery">
+                                                <strong><i class="fas fa-shipping-fast"></i> Home Delivery</strong>
+                                                <small class="text-muted d-block">Delivered to your doorstep</small>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="FulfillmentMethod" id="pickup" value="PICKUP">
-                                        <label class="form-check-label" for="pickup">
-                                            <strong>Store Pickup</strong><br>
-                                            <small class="text-muted">Collect from our store</small>
-                                        </label>
+                                    <div class="delivery-method-card" data-method="pickup">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="FulfillmentMethod" id="pickup" value="PICKUP">
+                                            <label class="form-check-label" for="pickup">
+                                                <strong><i class="fas fa-store"></i> Store Pickup</strong>
+                                                <small class="text-muted d-block">Collect from our store</small>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Address Selection (for delivery) -->
-                        <div id="addressSection" class="mb-4">
+                        <div id="addressSection" class="mb-4 fade-in">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5>Delivery Address</h5>
+                                <h5 class="section-title"><i class="fas fa-map-marker-alt"></i> Delivery Address</h5>
                                 <a href="@Url.Action("AddAddress")" class="btn btn-outline-primary btn-sm">
                                     <i class="fas fa-plus"></i> Add New Address
                                 </a>
@@ -91,9 +102,9 @@
                         </div>
 
                         <!-- Store Pickup Information (hidden by default) -->
-                        <div id="pickupSection" class="mb-4" style="display: none;">
-                            <h5>Store Pickup Information</h5>
-                            <div class="alert alert-info">
+                        <div id="pickupSection" class="mb-4 fade-in" style="display: none;">
+                            <h5 class="section-title"><i class="fas fa-store"></i> Store Pickup Information</h5>
+                            <div class="pickup-info">
                                 <h6><i class="fas fa-store"></i> AccessoryWorld Store</h6>
                                 <p class="mb-1"><strong>Address:</strong> 123 Main Street, Johannesburg, Gauteng 2000</p>
                                 <p class="mb-1"><strong>Hours:</strong> Monday - Friday: 9:00 AM - 6:00 PM, Saturday: 9:00 AM - 4:00 PM</p>
@@ -108,7 +119,7 @@
 
                         <!-- Order Notes -->
                         <div class="mb-4">
-                            <h5>Order Notes (Optional)</h5>
+                            <h5 class="section-title"><i class="fas fa-sticky-note"></i> Order Notes (Optional)</h5>
                             <textarea class="form-control" name="Notes" rows="3" 
                                       placeholder="Any special instructions for your order..."></textarea>
                         </div>
@@ -131,54 +142,55 @@
 
         <!-- Order Summary -->
         <div class="col-lg-4">
-            <div class="card">
+            <div class="checkout-card">
                 <div class="card-header">
-                    <h5 class="mb-0">Order Summary</h5>
+                    <h5 class="mb-0"><i class="fas fa-receipt"></i> Order Summary</h5>
                 </div>
                 <div class="card-body">
                     <!-- Cart Items -->
                     @foreach (var item in Model.CartItems)
                     {
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="flex-grow-1">
-                                <h6 class="mb-1">@item.ProductName</h6>
-                                <small class="text-muted">@item.SKUName</small><br>
-                                <small class="text-muted">Qty: @item.Quantity</small>
-                            </div>
-                            <div class="text-end">
-                                <strong>R @item.LineTotal.ToString("N2")</strong>
+                        <div class="order-summary-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">@item.ProductName</h6>
+                                    <small class="text-muted">@item.SKUName</small><br>
+                                    <small class="text-muted"><i class="fas fa-cube"></i> Qty: @item.Quantity</small>
+                                </div>
+                                <div class="text-end">
+                                    <strong>R @item.LineTotal.ToString("N2")</strong>
+                                </div>
                             </div>
                         </div>
                     }
                     
-                    <hr>
-                    
                     <!-- Order Totals -->
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Subtotal:</span>
-                        <span>R @Model.SubTotal.ToString("N2")</span>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>VAT (15%):</span>
-                        <span>R @Model.TaxAmount.ToString("N2")</span>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mb-2" id="shippingRow">
-                        <span>Shipping:</span>
-                        <span id="shippingAmount">R @Model.ShippingFee.ToString("N2")</span>
-                    </div>
-                    
-                    <hr>
-                    
-                    <div class="d-flex justify-content-between">
-                        <strong>Total:</strong>
-                        <strong id="totalAmount">R @Model.Total.ToString("N2")</strong>
+                    <div class="order-totals">
+                        <div class="d-flex justify-content-between">
+                            <span>Subtotal:</span>
+                            <span>R @Model.SubTotal.ToString("N2")</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <span>VAT (15%):</span>
+                            <span>R @Model.TaxAmount.ToString("N2")</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between" id="shippingRow">
+                            <span>Shipping:</span>
+                            <span id="shippingAmount">R @Model.ShippingFee.ToString("N2")</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <strong><i class="fas fa-calculator"></i> Total:</strong>
+                            <strong id="totalAmount">R @Model.Total.ToString("N2")</strong>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 @section Scripts {
@@ -187,19 +199,43 @@
             // Handle delivery method change
             $('input[name="FulfillmentMethod"]').change(function() {
                 var method = $(this).val();
+                
+                // Update visual selection for delivery method cards
+                $('.delivery-method-card').removeClass('selected');
+                $(this).closest('.delivery-method-card').addClass('selected');
+                
                 if (method === 'DELIVERY') {
-                    $('#addressSection').show();
+                    $('#addressSection').show().addClass('fade-in');
                     $('#pickupSection').hide();
                 } else {
                     $('#addressSection').hide();
-                    $('#pickupSection').show();
+                    $('#pickupSection').show().addClass('fade-in');
                 }
                 calculateShipping();
             });
+            
+            // Initialize delivery method selection on page load
+            $('input[name="FulfillmentMethod"]:checked').closest('.delivery-method-card').addClass('selected');
 
             // Handle address selection change
             $('input[name="ShippingAddressId"]').change(function() {
+                // Update visual selection for address cards
+                $('.address-card').removeClass('selected');
+                $(this).closest('.address-card').addClass('selected');
                 calculateShipping();
+            });
+            
+            // Initialize address selection on page load
+            $('input[name="ShippingAddressId"]:checked').closest('.address-card').addClass('selected');
+            
+            // Add click handlers for delivery method cards
+            $('.delivery-method-card').click(function() {
+                $(this).find('input[type="radio"]').prop('checked', true).trigger('change');
+            });
+            
+            // Add click handlers for address cards
+            $('.address-card').click(function() {
+                $(this).find('input[type="radio"]').prop('checked', true).trigger('change');
             });
 
             // Calculate shipping when page loads
@@ -267,23 +303,100 @@
                     }
                 }
                 
-                $('#placeOrderBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+                $('#placeOrderBtn').prop('disabled', true).html('<div class="loading-spinner"></div> Processing Order...');
             });
         });
     </script>
 }
 
 <style>
-    .address-card {
-        cursor: pointer;
-        transition: all 0.2s;
+    :root {
+        --primary: #1399FF;
+        --accent-magenta: #FF37B9;
+        --success: #10B981;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+        --text-dark: #111111;
+        --text-muted: #6B7280;
+        --border: #E5E7EB;
+        --card-bg: #FFFFFF;
+        --page-bg: #F8FAFC;
+        --radius-card: 16px;
+        --radius-button: 8px;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --gradient-primary: linear-gradient(135deg, var(--primary), var(--accent-magenta));
     }
-    
-    .address-card:hover {
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+
+    body {
+        background-color: var(--page-bg) !important;
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
     }
-    
-    .address-card .form-check-input:checked ~ .form-check-label {
-        color: #0d6efd;
+
+    .checkout-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
     }
-</style>
+
+    .checkout-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .checkout-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .checkout-header p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+    }
+
+    .checkout-card {
+        background: var(--card-bg);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .checkout-card:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+    }
+
+    .checkout-card .card-header {
+        background: var(--gradient-primary);
+        color: white;
+        border: none;
+        padding: 1.5rem;
+    }
+
+    .checkout-card .card-header h4,
+    .checkout-card .card-header h5 {
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .checkout-card .card-body {
+        padding: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
