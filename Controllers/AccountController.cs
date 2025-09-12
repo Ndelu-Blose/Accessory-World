@@ -107,9 +107,21 @@ namespace AccessoryWorld.Controllers
         }
 
         // GET: Account/AddAddress
-        public IActionResult AddAddress()
+        public async Task<IActionResult> AddAddress()
         {
-            return View("~/Views/Customer/Account/AddAddress.cshtml", new AddressViewModel());
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var model = new AddressViewModel
+            {
+                FullName = $"{user.FirstName} {user.LastName}".Trim(),
+                Country = "South Africa" // Default country
+            };
+
+            return View("~/Views/Customer/Account/AddAddress.cshtml", model);
         }
 
         // POST: Account/AddAddress
@@ -119,45 +131,99 @@ namespace AccessoryWorld.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View("~/Views/Customer/Account/EditAddress.cshtml", model);
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    var errors = new Dictionary<string, string[]>();
+                    foreach (var kvp in ModelState)
+                    {
+                        if (kvp.Value.Errors.Count > 0)
+                        {
+                            errors[kvp.Key] = kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray();
+                        }
+                    }
+                    return Json(new { success = false, errors = errors });
+                }
+                return View("~/Views/Customer/Account/AddAddress.cshtml", model);
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
             {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = false, message = "User not found" });
+                }
                 return NotFound();
             }
 
-            // If this is set as default, remove default from other addresses
-            if (model.IsDefault)
+            try
             {
-                var existingAddresses = await _context.Addresses
-                    .Where(a => a.UserId == userId && a.IsDefault)
-                    .ToListAsync();
-                
-                foreach (var addr in existingAddresses)
+                // If this is set as default, remove default from other addresses
+                if (model.IsDefault)
                 {
-                    addr.IsDefault = false;
+                    var existingAddresses = await _context.Addresses
+                        .Where(a => a.UserId == userId && a.IsDefault)
+                        .ToListAsync();
+                    
+                    foreach (var addr in existingAddresses)
+                    {
+                        addr.IsDefault = false;
+                    }
                 }
+
+                // Get user details to auto-populate name
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    {
+                        return Json(new { success = false, message = "User not found" });
+                    }
+                    return NotFound();
+                }
+
+                var address = new Address
+                {
+                    UserId = userId,
+                    FullName = $"{user.FirstName} {user.LastName}".Trim(),
+                    PhoneNumber = model.PhoneNumber,
+                    AddressLine1 = model.AddressLine1,
+                    AddressLine2 = model.AddressLine2,
+                    City = model.City,
+                    Province = model.Province,
+                    PostalCode = model.PostalCode,
+                    Country = model.Country,
+                    IsDefault = model.IsDefault,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.Addresses.Add(address);
+                await _context.SaveChangesAsync();
+
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { 
+                        success = true, 
+                        message = "Address added successfully!",
+                        redirectUrl = Url.Action(nameof(Addresses))
+                    });
+                }
+
+                TempData["SuccessMessage"] = "Address added successfully!";
+                return RedirectToAction(nameof(Addresses));
             }
-
-            var address = new Address
+            catch (Exception ex)
             {
-                UserId = userId,
-                AddressLine1 = model.AddressLine1,
-                AddressLine2 = model.AddressLine2,
-                City = model.City,
-                Province = model.Province,
-                PostalCode = model.PostalCode,
-                Country = model.Country,
-                IsDefault = model.IsDefault
-            };
-
-            _context.Addresses.Add(address);
-            await _context.SaveChangesAsync();
-
-            TempData["SuccessMessage"] = "Address added successfully!";
-            return RedirectToAction(nameof(Addresses));
+                _logger.LogError(ex, "Error adding address for user {UserId}", userId);
+                
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = false, message = "An error occurred while saving the address. Please try again." });
+                }
+                
+                ModelState.AddModelError("", "An error occurred while saving the address. Please try again.");
+                return View("~/Views/Customer/Account/AddAddress.cshtml", model);
+            }
         }
 
         // GET: Account/EditAddress/5
@@ -180,6 +246,8 @@ namespace AccessoryWorld.Controllers
             var viewModel = new AddressViewModel
             {
                 Id = address.Id,
+                FullName = address.FullName,
+                PhoneNumber = address.PhoneNumber,
                 AddressLine1 = address.AddressLine1,
                 AddressLine2 = address.AddressLine2,
                 City = address.City,
@@ -234,6 +302,8 @@ namespace AccessoryWorld.Controllers
                 }
             }
 
+            address.FullName = model.FullName;
+            address.PhoneNumber = model.PhoneNumber;
             address.AddressLine1 = model.AddressLine1;
             address.AddressLine2 = model.AddressLine2;
             address.City = model.City;
@@ -494,6 +564,7 @@ namespace AccessoryWorld.Controllers
             FulfilmentMethod = order.FulfilmentMethod,
             ShippingAddress = new AddressViewModel
             {
+                FullName = order.ShippingAddress.FullName,
                 AddressLine1 = order.ShippingAddress.AddressLine1,
                 AddressLine2 = order.ShippingAddress.AddressLine2,
                 City = order.ShippingAddress.City,

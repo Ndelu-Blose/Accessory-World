@@ -1,9 +1,12 @@
 @using AccessoryWorld.Models
-@model Address
+@using AccessoryWorld.ViewModels
+@model AddressViewModel
 @{
     ViewData["Title"] = "Add New Address";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+<div class="checkout-page">
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-lg-6">
@@ -17,6 +20,19 @@
                     <form asp-action="AddAddress" method="post">
                         @Html.AntiForgeryToken()
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        
+                        <!-- FullName is auto-populated from authenticated user -->
+                        <div class="mb-3">
+                            <label class="form-label">Name (from your account)</label>
+                            <input asp-for="FullName" class="form-control" readonly style="background-color: #f8f9fa;" />
+                            <small class="text-muted">This is automatically filled from your account information.</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label asp-for="PhoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="Enter your phone number" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                        </div>
                         
                         <div class="mb-3">
                             <label asp-for="AddressLine1" class="form-label">Address Line 1 <span class="text-danger">*</span></label>
@@ -89,6 +105,7 @@
         </div>
     </div>
 </div>
+</div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
@@ -120,18 +137,3 @@
         });
     </script>
 }
-
-<style>
-    .form-label .text-danger {
-        font-size: 0.875em;
-    }
-    
-    .card {
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    }
-    
-    .form-control:focus, .form-select:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-    }
-</style>

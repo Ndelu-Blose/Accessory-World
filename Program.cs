@@ -20,10 +20,14 @@ namespace AccessoryWorld
 
             // Add Entity Framework
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-                ??"Server=(localdb)\\MSSQLLocalDB;Database=AccessoryWorldDb;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true";
+                ??"Server=(localdb)\\MSSQLLocalDB;Database=AccessoryWorldDb;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true;Connection Timeout=60;Command Timeout=300";
             
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString));
+                options.UseSqlServer(connectionString, sqlOptions => 
+                {
+                    sqlOptions.CommandTimeout(300); // 5 minutes timeout for commands
+                    sqlOptions.EnableRetryOnFailure(maxRetryCount: 3, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null);
+                }));
             
             // Add memory cache for performance validation
             builder.Services.AddMemoryCache();

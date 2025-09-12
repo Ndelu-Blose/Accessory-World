@@ -14,7 +14,6 @@ using AccessoryWorld.Security;
 namespace AccessoryWorld.Controllers
 {
     [Authorize]
-    [ValidateAntiForgeryToken]
     public class CheckoutController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -44,7 +43,6 @@ namespace AccessoryWorld.Controllers
         }
 
         // GET: /Checkout
-        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> Index()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -159,8 +157,8 @@ namespace AccessoryWorld.Controllers
                     model.FulfillmentMethod, 
                     model.Notes);
 
-                TempData["Success"] = $"Order {order.OrderNumber} created successfully!";
-                return RedirectToAction("OrderConfirmation", new { orderId = order.Id });
+                TempData["Success"] = $"Order {order.OrderNumber} created successfully! Please complete your payment.";
+                return RedirectToAction("Payment", new { orderId = order.Id });
             }
             catch (InvalidOperationException ex)
             {
@@ -501,30 +499,86 @@ namespace AccessoryWorld.Controllers
 
 
         // GET: /Checkout/AddAddress
-        public IActionResult AddAddress()
+        public async Task<IActionResult> AddAddress()
         {
-            return View("~/Views/Customer/Checkout/AddAddress.cshtml", new Address());
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Debug: Log user information
+            _logger.LogInformation($"User FirstName: '{user.FirstName}', LastName: '{user.LastName}', Email: '{user.Email}'");
+            
+            var fullName = $"{user.FirstName} {user.LastName}".Trim();
+            _logger.LogInformation($"Generated FullName: '{fullName}'");
+
+            // If FirstName or LastName is empty, use email prefix as fallback
+            if (string.IsNullOrWhiteSpace(user.FirstName) || string.IsNullOrWhiteSpace(user.LastName))
+            {
+                var emailPrefix = user.Email?.Split('@')[0] ?? "User";
+                fullName = string.IsNullOrWhiteSpace(fullName.Trim()) ? emailPrefix : fullName;
+                _logger.LogInformation($"Using fallback FullName: '{fullName}'");
+            }
+
+            var model = new AddressViewModel
+            {
+                FullName = fullName,
+                Country = "South Africa" // Default country
+            };
+
+            return View("~/Views/Customer/Checkout/AddAddress.cshtml", model);
         }
 
         // POST: /Checkout/AddAddress
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddAddress(Address address)
+        public async Task<IActionResult> AddAddress(AddressViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                address.UserId = userId!;
-                address.CreatedAt = DateTime.UtcNow;
-
-                _context.Addresses.Add(address);
-                await _context.SaveChangesAsync();
-
-                TempData["Success"] = "Address added successfully.";
-                return RedirectToAction("Index");
+                return View("~/Views/Customer/Checkout/AddAddress.cshtml", model);
             }
 
-            return View("~/Views/Customer/Checkout/AddAddress.cshtml", address);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
+            {
+                return NotFound();
+            }
+
+            // If this is set as default, remove default from other addresses
+            if (model.IsDefault)
+            {
+                var existingAddresses = await _context.Addresses
+                    .Where(a => a.UserId == userId && a.IsDefault)
+                    .ToListAsync();
+                
+                foreach (var addr in existingAddresses)
+                {
+                    addr.IsDefault = false;
+                }
+            }
+
+            var address = new Address
+            {
+                UserId = userId,
+                FullName = model.FullName, // Use the FullName from the form instead of overriding it
+                PhoneNumber = model.PhoneNumber,
+                AddressLine1 = model.AddressLine1,
+                AddressLine2 = model.AddressLine2,
+                City = model.City,
+                Province = model.Province,
+                PostalCode = model.PostalCode,
+                Country = model.Country,
+                IsDefault = model.IsDefault,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Addresses.Add(address);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Address added successfully.";
+            return RedirectToAction("Index");
         }
 
         private string GenerateOrderNumber()

@@ -34,9 +34,26 @@
                     <h4 class="mb-0">Add New Address</h4>
                 </div>
                 <div class="card-body">
-                    <form asp-action="AddAddress" method="post">
+                    <form id="addAddressForm" asp-action="AddAddress" method="post">
                         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                         
+                        <!-- FullName is auto-populated from authenticated user -->
+                         <div class="mb-3">
+                             <label asp-for="FullName" class="form-label">Name (from your account)</label>
+                             <input asp-for="FullName" class="form-control" readonly style="background-color: #f8f9fa;" />
+                             <small class="text-muted">This is automatically filled from your account information.</small>
+                         </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label asp-for="PhoneNumber" class="form-label"></label>
+                                    <input asp-for="PhoneNumber" class="form-control" placeholder="Phone Number" />
+                                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
@@ -119,8 +136,14 @@
                             <a href="@Url.Action("Addresses", "Account")" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left me-2"></i>Back to Addresses
                             </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Save Address
+                            <button type="submit" class="btn btn-primary" id="saveAddressBtn">
+                                <span class="btn-text">
+                                    <i class="fas fa-save me-2"></i>Save Address
+                                </span>
+                                <span class="btn-loading d-none">
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    Saving...
+                                </span>
                             </button>
                         </div>
                     </form>
@@ -130,6 +153,229 @@
     </div>
 </div>
 
+<!-- Toast Container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+    <div id="addressToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i id="toastIcon" class="fas fa-check-circle text-success me-2"></i>
+            <strong class="me-auto" id="toastTitle">Success</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastMessage">
+            Address saved successfully!
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            // Client-side validation patterns
+            const validationRules = {
+                fullName: {
+                    pattern: /^[a-zA-Z\s'-]+$/,
+                    minLength: 2,
+                    maxLength: 100,
+                    message: 'Full name must contain only letters, spaces, hyphens, and apostrophes (2-100 characters)'
+                },
+                addressLine1: {
+                    minLength: 5,
+                    maxLength: 200,
+                    message: 'Address line 1 must be between 5 and 200 characters'
+                },
+                city: {
+                    pattern: /^[a-zA-Z\s'-]+$/,
+                    minLength: 2,
+                    maxLength: 100,
+                    message: 'City must contain only letters, spaces, hyphens, and apostrophes (2-100 characters)'
+                },
+                postalCode: {
+                    pattern: /^[0-9]{4}$/,
+                    message: 'Postal code must be exactly 4 digits'
+                },
+                phoneNumber: {
+                    pattern: /^(\+27|0)[0-9]{9}$/,
+                    message: 'Please enter a valid South African phone number (e.g., +27123456789 or 0123456789)'
+                }
+            };
+
+            // Real-time validation for each field
+            function validateField(fieldName, value) {
+                const rule = validationRules[fieldName];
+                if (!rule) return { isValid: true };
+
+                // Check required fields
+                if (!value || value.trim() === '') {
+                    return { isValid: false, message: `${fieldName.replace(/([A-Z])/g, ' $1').toLowerCase()} is required` };
+                }
+
+                // Check pattern
+                if (rule.pattern && !rule.pattern.test(value)) {
+                    return { isValid: false, message: rule.message };
+                }
+
+                // Check length
+                if (rule.minLength && value.length < rule.minLength) {
+                    return { isValid: false, message: rule.message };
+                }
+                if (rule.maxLength && value.length > rule.maxLength) {
+                    return { isValid: false, message: rule.message };
+                }
+
+                return { isValid: true };
+            }
+
+            // Show/hide validation message
+            function showValidationMessage(fieldName, message, isValid) {
+                const field = $(`[name="${fieldName}"]`);
+                const errorSpan = field.siblings('.text-danger');
+                
+                if (isValid) {
+                    field.removeClass('is-invalid').addClass('is-valid');
+                    errorSpan.text('');
+                } else {
+                    field.removeClass('is-valid').addClass('is-invalid');
+                    errorSpan.text(message);
+                }
+            }
+
+            // Attach real-time validation to form fields
+            $('#FullName, #AddressLine1, #City, #PostalCode, #PhoneNumber').on('blur keyup', function() {
+                const fieldName = $(this).attr('name');
+                const value = $(this).val();
+                const validation = validateField(fieldName.toLowerCase().replace(/([A-Z])/g, '$1'), value);
+                
+                showValidationMessage(fieldName, validation.message, validation.isValid);
+            });
+
+            // Province validation (required field)
+            $('#Province').on('change blur', function() {
+                const value = $(this).val();
+                const isValid = value && value.trim() !== '';
+                showValidationMessage('Province', isValid ? '' : 'Province is required', isValid);
+            });
+
+            // Form submission with comprehensive validation
+            $('#addAddressForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate all fields before submission
+                let isFormValid = true;
+                const formData = {};
+                
+                // Collect and validate all form data
+                $(this).find('input, select').each(function() {
+                    const fieldName = $(this).attr('name');
+                    const value = $(this).val();
+                    formData[fieldName] = value;
+                    
+                    if (fieldName && fieldName !== '__RequestVerificationToken') {
+                        const validation = validateField(fieldName.toLowerCase().replace(/([A-Z])/g, '$1'), value);
+                        showValidationMessage(fieldName, validation.message, validation.isValid);
+                        
+                        if (!validation.isValid) {
+                            isFormValid = false;
+                        }
+                    }
+                });
+
+                // Check if form is valid
+                if (!isFormValid) {
+                    showToast('error', 'Validation Error', 'Please correct the errors in the form before submitting.');
+                    return;
+                }
+                
+                const form = $(this);
+                const serializedData = form.serialize();
+                const submitBtn = $('#saveAddressBtn');
+                const btnText = submitBtn.find('.btn-text');
+                const btnLoading = submitBtn.find('.btn-loading');
+                
+                // Disable button and show loading state
+                submitBtn.prop('disabled', true);
+                btnText.addClass('d-none');
+                btnLoading.removeClass('d-none');
+                
+                $.ajax({
+                    url: form.attr('action'),
+                    type: 'POST',
+                    data: serializedData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Clear any validation errors
+                            $('.is-invalid').removeClass('is-invalid').addClass('is-valid');
+                            
+                            // Show success toast
+                            showToast('success', 'Success', response.message);
+                            
+                            // Redirect after a short delay to show the toast
+                            setTimeout(function() {
+                                window.location.href = response.redirectUrl;
+                            }, 1500);
+                        } else {
+                            // Handle server validation errors
+                            if (response.errors) {
+                                // Display server-side validation errors
+                                Object.keys(response.errors).forEach(function(fieldName) {
+                                    const errors = response.errors[fieldName];
+                                    if (errors && errors.length > 0) {
+                                        showValidationMessage(fieldName, errors[0], false);
+                                    }
+                                });
+                                showToast('error', 'Validation Error', 'Please correct the errors in the form.');
+                            } else if (response.message) {
+                                showToast('error', 'Error', response.message);
+                            }
+                            resetButton();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX Error:', error);
+                        showToast('error', 'Error', 'An unexpected error occurred. Please try again.');
+                        resetButton();
+                    }
+                });
+                
+                function resetButton() {
+                    const submitBtn = $('#saveAddressBtn');
+                    const btnText = submitBtn.find('.btn-text');
+                    const btnLoading = submitBtn.find('.btn-loading');
+                    
+                    submitBtn.prop('disabled', false);
+                    btnText.removeClass('d-none');
+                    btnLoading.addClass('d-none');
+                }
+            });
+            
+            function showToast(type, title, message) {
+                const toast = $('#addressToast');
+                const toastIcon = $('#toastIcon');
+                const toastTitle = $('#toastTitle');
+                const toastMessage = $('#toastMessage');
+                
+                // Update toast content based on type
+                if (type === 'success') {
+                    toastIcon.removeClass('fa-exclamation-triangle text-danger').addClass('fa-check-circle text-success');
+                    toast.removeClass('border-danger').addClass('border-success');
+                } else {
+                    toastIcon.removeClass('fa-check-circle text-success').addClass('fa-exclamation-triangle text-danger');
+                    toast.removeClass('border-success').addClass('border-danger');
+                }
+                
+                toastTitle.text(title);
+                toastMessage.text(message);
+                
+                // Show the toast
+                const bsToast = new bootstrap.Toast(toast[0], {
+                    autohide: type === 'success',
+                    delay: type === 'success' ? 3000 : 5000
+                });
+                bsToast.show();
+            }
+        });
+    </script>
 }

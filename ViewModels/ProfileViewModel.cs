@@ -29,42 +29,46 @@ namespace AccessoryWorld.ViewModels
     {
         public int Id { get; set; }
         
-        [Required]
         [Display(Name = "Full Name")]
-        [StringLength(100, ErrorMessage = "Full name cannot be longer than 100 characters.")]
+        [StringLength(100, MinimumLength = 2, ErrorMessage = "Full name must be between 2 and 100 characters.")]
+        [RegularExpression(@"^[a-zA-Z\s'-]+$", ErrorMessage = "Full name can only contain letters, spaces, hyphens, and apostrophes.")]
         public string FullName { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Address line 1 is required.")]
         [Display(Name = "Address Line 1")]
-        [StringLength(200, ErrorMessage = "Address line 1 cannot be longer than 200 characters.")]
+        [StringLength(200, MinimumLength = 5, ErrorMessage = "Address line 1 must be between 5 and 200 characters.")]
         public string AddressLine1 { get; set; } = string.Empty;
 
         [Display(Name = "Address Line 2")]
         [StringLength(200, ErrorMessage = "Address line 2 cannot be longer than 200 characters.")]
         public string? AddressLine2 { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "City is required.")]
         [Display(Name = "City")]
-        [StringLength(100, ErrorMessage = "City cannot be longer than 100 characters.")]
+        [StringLength(100, MinimumLength = 2, ErrorMessage = "City must be between 2 and 100 characters.")]
+        [RegularExpression(@"^[a-zA-Z\s'-]+$", ErrorMessage = "City can only contain letters, spaces, hyphens, and apostrophes.")]
         public string City { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Province is required.")]
         [Display(Name = "Province")]
         [StringLength(100, ErrorMessage = "Province cannot be longer than 100 characters.")]
         public string Province { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Postal code is required.")]
         [Display(Name = "Postal Code")]
-        [StringLength(10, ErrorMessage = "Postal code cannot be longer than 10 characters.")]
+        [StringLength(10, MinimumLength = 4, ErrorMessage = "Postal code must be between 4 and 10 characters.")]
+        [RegularExpression(@"^[0-9]{4}$", ErrorMessage = "Postal code must be exactly 4 digits for South Africa.")]
         public string PostalCode { get; set; } = string.Empty;
 
-        [Required]
+        [Required(ErrorMessage = "Country is required.")]
         [Display(Name = "Country")]
         [StringLength(100, ErrorMessage = "Country cannot be longer than 100 characters.")]
         public string Country { get; set; } = "South Africa";
 
-        [Phone]
+        [Required(ErrorMessage = "Phone number is required.")]
+        [Phone(ErrorMessage = "Please enter a valid phone number.")]
         [Display(Name = "Phone Number")]
+        [RegularExpression(@"^(\+27|0)[0-9]{9}$", ErrorMessage = "Please enter a valid South African phone number (e.g., +27123456789 or 0123456789).")]
         public string PhoneNumber { get; set; } = string.Empty;
 
         [Display(Name = "Set as Default Address")]

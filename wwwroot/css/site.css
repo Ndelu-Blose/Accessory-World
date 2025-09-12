@@ -709,6 +709,67 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Add Address Page Styles */
+.checkout-page .form-label .text-danger {
+  font-size: 0.875em;
+}
+
+.checkout-page .form-control:focus,
+.checkout-page .form-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.2rem rgba(19, 153, 255, 0.25);
+}
+
+.checkout-page .form-check-input:checked {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.checkout-page .form-check-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.2rem rgba(19, 153, 255, 0.25);
+}
+
+.checkout-page .invalid-feedback {
+  display: block;
+  color: var(--danger);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.checkout-page .form-control.is-invalid,
+.checkout-page .form-select.is-invalid {
+  border-color: var(--danger);
+}
+
+.checkout-page .form-control.is-invalid:focus,
+.checkout-page .form-select.is-invalid:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.25);
+}
+
+/* Payment Page Styles */
+.checkout-page .payment-method-card {
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.checkout-page .payment-method-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.checkout-page .payment-method-card.border-primary {
+  border-color: var(--primary) !important;
+}
+
+.checkout-page .payment-form {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  background-color: var(--card-bg);
+}
+
 /* Checkout Responsive Design */
 @media (max-width: 992px) {
   .checkout-container {

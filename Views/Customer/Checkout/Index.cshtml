@@ -164,6 +164,20 @@
                         </div>
                     }
                     
+                    <!-- Delivery Information -->
+                    <div class="delivery-info mb-3" id="deliveryInfoSection">
+                        <h6 class="mb-2"><i class="fas fa-truck"></i> Delivery Information</h6>
+                        <div id="selectedDeliveryMethod">
+                            <small class="text-muted">Please select a delivery method</small>
+                        </div>
+                        <div id="selectedAddress" style="display: none;">
+                            <div class="selected-address-display">
+                                <small class="text-muted">Delivery Address:</small>
+                                <div id="addressDetails"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Order Totals -->
                     <div class="order-totals">
                         <div class="d-flex justify-content-between">
@@ -207,23 +221,51 @@
                 if (method === 'DELIVERY') {
                     $('#addressSection').show().addClass('fade-in');
                     $('#pickupSection').hide();
+                    $('#selectedDeliveryMethod').html('<small class="text-success"><i class="fas fa-truck"></i> Home Delivery</small>');
+                    updateSelectedAddress();
                 } else {
                     $('#addressSection').hide();
                     $('#pickupSection').show().addClass('fade-in');
+                    $('#selectedDeliveryMethod').html('<small class="text-info"><i class="fas fa-store"></i> Store Pickup</small>');
+                    $('#selectedAddress').hide();
                 }
                 calculateShipping();
             });
             
             // Initialize delivery method selection on page load
             $('input[name="FulfillmentMethod"]:checked').closest('.delivery-method-card').addClass('selected');
+            $('input[name="FulfillmentMethod"]:checked').trigger('change');
 
             // Handle address selection change
             $('input[name="ShippingAddressId"]').change(function() {
                 // Update visual selection for address cards
                 $('.address-card').removeClass('selected');
                 $(this).closest('.address-card').addClass('selected');
+                updateSelectedAddress();
                 calculateShipping();
             });
+            
+            // Function to update selected address display
+            function updateSelectedAddress() {
+                var selectedAddress = $('input[name="ShippingAddressId"]:checked');
+                if (selectedAddress.length > 0) {
+                    var addressCard = selectedAddress.closest('.address-card');
+                    var fullName = addressCard.find('h6').text();
+                    var addressLine1 = addressCard.find('p').first().text();
+                    var cityProvince = addressCard.find('p').eq(1).text();
+                    
+                    var addressHtml = '<div class="small">' +
+                        '<strong>' + fullName + '</strong><br>' +
+                        addressLine1 + '<br>' +
+                        cityProvince +
+                        '</div>';
+                    
+                    $('#addressDetails').html(addressHtml);
+                    $('#selectedAddress').show();
+                } else {
+                    $('#selectedAddress').hide();
+                }
+            }
             
             // Initialize address selection on page load
             $('input[name="ShippingAddressId"]:checked').closest('.address-card').addClass('selected');
