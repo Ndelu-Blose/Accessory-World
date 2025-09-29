@@ -177,18 +177,18 @@
                             <label for="role" class="form-label">Role</label>
                             <select class="form-select" id="role" name="role">
                                 <option value="">All Roles</option>
-                                <option value="Admin" @(ViewBag.RoleFilter == "Admin" ? "selected" : "")>Admin</option>
-                                <option value="Customer" @(ViewBag.RoleFilter == "Customer" ? "selected" : "")>Customer</option>
-                                <option value="InventoryManager" @(ViewBag.RoleFilter == "InventoryManager" ? "selected" : "")>Inventory Manager</option>
-                                <option value="SalesAssociate" @(ViewBag.RoleFilter == "SalesAssociate" ? "selected" : "")>Sales Associate</option>
+                                <option value="Admin" selected="@(ViewBag.RoleFilter == "Admin")">Admin</option>
+                                <option value="Customer" selected="@(ViewBag.RoleFilter == "Customer")">Customer</option>
+                                <option value="InventoryManager" selected="@(ViewBag.RoleFilter == "InventoryManager")">Inventory Manager</option>
+                                <option value="SalesAssociate" selected="@(ViewBag.RoleFilter == "SalesAssociate")">Sales Associate</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label for="status" class="form-label">Status</label>
                             <select class="form-select" id="status" name="status">
                                 <option value="">All Status</option>
-                                <option value="active" @(ViewBag.StatusFilter == "active" ? "selected" : "")>Active</option>
-                                <option value="inactive" @(ViewBag.StatusFilter == "inactive" ? "selected" : "")>Inactive</option>
+                                <option value="active" selected="@(ViewBag.StatusFilter == "active")">Active</option>
+                                <option value="inactive" selected="@(ViewBag.StatusFilter == "inactive")">Inactive</option>
                             </select>
                         </div>
                         <div class="col-md-2">

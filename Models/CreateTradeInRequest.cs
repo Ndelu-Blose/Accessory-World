@@ -14,8 +14,15 @@ namespace AccessoryWorld.Models
         [Display(Name = "Device Model")]
         public string DeviceModel { get; set; } = string.Empty;
         
+        [Required(ErrorMessage = "Device type is required")]
+        [Display(Name = "Device Type")]
+        public string DeviceType { get; set; } = string.Empty;
+        
         [Display(Name = "IMEI/Serial Number")]
         public string? IMEI { get; set; }
+        
+        [Display(Name = "Description")]
+        public string? Description { get; set; }
         
         [Required(ErrorMessage = "Condition grade is required")]
         [Display(Name = "Condition Grade")]

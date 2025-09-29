@@ -197,37 +197,6 @@ namespace AccessoryWorld.ViewModels
         public int LowStockThreshold { get; set; } = 5;
     }
 
-    public class SettingsViewModel
-    {
-        // General Settings
-        public string SiteName { get; set; } = "AccessoryWorld";
-        public string SiteEmail { get; set; } = "admin@accessoryworld.com";
-        public string Currency { get; set; } = "USD";
-        public bool MaintenanceMode { get; set; } = false;
-        
-        // Email Settings
-        public string? SmtpHost { get; set; }
-        public int? SmtpPort { get; set; }
-        public string? SmtpUsername { get; set; }
-        public string? SmtpPassword { get; set; }
-        public bool SmtpEnableSsl { get; set; } = true;
-        
-        // Security Settings
-        public bool RequireEmailConfirmation { get; set; } = true;
-        public bool EnableTwoFactorAuth { get; set; } = false;
-        public int SessionTimeoutMinutes { get; set; } = 30;
-        public int MaxLoginAttempts { get; set; } = 5;
-        
-        // Payment Settings
-        public string? PaymentGateway { get; set; } = "Stripe";
-        public string? PaymentApiKey { get; set; }
-        public string? PaymentSecretKey { get; set; }
-        public bool EnablePayPal { get; set; } = false;
-        public bool EnableCreditCard { get; set; } = true;
-        public decimal TaxRate { get; set; } = 8.5m;
-        public decimal ShippingCost { get; set; } = 9.99m;
-    }
-
     public class AddProductViewModel
     {
         [Required(ErrorMessage = "Product name is required")]
@@ -313,6 +282,15 @@ namespace AccessoryWorld.ViewModels
 
         [StringLength(50, ErrorMessage = "SKU code cannot exceed 50 characters")]
         public string? SKUCode { get; set; }
+
+        // Additional properties for EditProduct form
+        [StringLength(20)]
+        public string Condition { get; set; } = "New";
+        
+        public bool InStock { get; set; } = true;
+        
+        [StringLength(500)]
+        public string? Tags { get; set; }
 
         // Display properties
         public string CategoryName { get; set; } = string.Empty;

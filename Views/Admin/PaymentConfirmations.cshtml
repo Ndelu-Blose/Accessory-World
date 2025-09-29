@@ -29,19 +29,19 @@
                             <label for="status" class="form-label">Status</label>
                             <select class="form-select" id="status" name="status">
                                 <option value="">All Statuses</option>
-                                <option value="PENDING" @(ViewBag.StatusFilter == "PENDING" ? "selected" : "")>Pending</option>
-                                <option value="COMPLETED" @(ViewBag.StatusFilter == "COMPLETED" ? "selected" : "")>Completed</option>
-                                <option value="FAILED" @(ViewBag.StatusFilter == "FAILED" ? "selected" : "")>Failed</option>
-                                <option value="REFUNDED" @(ViewBag.StatusFilter == "REFUNDED" ? "selected" : "")>Refunded</option>
+                                <option value="PENDING" selected="@(ViewBag.StatusFilter == "PENDING")">Pending</option>
+                                <option value="COMPLETED" selected="@(ViewBag.StatusFilter == "COMPLETED")">Completed</option>
+                                <option value="FAILED" selected="@(ViewBag.StatusFilter == "FAILED")">Failed</option>
+                                <option value="REFUNDED" selected="@(ViewBag.StatusFilter == "REFUNDED")">Refunded</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label for="method" class="form-label">Payment Method</label>
                             <select class="form-select" id="method" name="method">
                                 <option value="">All Methods</option>
-                                <option value="CARD" @(ViewBag.MethodFilter == "CARD" ? "selected" : "")>Card</option>
-                                <option value="EFT" @(ViewBag.MethodFilter == "EFT" ? "selected" : "")>EFT</option>
-                                <option value="PAYFAST" @(ViewBag.MethodFilter == "PAYFAST" ? "selected" : "")>PayFast</option>
+                                <option value="CARD" selected="@(ViewBag.MethodFilter == "CARD")">Card</option>
+                                <option value="EFT" selected="@(ViewBag.MethodFilter == "EFT")">EFT</option>
+                                <option value="PAYFAST" selected="@(ViewBag.MethodFilter == "PAYFAST")">PayFast</option>
                             </select>
                         </div>
                         <div class="col-md-3">

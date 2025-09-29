@@ -29,20 +29,20 @@
                             <label for="status" class="form-label">Label Status</label>
                             <select class="form-select" id="status" name="status">
                                 <option value="">All Statuses</option>
-                                <option value="PENDING" @(ViewBag.StatusFilter == "PENDING" ? "selected" : "")>Pending Generation</option>
-                                <option value="GENERATED" @(ViewBag.StatusFilter == "GENERATED" ? "selected" : "")>Generated</option>
-                                <option value="PRINTED" @(ViewBag.StatusFilter == "PRINTED" ? "selected" : "")>Printed</option>
-                                <option value="SHIPPED" @(ViewBag.StatusFilter == "SHIPPED" ? "selected" : "")>Shipped</option>
+                                <option value="PENDING" selected="@(ViewBag.StatusFilter == "PENDING")">Pending Generation</option>
+                                <option value="GENERATED" selected="@(ViewBag.StatusFilter == "GENERATED")">Generated</option>
+                                <option value="PRINTED" selected="@(ViewBag.StatusFilter == "PRINTED")">Printed</option>
+                                <option value="SHIPPED" selected="@(ViewBag.StatusFilter == "SHIPPED")">Shipped</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label for="courier" class="form-label">Courier</label>
                             <select class="form-select" id="courier" name="courier">
                                 <option value="">All Couriers</option>
-                                <option value="ARAMEX" @(ViewBag.CourierFilter == "ARAMEX" ? "selected" : "")>Aramex</option>
-                                <option value="FASTWAY" @(ViewBag.CourierFilter == "FASTWAY" ? "selected" : "")>Fastway</option>
-                                <option value="POSTNET" @(ViewBag.CourierFilter == "POSTNET" ? "selected" : "")>PostNet</option>
-                                <option value="DAWN_WING" @(ViewBag.CourierFilter == "DAWN_WING" ? "selected" : "")>Dawn Wing</option>
+                                <option value="ARAMEX" selected="@(ViewBag.CourierFilter == "ARAMEX")">Aramex</option>
+                                <option value="FASTWAY" selected="@(ViewBag.CourierFilter == "FASTWAY")">Fastway</option>
+                                <option value="POSTNET" selected="@(ViewBag.CourierFilter == "POSTNET")">PostNet</option>
+                                <option value="DAWN_WING" selected="@(ViewBag.CourierFilter == "DAWN_WING")">Dawn Wing</option>
                             </select>
                         </div>
                         <div class="col-md-3">

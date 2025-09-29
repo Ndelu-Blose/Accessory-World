@@ -46,7 +46,9 @@ namespace AccessoryWorld.Services
                 CustomerId = request.CustomerId,
                 DeviceBrand = request.DeviceBrand,
                 DeviceModel = request.DeviceModel,
+                DeviceType = request.DeviceType,
                 IMEI = request.IMEI,
+                Description = request.Description,
                 ConditionGrade = request.ConditionGrade,
                 PhotosJson = JsonSerializer.Serialize(request.Photos ?? new List<string>()),
                 Status = TradeInDomainService.TradeInStatus.Submitted,
@@ -243,7 +245,9 @@ namespace AccessoryWorld.Services
         public string CustomerId { get; set; } = string.Empty;
         public string DeviceBrand { get; set; } = string.Empty;
         public string DeviceModel { get; set; } = string.Empty;
+        public string DeviceType { get; set; } = string.Empty;
         public string? IMEI { get; set; }
+        public string? Description { get; set; }
         public string ConditionGrade { get; set; } = string.Empty;
         public List<string>? Photos { get; set; }
         public decimal? ProposedValue { get; set; }

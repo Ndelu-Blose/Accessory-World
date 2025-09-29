@@ -29,20 +29,20 @@
                             <label for="status" class="form-label">OTP Status</label>
                             <select class="form-select" id="status" name="status">
                                 <option value="">All Statuses</option>
-                                <option value="PENDING" @(ViewBag.StatusFilter == "PENDING" ? "selected" : "")>Pending Generation</option>
-                                <option value="GENERATED" @(ViewBag.StatusFilter == "GENERATED" ? "selected" : "")>Generated</option>
-                                <option value="SENT" @(ViewBag.StatusFilter == "SENT" ? "selected" : "")>Sent to Customer</option>
-                                <option value="VERIFIED" @(ViewBag.StatusFilter == "VERIFIED" ? "selected" : "")>Verified</option>
-                                <option value="EXPIRED" @(ViewBag.StatusFilter == "EXPIRED" ? "selected" : "")>Expired</option>
+                                <option value="PENDING" selected="@(ViewBag.StatusFilter == "PENDING")">Pending Generation</option>
+                                <option value="GENERATED" selected="@(ViewBag.StatusFilter == "GENERATED")">Generated</option>
+                                <option value="SENT" selected="@(ViewBag.StatusFilter == "SENT")">Sent to Customer</option>
+                                <option value="VERIFIED" selected="@(ViewBag.StatusFilter == "VERIFIED")">Verified</option>
+                                <option value="EXPIRED" selected="@(ViewBag.StatusFilter == "EXPIRED")">Expired</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label for="expiryStatus" class="form-label">Expiry Status</label>
                             <select class="form-select" id="expiryStatus" name="expiryStatus">
                                 <option value="">All</option>
-                                <option value="ACTIVE" @(ViewBag.ExpiryFilter == "ACTIVE" ? "selected" : "")>Active</option>
-                                <option value="EXPIRING_SOON" @(ViewBag.ExpiryFilter == "EXPIRING_SOON" ? "selected" : "")>Expiring Soon</option>
-                                <option value="EXPIRED" @(ViewBag.ExpiryFilter == "EXPIRED" ? "selected" : "")>Expired</option>
+                                <option value="ACTIVE" selected="@(ViewBag.ExpiryFilter == "ACTIVE")">Active</option>
+                                <option value="EXPIRING_SOON" selected="@(ViewBag.ExpiryFilter == "EXPIRING_SOON")">Expiring Soon</option>
+                                <option value="EXPIRED" selected="@(ViewBag.ExpiryFilter == "EXPIRED")">Expired</option>
                             </select>
                         </div>
                         <div class="col-md-3">

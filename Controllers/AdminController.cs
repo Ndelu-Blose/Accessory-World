@@ -1247,7 +1247,9 @@ namespace AccessoryWorld.Controllers
                     PaymentApiKey = settings.PaymentApiKey,
                     PaymentSecretKey = settings.PaymentSecretKey,
                     EnablePayPal = settings.EnablePayPal,
-                    EnableCreditCard = settings.EnableCreditCard
+                    EnableCreditCard = settings.EnableCreditCard,
+                    PaypalClientId = settings.PaypalClientId,
+                    PaypalClientSecret = settings.PaypalClientSecret
                 };
 
                 return View(viewModel);
@@ -1298,6 +1300,8 @@ namespace AccessoryWorld.Controllers
                 settings.PaymentSecretKey = model.PaymentSecretKey;
                 settings.EnablePayPal = model.EnablePayPal;
                 settings.EnableCreditCard = model.EnableCreditCard;
+                settings.PaypalClientId = model.PaypalClientId;
+                settings.PaypalClientSecret = model.PaypalClientSecret;
                 settings.UpdatedAt = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();

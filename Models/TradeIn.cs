@@ -21,8 +21,14 @@ namespace AccessoryWorld.Models
         [MaxLength(128)]
         public string DeviceModel { get; set; } = string.Empty;
         
+        [MaxLength(64)]
+        public string? DeviceType { get; set; }
+        
         [MaxLength(32)]
         public string? IMEI { get; set; }
+        
+        [Column(TypeName = "nvarchar(max)")]
+        public string? Description { get; set; }
         
         [Required]
         [MaxLength(2)]

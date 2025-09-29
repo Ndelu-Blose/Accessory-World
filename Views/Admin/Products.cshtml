@@ -390,7 +390,7 @@
                                 <option value="">All Categories</option>
                                 @foreach (var category in (ViewBag.Categories as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>())
                                 {
-                                    <option value="@category.Id" @(ViewBag.CategoryFilter == category.Id.ToString() ? "selected" : "")>@category.Name</option>
+                                    <option value="@category.Id" selected="@(ViewBag.CategoryFilter == category.Id.ToString())">@category.Name</option>
                                 }
                             </select>
                         </div>
@@ -400,7 +400,7 @@
                                 <option value="">All Brands</option>
                                 @foreach (var brand in (ViewBag.Brands as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>())
                                 {
-                                    <option value="@brand.Id" @(ViewBag.BrandFilter == brand.Id.ToString() ? "selected" : "")>@brand.Name</option>
+                                    <option value="@brand.Id" selected="@(ViewBag.BrandFilter == brand.Id.ToString())">@brand.Name</option>
                                 }
                             </select>
                         </div>
@@ -408,19 +408,19 @@
                             <label for="status" class="form-label">Status</label>
                             <select class="form-select" id="status" name="status">
                                 <option value="">All Status</option>
-                                <option value="active" @(ViewBag.StatusFilter == "active" ? "selected" : "")>Active</option>
-                                <option value="inactive" @(ViewBag.StatusFilter == "inactive" ? "selected" : "")>Inactive</option>
-                                <option value="lowstock" @(ViewBag.StatusFilter == "lowstock" ? "selected" : "")>Low Stock</option>
-                                <option value="outofstock" @(ViewBag.StatusFilter == "outofstock" ? "selected" : "")>Out of Stock</option>
+                                <option value="active" selected="@(ViewBag.StatusFilter == "active")">Active</option>
+                                <option value="inactive" selected="@(ViewBag.StatusFilter == "inactive")">Inactive</option>
+                                <option value="lowstock" selected="@(ViewBag.StatusFilter == "lowstock")">Low Stock</option>
+                                <option value="outofstock" selected="@(ViewBag.StatusFilter == "outofstock")">Out of Stock</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label for="sortBy" class="form-label">Sort By</label>
                             <select class="form-select" id="sortBy" name="sortBy">
-                                <option value="name" @(ViewBag.SortBy == "name" ? "selected" : "")>Name</option>
-                                <option value="price" @(ViewBag.SortBy == "price" ? "selected" : "")>Price</option>
-                                <option value="stock" @(ViewBag.SortBy == "stock" ? "selected" : "")>Stock</option>
-                                <option value="created" @(ViewBag.SortBy == "created" ? "selected" : "")>Date Created</option>
+                                <option value="name" selected="@(ViewBag.SortBy == "name")">Name</option>
+                                <option value="price" selected="@(ViewBag.SortBy == "price")">Price</option>
+                                <option value="stock" selected="@(ViewBag.SortBy == "stock")">Stock</option>
+                                <option value="created" selected="@(ViewBag.SortBy == "created")">Date Created</option>
                             </select>
                         </div>
                         <div class="col-md-1">

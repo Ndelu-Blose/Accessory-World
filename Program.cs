@@ -18,6 +18,22 @@ namespace AccessoryWorld
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Configure logging
+            builder.Logging.ClearProviders();
+            builder.Logging.AddConsole();
+            builder.Logging.AddDebug();
+            builder.Logging.SetMinimumLevel(LogLevel.Information);
+            
+            // Add specific logging for TradeIn operations
+            builder.Logging.AddFilter("AccessoryWorld.Controllers.TradeInController", LogLevel.Debug);
+            builder.Logging.AddFilter("AccessoryWorld.Services", LogLevel.Debug);
+            
+            // Add HTTP request/response logging for diagnostics
+            builder.Logging.AddFilter("Microsoft.AspNetCore.Hosting.Diagnostics", LogLevel.Information);
+            builder.Logging.AddFilter("Microsoft.AspNetCore.Mvc", LogLevel.Information);
+            builder.Logging.AddFilter("Microsoft.AspNetCore.Routing", LogLevel.Information);
+            builder.Logging.AddFilter("Microsoft.AspNetCore.Server.Kestrel", LogLevel.Information);
+            
             // Add Entity Framework
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
                 ??"Server=(localdb)\\MSSQLLocalDB;Database=AccessoryWorldDb;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true;Connection Timeout=60;Command Timeout=300";
@@ -69,6 +85,28 @@ namespace AccessoryWorld
             {
                 // Add global anti-forgery token validation for POST requests
                 options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
+            });
+            
+            // Configure form options for large file uploads
+            builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+            {
+                options.MultipartBodyLengthLimit = 268_435_456; // 256MB
+                options.ValueLengthLimit = int.MaxValue;
+                options.ValueCountLimit = int.MaxValue;
+                options.KeyLengthLimit = int.MaxValue;
+                options.MultipartHeadersLengthLimit = int.MaxValue;
+            });
+            
+            // Configure Kestrel server limits
+            builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
+            {
+                options.Limits.MaxRequestBodySize = 268_435_456; // 256MB
+            });
+            
+            // Configure IIS server limits
+            builder.Services.Configure<Microsoft.AspNetCore.Builder.IISServerOptions>(options =>
+            {
+                options.MaxRequestBodySize = 268_435_456; // 256MB
             });
             
             // Configure anti-forgery options
@@ -168,6 +206,64 @@ builder.Services.AddScoped<AccessoryWorld.Services.IOrderWorkflowService, Access
                 app.UseExceptionHandler("/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
+            }
+            else
+            {
+                // Enable detailed HTTP logging in development
+                app.Use(async (context, next) =>
+                {
+                    var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+                    
+                    // Log incoming request
+                    logger.LogInformation("HTTP {Method} {Path} - Content-Type: {ContentType} - Content-Length: {ContentLength}",
+                        context.Request.Method,
+                        context.Request.Path,
+                        context.Request.ContentType,
+                        context.Request.ContentLength);
+                    
+                    // Log form data for POST requests (excluding sensitive data)
+                    if (context.Request.Method == "POST" && context.Request.HasFormContentType)
+                    {
+                        try
+                        {
+                            // Enable buffering so the body can be read again by MVC
+                            context.Request.EnableBuffering();
+                            
+                            var form = await context.Request.ReadFormAsync();
+                            foreach (var field in form)
+                            {
+                                if (!field.Key.ToLower().Contains("password") && !field.Key.ToLower().Contains("token"))
+                                {
+                                    logger.LogInformation("Form field: {Key} = {Value}", field.Key, field.Value);
+                                }
+                            }
+                            
+                            if (form.Files.Count > 0)
+                            {
+                                foreach (var file in form.Files)
+                                {
+                                    logger.LogInformation("Uploaded file: {FileName} - Size: {Length} bytes - Content-Type: {ContentType}",
+                                        file.FileName, file.Length, file.ContentType);
+                                }
+                            }
+                            
+                            // Reset the body position so MVC can read it again
+                            context.Request.Body.Position = 0;
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogWarning(ex, "Could not read form data for logging");
+                        }
+                    }
+                    
+                    await next();
+                    
+                    // Log response
+                    logger.LogInformation("HTTP {Method} {Path} responded {StatusCode}",
+                        context.Request.Method,
+                        context.Request.Path,
+                        context.Response.StatusCode);
+                });
             }
 
             // Add performance validation middleware

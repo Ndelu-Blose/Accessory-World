@@ -230,4 +230,96 @@ public class PaymentHistoryViewModel
     public DateTime? ProcessedAt { get; set; }
     public string? FailureReason { get; set; }
 }
+
+public class SettingsViewModel
+{
+    [Required]
+    [StringLength(100)]
+    public string SiteName { get; set; } = "AccessoryWorld";
+    
+    [Required]
+    [EmailAddress]
+    [StringLength(100)]
+    public string SiteEmail { get; set; } = "admin@accessoryworld.com";
+    
+    [Required]
+    [StringLength(10)]
+    public string Currency { get; set; } = "USD";
+    
+    public bool MaintenanceMode { get; set; } = false;
+    
+    // Email Settings
+    [StringLength(100)]
+    public string? SmtpHost { get; set; }
+    
+    public int? SmtpPort { get; set; }
+    
+    [StringLength(100)]
+    public string? SmtpUsername { get; set; }
+    
+    [StringLength(100)]
+    public string? SmtpPassword { get; set; }
+    
+    public bool SmtpEnableSsl { get; set; } = true;
+    
+    // Additional SMTP property
+    public bool SmtpSsl { get; set; } = true;
+    
+    // Security Settings
+    public bool RequireEmailConfirmation { get; set; } = true;
+    
+    // Additional email verification property
+    public bool RequireEmailVerification { get; set; } = true;
+    
+    public bool EnableTwoFactorAuth { get; set; } = false;
+    
+    // Additional two-factor property
+    public bool EnableTwoFactor { get; set; } = false;
+    
+    public int SessionTimeoutMinutes { get; set; } = 30;
+    
+    // Additional session property
+    public int SessionTimeout { get; set; } = 30;
+    
+    public int MaxLoginAttempts { get; set; } = 5;
+    
+    // Payment Settings
+    [StringLength(100)]
+    public string? PaymentGateway { get; set; } = "Stripe";
+    
+    [StringLength(100)]
+    public string? PaymentApiKey { get; set; }
+    
+    [StringLength(100)]
+    public string? PaymentSecretKey { get; set; }
+    
+    // Stripe Settings
+    [StringLength(100)]
+    public string? StripePublishableKey { get; set; }
+    
+    [StringLength(100)]
+    public string? StripeSecretKey { get; set; }
+    
+    public bool EnablePayPal { get; set; } = false;
+    
+    public bool EnableCreditCard { get; set; } = true;
+    
+    // Additional payment gateway options
+    public bool EnableStripe { get; set; } = true;
+    
+    public bool EnablePaypal { get; set; } = false;
+    
+    public bool EnableCashOnDelivery { get; set; } = false;
+    
+    // PayPal Settings
+    [StringLength(100)]
+    public string? PaypalClientId { get; set; }
+    
+    [StringLength(100)]
+    public string? PaypalClientSecret { get; set; }
+    
+    public decimal TaxRate { get; set; } = 8.5m;
+    
+    public decimal ShippingCost { get; set; } = 9.99m;
+}
 }

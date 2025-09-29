@@ -59,6 +59,13 @@ namespace AccessoryWorld.Models
         
         public bool EnableCreditCard { get; set; } = true;
         
+        // PayPal Settings
+        [StringLength(100)]
+        public string? PaypalClientId { get; set; }
+        
+        [StringLength(100)]
+        public string? PaypalClientSecret { get; set; }
+        
         public decimal TaxRate { get; set; } = 8.5m;
         
         public decimal ShippingCost { get; set; } = 9.99m;

@@ -227,20 +227,20 @@
                             <label for="status" class="form-label">Status</label>
                             <select class="form-select" id="status" name="status">
                                 <option value="">All Status</option>
-                                <option value="Pending" @(ViewBag.StatusFilter == "Pending" ? "selected" : "")>Pending</option>
-                                <option value="Processing" @(ViewBag.StatusFilter == "Processing" ? "selected" : "")>Processing</option>
-                                <option value="Shipped" @(ViewBag.StatusFilter == "Shipped" ? "selected" : "")>Shipped</option>
-                                <option value="Delivered" @(ViewBag.StatusFilter == "Delivered" ? "selected" : "")>Delivered</option>
-                                <option value="Cancelled" @(ViewBag.StatusFilter == "Cancelled" ? "selected" : "")>Cancelled</option>
-                                <option value="Refunded" @(ViewBag.StatusFilter == "Refunded" ? "selected" : "")>Refunded</option>
+                                <option value="Pending" selected="@(ViewBag.StatusFilter == "Pending")">Pending</option>
+                                <option value="Processing" selected="@(ViewBag.StatusFilter == "Processing")">Processing</option>
+                                <option value="Shipped" selected="@(ViewBag.StatusFilter == "Shipped")">Shipped</option>
+                                <option value="Delivered" selected="@(ViewBag.StatusFilter == "Delivered")">Delivered</option>
+                                <option value="Cancelled" selected="@(ViewBag.StatusFilter == "Cancelled")">Cancelled</option>
+                                <option value="Refunded" selected="@(ViewBag.StatusFilter == "Refunded")">Refunded</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label for="fulfillment" class="form-label">Fulfillment</label>
                             <select class="form-select" id="fulfillment" name="fulfillment">
                                 <option value="">All Methods</option>
-                                <option value="Delivery" @(ViewBag.FulfillmentFilter == "Delivery" ? "selected" : "")>Delivery</option>
-                                <option value="Pickup" @(ViewBag.FulfillmentFilter == "Pickup" ? "selected" : "")>Pickup</option>
+                                <option value="Delivery" selected="@(ViewBag.FulfillmentFilter == "Delivery")">Delivery</option>
+                                <option value="Pickup" selected="@(ViewBag.FulfillmentFilter == "Pickup")">Pickup</option>
                             </select>
                         </div>
                         <div class="col-md-2">
