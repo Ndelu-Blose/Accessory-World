@@ -119,7 +119,7 @@
                                 <div class="product-actions">
                                     @if (totalStock > 0)
                                     {
-                                        var availableSku = product.SKUs.FirstOrDefault(s => s.AvailableQuantity > 0);
+                                        var availableSku = product.SKUs?.FirstOrDefault(s => s.AvailableQuantity > 0);
                                         @if (availableSku != null)
                                         {
                                             <button class="btn btn-add-cart" onclick="addToCart(@product.Id, @availableSku.Id)">

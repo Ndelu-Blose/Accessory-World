@@ -303,15 +303,13 @@ namespace AccessoryWorld.Services
             // This is a simplified implementation
         }
 
-        public async Task<bool> IsClientThrottledAsync(string clientId)
+        public Task<bool> IsClientThrottledAsync(string clientId)
         {
-            if (!_options.EnableRateLimiting)
-                return false;
-
-            var minuteKey = $"rate_limit_minute_{clientId}";
-            var minuteRequests = GetRequestCount(minuteKey, TimeSpan.FromMinutes(1));
+            if (string.IsNullOrEmpty(clientId))
+                return Task.FromResult(false);
             
-            return minuteRequests >= _options.MaxRequestsPerMinute;
+            var key = $"throttle_{clientId}";
+            return Task.FromResult(_cache.TryGetValue(key, out _));
         }
 
         public void ResetClientLimits(string clientId)

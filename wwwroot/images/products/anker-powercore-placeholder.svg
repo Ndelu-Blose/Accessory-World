@@ -1,0 +1,12 @@
+<svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <rect width="500" height="500" fill="#f8f9fa"/>
+  <rect x="150" y="150" width="200" height="200" rx="20" fill="#e9ecef" stroke="#dee2e6" stroke-width="2"/>
+  <rect x="170" y="170" width="160" height="80" rx="10" fill="#6c757d"/>
+  <circle cx="200" cy="280" r="8" fill="#495057"/>
+  <circle cx="230" cy="280" r="8" fill="#495057"/>
+  <circle cx="260" cy="280" r="8" fill="#495057"/>
+  <circle cx="290" cy="280" r="8" fill="#495057"/>
+  <rect x="220" y="310" width="60" height="20" rx="10" fill="#6c757d"/>
+  <text x="250" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#495057">Anker PowerCore</text>
+  <text x="250" y="410" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6c757d">Placeholder Image</text>
+</svg>

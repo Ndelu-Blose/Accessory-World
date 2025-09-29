@@ -26,6 +26,10 @@ namespace AccessoryWorld.Models
         [MaxLength(100)]
         public string? ReferenceNumber { get; set; } // Order ID, RMA ID, etc.
         
+        // Trade-In related fields
+        public int? TradeInId { get; set; }
+        public int? CreditNoteId { get; set; }
+        
         [Required]
         public string UserId { get; set; } = string.Empty; // Who made the movement
         
@@ -34,5 +38,7 @@ namespace AccessoryWorld.Models
         // Navigation properties
         public virtual SKU SKU { get; set; } = null!;
         public virtual ApplicationUser User { get; set; } = null!;
+        public virtual TradeIn? TradeIn { get; set; }
+        public virtual CreditNote? CreditNote { get; set; }
     }
 }

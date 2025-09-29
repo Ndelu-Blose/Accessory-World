@@ -47,7 +47,7 @@ namespace AccessoryWorld.Controllers.Api
                     price = product.IsOnSale && product.SalePrice.HasValue ? product.SalePrice.Value : product.Price
                 });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return StatusCode(500, new { message = "An error occurred while retrieving product SKU" });
             }

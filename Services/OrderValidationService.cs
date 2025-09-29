@@ -34,7 +34,7 @@ namespace AccessoryWorld.Services
             return status.ToString().ToUpper();
         }
         
-        public async Task ValidateOrderTransitionAsync(Order order, OrderStatus newStatus)
+        public Task ValidateOrderTransitionAsync(Order order, OrderStatus newStatus)
         {
             if (order == null)
                 throw new DomainException("Order not found", DomainErrors.ORDER_NOT_FOUND);
@@ -58,9 +58,11 @@ namespace AccessoryWorld.Services
             
             if (!validTransitions[currentStatus].Contains(newStatus))
                 throw new DomainException($"Invalid status transition from {order.Status} to {OrderStatusToString(newStatus)}", DomainErrors.INVALID_ORDER_STATE);
+            
+            return Task.CompletedTask;
         }
         
-        public async Task ValidateOrderCancellationAsync(Order order)
+        public Task ValidateOrderCancellationAsync(Order order)
         {
             if (order == null)
                 throw new DomainException("Order not found", DomainErrors.ORDER_NOT_FOUND);
@@ -75,6 +77,8 @@ namespace AccessoryWorld.Services
             var cancellationWindow = TimeSpan.FromHours(24);
             if (DateTime.UtcNow - order.CreatedAt > cancellationWindow && currentStatus != OrderStatus.Pending)
                 throw new DomainException("Order cancellation window has expired", DomainErrors.INVALID_ORDER_STATE);
+            
+            return Task.CompletedTask;
         }
         
         public async Task ValidateOrderItemsAsync(List<CartItem> cartItems)

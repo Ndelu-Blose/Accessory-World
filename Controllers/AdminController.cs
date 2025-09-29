@@ -110,7 +110,7 @@ namespace AccessoryWorld.Controllers
                 
                 var totalCreditValue = await _context.CreditNotes
                     .Where(cn => cn.Status == "ACTIVE")
-                    .SumAsync(cn => cn.RemainingAmount);
+                    .SumAsync(cn => cn.AmountRemaining);
 
                 // Get new customer signups (this month)
                 var newCustomersThisMonth = await _context.Users
@@ -205,9 +205,9 @@ namespace AccessoryWorld.Controllers
             // Apply search filter
             if (!string.IsNullOrEmpty(search))
             {
-                query = query.Where(u => u.FirstName.Contains(search) || 
-                                        u.LastName.Contains(search) || 
-                                        u.Email.Contains(search) ||
+                query = query.Where(u => (u.FirstName ?? "").Contains(search) || 
+                                        (u.LastName ?? "").Contains(search) || 
+                                        (u.Email ?? "").Contains(search) ||
                                         (u.PhoneNumber != null && u.PhoneNumber.Contains(search)));
             }
 
@@ -250,8 +250,8 @@ namespace AccessoryWorld.Controllers
                     Id = user.Id,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
-                    Email = user.Email,
-                    PhoneNumber = user.PhoneNumber,
+                    Email = user.Email ?? string.Empty,
+                    PhoneNumber = user.PhoneNumber ?? string.Empty,
                     IsActive = user.IsActive,
                     CreatedAt = user.CreatedAt,
                     LastLoginAt = user.LastLoginAt,
@@ -285,8 +285,8 @@ namespace AccessoryWorld.Controllers
                 Id = user.Id,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Email = user.Email,
-                PhoneNumber = user.PhoneNumber,
+                Email = user.Email ?? string.Empty,
+                PhoneNumber = user.PhoneNumber ?? string.Empty,
                 IsActive = user.IsActive,
                 CreatedAt = user.CreatedAt,
                 LastLoginAt = user.LastLoginAt,
@@ -1832,7 +1832,7 @@ namespace AccessoryWorld.Controllers
     public class UpdateOrderStatusRequest
     {
         public int OrderId { get; set; }
-        public string Status { get; set; }
+        public string Status { get; set; } = string.Empty;
     }
 
     public class ToggleProductStatusRequest

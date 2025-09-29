@@ -120,7 +120,7 @@ namespace AccessoryWorld.Services
                     Tags = "flagship,premium,titanium,pro",
                     ProductImages = new List<ProductImage>
                     {
-                        new ProductImage { ImageUrl = "https://via.placeholder.com/500x500?text=iPhone+15+Pro", IsPrimary = true, SortOrder = 1 }
+                        new ProductImage { ImageUrl = "/images/products/iphone-15-pro-placeholder.svg", IsPrimary = true, SortOrder = 1 }
                     },
                     ProductSpecifications = new List<ProductSpecification>
                     {
@@ -149,7 +149,7 @@ namespace AccessoryWorld.Services
                     Tags = "flagship,s-pen,ai,camera",
                     ProductImages = new List<ProductImage>
                     {
-                        new ProductImage { ImageUrl = "https://via.placeholder.com/500x500?text=Galaxy+S24+Ultra", IsPrimary = true, SortOrder = 1 }
+                        new ProductImage { ImageUrl = "/images/products/galaxy-s24-ultra-placeholder.svg", IsPrimary = true, SortOrder = 1 }
                     },
                     ProductSpecifications = new List<ProductSpecification>
                     {
@@ -182,7 +182,7 @@ namespace AccessoryWorld.Services
                     Tags = "wireless,anc,spatial-audio",
                     ProductImages = new List<ProductImage>
                     {
-                        new ProductImage { ImageUrl = "https://via.placeholder.com/500x500?text=AirPods+Pro", IsPrimary = true, SortOrder = 1 }
+                        new ProductImage { ImageUrl = "/images/products/airpods-pro-placeholder.svg", IsPrimary = true, SortOrder = 1 }
                     },
                     ProductSpecifications = new List<ProductSpecification>
                     {
@@ -210,7 +210,7 @@ namespace AccessoryWorld.Services
                     Tags = "bluetooth,speaker,waterproof,powerbank",
                     ProductImages = new List<ProductImage>
                     {
-                        new ProductImage { ImageUrl = "https://via.placeholder.com/500x500?text=JBL+Charge+5", IsPrimary = true, SortOrder = 1 }
+                        new ProductImage { ImageUrl = "/images/products/jbl-charge-5-placeholder.svg", IsPrimary = true, SortOrder = 1 }
                     },
                     ProductSpecifications = new List<ProductSpecification>
                     {
@@ -240,7 +240,7 @@ namespace AccessoryWorld.Services
                     Tags = "powerbank,portable,fast-charging",
                     ProductImages = new List<ProductImage>
                     {
-                        new ProductImage { ImageUrl = "https://via.placeholder.com/500x500?text=Anker+PowerCore", IsPrimary = true, SortOrder = 1 }
+                        new ProductImage { ImageUrl = "/images/products/anker-powercore-placeholder.svg", IsPrimary = true, SortOrder = 1 }
                     },
                     ProductSpecifications = new List<ProductSpecification>
                     {
@@ -268,7 +268,7 @@ namespace AccessoryWorld.Services
                     Tags = "cable,usb-c,lightning,fast-charging",
                     ProductImages = new List<ProductImage>
                     {
-                        new ProductImage { ImageUrl = "https://via.placeholder.com/500x500?text=USB-C+Cable", IsPrimary = true, SortOrder = 1 }
+                        new ProductImage { ImageUrl = "/images/products/usb-c-cable-placeholder.svg", IsPrimary = true, SortOrder = 1 }
                     },
                     ProductSpecifications = new List<ProductSpecification>
                     {
@@ -289,7 +289,7 @@ namespace AccessoryWorld.Services
                     IsActive = true,
                     ProductImages = new List<ProductImage>
                     {
-                        new ProductImage { ImageUrl = "https://via.placeholder.com/500x500?text=Apple+Watch+S9", IsPrimary = true, SortOrder = 1 }
+                        new ProductImage { ImageUrl = "/images/products/apple-watch-s9-placeholder.svg", IsPrimary = true, SortOrder = 1 }
                     },
                     ProductSpecifications = new List<ProductSpecification>
                     {

@@ -35,19 +35,32 @@ namespace AccessoryWorld.ViewModels
         public decimal SubTotal { get; set; }
         public decimal TaxAmount { get; set; }
         public decimal ShippingFee { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public decimal CreditNoteAmount { get; set; }
         public decimal Total { get; set; }
         
         public List<AddressViewModel> UserAddresses { get; set; } = new List<AddressViewModel>();
         
         // Checkout form properties
-        public int? SelectedAddressId { get; set; }
-        public int? ShippingAddressId { get; set; }
+        public Guid? SelectedAddressId { get; set; }
+        public Guid? ShippingAddressId { get; set; }
         public string DeliveryMethod { get; set; } = "Standard";
         public string FulfillmentMethod { get; set; } = "Delivery";
         public string PaymentMethod { get; set; } = "Card";
         public string? SpecialInstructions { get; set; }
         public string? Notes { get; set; }
         public decimal VATAmount { get; set; }
+        
+        // Credit Note properties
+        public string? CreditNoteCode { get; set; }
+        public decimal? CreditNoteRequestedAmount { get; set; }
+        public bool HasValidCreditNote { get; set; }
+        public decimal AvailableCreditBalance { get; set; }
+        public List<CreditNoteViewModel> UserCreditNotes { get; set; } = new List<CreditNoteViewModel>();
+        
+        // Inline address form for workaround (when no addresses exist or user wants to add new)
+        public bool UseInlineAddress { get; set; } = false;
+        public AddressViewModel InlineAddress { get; set; } = new AddressViewModel();
     }
 
     public class CartItemViewModel

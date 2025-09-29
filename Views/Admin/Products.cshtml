@@ -388,7 +388,7 @@
                             <label for="category" class="form-label">Category</label>
                             <select class="form-select" id="category" name="category">
                                 <option value="">All Categories</option>
-                                @foreach (var category in ViewBag.Categories as IEnumerable<dynamic>)
+                                @foreach (var category in (ViewBag.Categories as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>())
                                 {
                                     <option value="@category.Id" @(ViewBag.CategoryFilter == category.Id.ToString() ? "selected" : "")>@category.Name</option>
                                 }
@@ -398,7 +398,7 @@
                             <label for="brand" class="form-label">Brand</label>
                             <select class="form-select" id="brand" name="brand">
                                 <option value="">All Brands</option>
-                                @foreach (var brand in ViewBag.Brands as IEnumerable<dynamic>)
+                                @foreach (var brand in (ViewBag.Brands as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>())
                                 {
                                     <option value="@brand.Id" @(ViewBag.BrandFilter == brand.Id.ToString() ? "selected" : "")>@brand.Name</option>
                                 }
@@ -628,7 +628,7 @@
                                 <label for="productCategory" class="form-label">Category *</label>
                                 <select class="form-select" id="productCategory" name="CategoryId" required>
                                     <option value="">Select Category</option>
-                                    @foreach (var category in ViewBag.Categories as IEnumerable<dynamic>)
+                                    @foreach (var category in (ViewBag.Categories as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>())
                                     {
                                         <option value="@category.Id">@category.Name</option>
                                     }
@@ -640,7 +640,7 @@
                                 <label for="productBrand" class="form-label">Brand *</label>
                                 <select class="form-select" id="productBrand" name="BrandId" required>
                                     <option value="">Select Brand</option>
-                                    @foreach (var brand in ViewBag.Brands as IEnumerable<dynamic>)
+                                    @foreach (var brand in (ViewBag.Brands as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>())
                                     {
                                         <option value="@brand.Id">@brand.Name</option>
                                     }

@@ -5,7 +5,7 @@ namespace AccessoryWorld.Services
 {
     public interface IOrderService
     {
-        Task<Order> CreateOrderAsync(string userId, int shippingAddressId, string fulfillmentMethod, string? notes = null);
+        Task<Order> CreateOrderAsync(string userId, Guid shippingAddressId, string fulfillmentMethod, string? notes = null, decimal creditNoteAmount = 0);
         Task<Order?> GetOrderByIdAsync(int orderId);
         Task<Order?> GetOrderByNumberAsync(string orderNumber);
         Task<List<Order>> GetUserOrdersAsync(string userId);

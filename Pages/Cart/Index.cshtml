@@ -268,7 +268,8 @@
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                         'RequestVerificationToken': token
-                    }
+                    },
+                    body: JSON.stringify({}) // Add empty body for POST request
                 });
                 
                 if (response.ok) {

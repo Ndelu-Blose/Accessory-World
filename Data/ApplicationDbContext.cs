@@ -27,10 +27,12 @@ namespace AccessoryWorld.Data
         public DbSet<PickupOTP> PickupOTPs { get; set; } = null!;
         public DbSet<RMA> RMAs { get; set; } = null!;
         public DbSet<RMAItem> RMAItems { get; set; } = null!;
+        public DbSet<TradeIn> TradeIns { get; set; } = null!;
+        public DbSet<CreditNote> CreditNotes { get; set; } = null!;
+        public DbSet<StockItem> StockItems { get; set; } = null!;
         public DbSet<TradeInCase> TradeInCases { get; set; } = null!;
         public DbSet<TradeInImage> TradeInImages { get; set; } = null!;
         public DbSet<TradeInEvaluation> TradeInEvaluations { get; set; } = null!;
-        public DbSet<CreditNote> CreditNotes { get; set; } = null!;
         public DbSet<DeviceModel> DeviceModels { get; set; } = null!;
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;
         public DbSet<Role> CustomRoles { get; set; } = null!;
@@ -38,9 +40,13 @@ namespace AccessoryWorld.Data
         public DbSet<UserRole> CustomUserRoles { get; set; } = null!;
         public DbSet<RolePermission> RolePermissions { get; set; } = null!;
         public DbSet<CartItem> CartItems { get; set; } = null!;
-        public DbSet<Newsletter> Newsletters { get; set; }
-        public DbSet<Settings> Settings { get; set; }
+        public DbSet<Newsletter> Newsletters { get; set; } = null!;
+        public DbSet<Settings> Settings { get; set; } = null!;
         public DbSet<Wishlist> Wishlists { get; set; } = null!;
+        public DbSet<CheckoutSession> CheckoutSessions { get; set; } = null!;
+        public DbSet<StockLock> StockLocks { get; set; } = null!;
+        public DbSet<CreditNoteLock> CreditNoteLocks { get; set; } = null!;
+        public DbSet<WebhookEvent> WebhookEvents { get; set; } = null!;
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -54,6 +60,25 @@ namespace AccessoryWorld.Data
                 .WithMany(u => u.Addresses)
                 .HasForeignKey(a => a.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+            
+            // Address entity configuration
+            modelBuilder.Entity<Address>()
+                .HasKey(a => a.Id);
+            
+            modelBuilder.Entity<Address>()
+                .HasIndex(a => a.PublicId)
+                .IsUnique();
+            
+            modelBuilder.Entity<Address>()
+                .Property(a => a.PublicId)
+                .IsRequired()
+                .HasDefaultValueSql("NEWID()");
+            
+            // Ensure single default per user (SQL Server filtered index)
+            modelBuilder.Entity<Address>()
+                .HasIndex(a => new { a.UserId, a.IsDefault })
+                .HasFilter("[IsDefault] = 1")
+                .IsUnique();
             
             // Product -> SKU (One-to-Many)
             modelBuilder.Entity<SKU>()
@@ -90,12 +115,7 @@ namespace AccessoryWorld.Data
                 .HasForeignKey(ps => ps.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
             
-            // SKU -> StockMovement (One-to-Many)
-            modelBuilder.Entity<StockMovement>()
-                .HasOne(sm => sm.SKU)
-                .WithMany(s => s.StockMovements)
-                .HasForeignKey(sm => sm.SKUId)
-                .OnDelete(DeleteBehavior.Cascade);
+
             
             // User -> StockMovement (One-to-Many)
             modelBuilder.Entity<StockMovement>()
@@ -111,7 +131,7 @@ namespace AccessoryWorld.Data
                 .HasForeignKey(o => o.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
             
-            // Address -> Order (One-to-Many)
+            // Order-Address relationship - using int Id for now
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.ShippingAddress)
                 .WithMany(a => a.Orders)
@@ -188,11 +208,11 @@ namespace AccessoryWorld.Data
                 .HasForeignKey(cn => cn.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
             
-            // TradeInCase -> CreditNote (One-to-One)
+            // TradeInCase -> CreditNote (One-to-Many)
             modelBuilder.Entity<CreditNote>()
                 .HasOne(cn => cn.TradeInCase)
-                .WithOne(t => t.CreditNote)
-                .HasForeignKey<CreditNote>(cn => cn.TradeInCaseId)
+                .WithMany()
+                .HasForeignKey(cn => cn.TradeInCaseId)
                 .OnDelete(DeleteBehavior.SetNull);
             
             // Order -> CreditNote (One-to-Many for consumed orders)
@@ -319,6 +339,16 @@ namespace AccessoryWorld.Data
                 .HasIndex(u => u.Email)
                 .IsUnique();
             
+            // Address indexes for performance and data integrity
+            modelBuilder.Entity<Address>()
+                .HasIndex(a => a.UserId);
+            
+            modelBuilder.Entity<Address>()
+                .HasIndex(a => new { a.UserId, a.IsDefault });
+            
+            modelBuilder.Entity<Address>()
+                .HasIndex(a => a.PublicId).IsUnique();
+            
             // Check constraints for business rules
             modelBuilder.Entity<Product>()
                 .ToTable(t => {
@@ -406,6 +436,151 @@ namespace AccessoryWorld.Data
             modelBuilder.Entity<CartItem>()
                 .HasIndex(ci => ci.UserId);
             
+            // Configure TradeIn
+            modelBuilder.Entity<TradeIn>(entity =>
+            {
+                entity.ToTable("TradeIns"); // Explicit table mapping to match the database table
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.PublicId).HasDefaultValueSql("NEWID()");
+                entity.Property(e => e.CustomerId).IsRequired();
+                entity.Property(e => e.DeviceBrand).IsRequired().HasMaxLength(64).HasDefaultValue("Apple");
+                entity.Property(e => e.DeviceModel).IsRequired().HasMaxLength(128);
+                entity.Property(e => e.IMEI).HasMaxLength(32);
+                entity.Property(e => e.ConditionGrade).IsRequired().HasMaxLength(2);
+                entity.Property(e => e.PhotosJson).IsRequired().HasColumnType("nvarchar(max)");
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(32);
+                entity.Property(e => e.ProposedValue).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.ApprovedValue).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.Notes).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.CreatedAt).IsRequired().HasDefaultValueSql("SYSUTCDATETIME()");
+                entity.Property(e => e.RowVersion).IsRowVersion();
+                
+                // Indexes
+                entity.HasIndex(e => e.PublicId).IsUnique();
+                entity.HasIndex(e => new { e.CustomerId, e.Status });
+                
+                // Check constraint for ConditionGrade
+                entity.ToTable(t => t.HasCheckConstraint("CK_TradeIn_ConditionGrade", "[ConditionGrade] IN ('A','B','C','D')"));
+                
+                // Relationships
+                entity.HasOne(e => e.Customer)
+                    .WithMany()
+                    .HasForeignKey(e => e.CustomerId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                entity.Property(e => e.ApprovedBy)
+                    .HasMaxLength(450);
+                    
+                entity.HasOne(e => e.ApprovedByUser)
+                    .WithMany()
+                    .HasForeignKey(e => e.ApprovedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+            
+            // ===============================
+            // REPLACEMENT: CreditNote / TradeInCase / User / TradeIn wiring
+            // ===============================
+            modelBuilder.Entity<CreditNote>(entity =>
+            {
+                // Keys & columns
+                entity.HasKey(e => e.Id);
+
+                entity.Property(e => e.CreditNoteCode)
+                      .IsRequired()
+                      .HasMaxLength(20);
+
+                entity.Property(e => e.UserId)
+                      .IsRequired()
+                      .HasMaxLength(450);
+
+                entity.Property(e => e.TradeInId)
+                      .IsRequired(); // FK to TradeIn (1:1)
+
+                entity.Property(e => e.TradeInCaseId);     // nullable
+                entity.Property(e => e.ConsumedInOrderId); // nullable
+
+                entity.Property(e => e.Amount)
+                      .IsRequired()
+                      .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.AmountRemaining)
+                      .IsRequired()
+                      .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.Status)
+                      .IsRequired()
+                      .HasMaxLength(32);
+
+                entity.Property(e => e.ExpiresAt)
+                      .IsRequired();
+
+                entity.Property(e => e.CreatedAt)
+                      .IsRequired()
+                      .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                entity.Property(e => e.RedeemedAt);     // nullable
+                entity.Property(e => e.RedeemedOrderId);// nullable
+
+                entity.Property(e => e.RowVersion).IsRowVersion();
+
+                // Indexes
+                entity.HasIndex(e => e.CreditNoteCode).IsUnique();
+                entity.HasIndex(e => new { e.UserId, e.Status });
+                // One CreditNote per TradeIn
+                entity.HasIndex(e => e.TradeInId).IsUnique();
+
+                // Relationships
+
+                // Bind to ApplicationUser via UserId (prevents shadow 'ApplicationUserId')
+                entity.HasOne(e => e.User)
+                      .WithMany(u => u.CreditNotes)              // <-- bind to the collection on ApplicationUser
+                      .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Bind to TradeInCase via TradeInCaseId (prevents shadow 'TradeInCaseId1')
+                entity.HasOne(e => e.TradeInCase)
+                      .WithMany(tc => tc.CreditNotes)            // <-- bind to the collection on TradeInCase
+                      .HasForeignKey(e => e.TradeInCaseId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                // Optional: the order in which a credit note was consumed
+                entity.HasOne(e => e.ConsumedInOrder)
+                      .WithMany()                                // no back-collection on Order
+                      .HasForeignKey(e => e.ConsumedInOrderId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // Ensure the 1:1 between TradeIn and CreditNote is explicit
+            modelBuilder.Entity<TradeIn>(entity =>
+            {
+                entity.HasOne(t => t.CreditNote)
+                      .WithOne()                                 // CreditNote has no nav back to TradeIn
+                      .HasForeignKey<CreditNote>(cn => cn.TradeInId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+            
+            // Configure StockItem
+            modelBuilder.Entity<StockItem>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.SKUId).IsRequired();
+                entity.Property(e => e.IsTradeInUnit).IsRequired().HasDefaultValue(false);
+                
+                // Index
+                entity.HasIndex(e => e.SourceTradeInId);
+                
+                // Relationships
+                entity.HasOne(e => e.SKU)
+                    .WithMany()
+                    .HasForeignKey(e => e.SKUId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                entity.HasOne(e => e.SourceTradeIn)
+                    .WithMany(t => t.StockItems)
+                    .HasForeignKey(e => e.SourceTradeInId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
             // Configure Wishlist
             modelBuilder.Entity<Wishlist>(entity =>
             {
@@ -427,6 +602,152 @@ namespace AccessoryWorld.Data
                     .WithMany()
                     .HasForeignKey(e => e.ProductId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+            
+            // StockMovement configuration
+            modelBuilder.Entity<StockMovement>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.MovementType).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.ReasonCode).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Notes).HasMaxLength(500);
+                entity.Property(e => e.ReferenceNumber).HasMaxLength(100);
+                entity.Property(e => e.UserId).IsRequired();
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+                
+                // Relationships
+                entity.HasOne(e => e.SKU)
+                    .WithMany()
+                    .HasForeignKey(e => e.SKUId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                entity.HasOne(e => e.TradeIn)
+                    .WithMany(t => t.StockMovements)
+                    .HasForeignKey(e => e.TradeInId)
+                    .OnDelete(DeleteBehavior.SetNull);
+                    
+                entity.HasOne(e => e.CreditNote)
+                    .WithMany(c => c.StockMovements)
+                    .HasForeignKey(e => e.CreditNoteId)
+                    .OnDelete(DeleteBehavior.SetNull);
+                    
+                // Indexes
+                entity.HasIndex(e => e.SKUId);
+                entity.HasIndex(e => e.MovementType);
+                entity.HasIndex(e => e.CreatedAt);
+                entity.HasIndex(e => e.TradeInId);
+                entity.HasIndex(e => e.CreditNoteId);
+            });
+
+            // CheckoutSession configuration
+            modelBuilder.Entity<CheckoutSession>(entity =>
+            {
+                entity.HasKey(e => e.SessionId);
+                entity.Property(e => e.SessionId).IsRequired();
+                entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.AppliedCreditNoteCode).HasMaxLength(20);
+                entity.Property(e => e.CreditNoteAmount).HasColumnType("decimal(18,2)");
+                
+                entity.HasIndex(e => e.SessionId).IsUnique();
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.ExpiresAt);
+            });
+
+            // StockLock configuration
+            modelBuilder.Entity<StockLock>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.SessionId).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+                
+                entity.HasOne(e => e.SKU)
+                    .WithMany()
+                    .HasForeignKey(e => e.SKUId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasIndex(e => e.SessionId);
+                entity.HasIndex(e => e.SKUId);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.ExpiresAt);
+            });
+
+            // CreditNoteLock configuration
+            modelBuilder.Entity<CreditNoteLock>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.SessionId).IsRequired();
+                entity.Property(e => e.CreditNoteCode).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.LockedAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+                
+                entity.HasOne(e => e.CheckoutSession)
+                    .WithMany(cs => cs.CreditNoteLocks)
+                    .HasForeignKey(e => e.SessionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasOne(e => e.CreditNote)
+                    .WithMany()
+                    .HasForeignKey(e => e.CreditNoteCode)
+                    .HasPrincipalKey(cn => cn.CreditNoteCode)
+                    .OnDelete(DeleteBehavior.Cascade);
+                
+                entity.HasIndex(e => e.SessionId);
+                entity.HasIndex(e => e.CreditNoteCode);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.ExpiresAt);
+            });
+
+            // WebhookEvent configuration
+            modelBuilder.Entity<WebhookEvent>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.EventId).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.EventType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Source).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Payload).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.ProcessingResult).HasColumnType("nvarchar(max)");
+                entity.Property(e => e.ErrorMessage).HasMaxLength(1000);
+                entity.Property(e => e.ReceivedAt).IsRequired().HasDefaultValueSql("SYSUTCDATETIME()");
+                
+                // Relationships
+                entity.HasOne(e => e.RelatedOrder)
+                    .WithMany()
+                    .HasForeignKey(e => e.RelatedOrderId)
+                    .OnDelete(DeleteBehavior.SetNull);
+                    
+                entity.HasOne(e => e.RelatedTradeInCase)
+                    .WithMany()
+                    .HasForeignKey(e => e.RelatedTradeInCaseId)
+                    .OnDelete(DeleteBehavior.SetNull);
+                    
+                entity.HasOne(e => e.RelatedCreditNote)
+                    .WithMany()
+                    .HasForeignKey(e => e.RelatedCreditNoteId)
+                    .OnDelete(DeleteBehavior.SetNull);
+                
+                // Indexes
+                entity.HasIndex(e => e.EventId).IsUnique();
+                entity.HasIndex(e => new { e.EventType, e.Source });
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.ReceivedAt);
+                entity.HasIndex(e => e.RelatedOrderId);
+                entity.HasIndex(e => e.RelatedTradeInCaseId);
+                entity.HasIndex(e => e.RelatedCreditNoteId);
+            });
+
+            // Settings configuration - Add decimal precision to silence warnings
+            modelBuilder.Entity<Settings>(entity =>
+            {
+                entity.Property(e => e.ShippingCost).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.TaxRate).HasColumnType("decimal(18,4)");
             });
         }
     }

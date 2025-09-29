@@ -1,0 +1,60 @@
+{
+  "info": {
+    "name": "AccessoryWorld Checkout",
+    "_postman_id": "bcb4ee18-ccd9-4547-b97f-2d2ba96cdc10",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "Create Checkout",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/checkout",
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"addressId\": \"{{addressId}}\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "ITN (Simulated)",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/payment/itn",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "pf_payment_id",
+              "value": "SIM123"
+            },
+            {
+              "key": "payment_status",
+              "value": "COMPLETE"
+            },
+            {
+              "key": "amount_gross",
+              "value": "100.00"
+            },
+            {
+              "key": "m_payment_id",
+              "value": "ORD-123"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

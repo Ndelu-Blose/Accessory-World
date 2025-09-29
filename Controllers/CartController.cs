@@ -37,7 +37,7 @@ namespace AccessoryWorld.Controllers
             {
                 return Json(new { success = false, message = ex.Message });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // Log the exception here if you have logging configured
                 return Json(new { success = false, message = "An unexpected error occurred while adding item to cart." });
@@ -67,7 +67,7 @@ namespace AccessoryWorld.Controllers
             {
                 return Json(new { success = false, message = ex.Message });
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return Json(new { success = false, message = "An unexpected error occurred while updating item quantity." });
             }

@@ -362,7 +362,7 @@
                                                     <label asp-for="BrandId" class="form-label">Brand *</label>
                                                     <select asp-for="BrandId" class="form-select" required>
                                                         <option value="">Select Brand</option>
-                                                        @foreach (var brand in ViewBag.Brands as IEnumerable<dynamic>)
+                                                        @foreach (var brand in (ViewBag.Brands as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>())
                                                         {
                                                             <option value="@brand.Id">@brand.Name</option>
                                                         }

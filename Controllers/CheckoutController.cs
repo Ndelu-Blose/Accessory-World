@@ -13,6 +13,12 @@ using AccessoryWorld.Security;
 
 namespace AccessoryWorld.Controllers
 {
+    public class ValidateCreditNoteRequest
+    {
+        public string CreditNoteCode { get; set; } = string.Empty;
+        public decimal RequestedAmount { get; set; }
+    }
+
     [Authorize]
     public class CheckoutController : Controller
     {
@@ -23,6 +29,9 @@ namespace AccessoryWorld.Controllers
         private readonly IPayfastService _payfastService;
         private readonly ISecurityValidationService _securityValidation;
         private readonly ILogger<CheckoutController> _logger;
+        private readonly IAddressService _addressService;
+        private readonly ICheckoutService _checkoutService;
+        private readonly ICreditNoteService _creditNoteService;
 
         public CheckoutController(
             ApplicationDbContext context,
@@ -31,7 +40,10 @@ namespace AccessoryWorld.Controllers
             IOrderService orderService,
             IPayfastService payfastService,
             ISecurityValidationService securityValidation,
-            ILogger<CheckoutController> logger)
+            ILogger<CheckoutController> logger,
+            IAddressService addressService,
+            ICheckoutService checkoutService,
+            ICreditNoteService creditNoteService)
         {
             _context = context;
             _userManager = userManager;
@@ -40,10 +52,13 @@ namespace AccessoryWorld.Controllers
             _payfastService = payfastService;
             _securityValidation = securityValidation;
             _logger = logger;
+            _addressService = addressService;
+            _checkoutService = checkoutService;
+            _creditNoteService = creditNoteService;
         }
 
         // GET: /Checkout
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? creditNoteCode = null, decimal? creditNoteAmount = null)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null)
@@ -58,10 +73,31 @@ namespace AccessoryWorld.Controllers
                 return RedirectToAction("Index", "Cart");
             }
 
-            // Get user addresses
-            var user = await _userManager.Users
-                .Include(u => u.Addresses)
-                .FirstOrDefaultAsync(u => u.Id == userId);
+            // Get user addresses using AddressService to ensure proper scoping
+            var userAddresses = await _addressService.GetUserAddressesAsync(userId);
+
+            // Get user's credit notes
+            var userCreditNotes = await _creditNoteService.GetUserCreditNotesAsync(userId, true);
+            var availableCreditBalance = await _creditNoteService.GetUserCreditBalanceAsync(userId);
+
+            _logger.LogInformation($"Debug: User ID: {userId}");
+            _logger.LogInformation($"Debug: Address count: {userAddresses.Count}");
+
+            // Check if credit note is applied
+            bool hasValidCreditNote = false;
+            decimal appliedCreditAmount = 0;
+            
+            if (!string.IsNullOrEmpty(creditNoteCode) && creditNoteAmount.HasValue)
+            {
+                var isValid = await _checkoutService.ValidateCreditNoteForCheckoutAsync(
+                    creditNoteCode, creditNoteAmount.Value, userId);
+                
+                if (isValid)
+                {
+                    hasValidCreditNote = true;
+                    appliedCreditAmount = creditNoteAmount.Value;
+                }
+            }
 
             var viewModel = new CheckoutViewModel
             {
@@ -75,28 +111,26 @@ namespace AccessoryWorld.Controllers
                     LineTotal = item.TotalPrice,
                     ImageUrl = item.Product.ProductImages.FirstOrDefault()?.ImageUrl
                 }).ToList(),
-                UserAddresses = user?.Addresses.Select(a => new AddressViewModel
-                {
-                    Id = a.Id,
-                    FullName = a.FullName,
-                    AddressLine1 = a.AddressLine1,
-                    AddressLine2 = a.AddressLine2,
-                    City = a.City,
-                    Province = a.Province,
-                    PostalCode = a.PostalCode,
-                    Country = a.Country,
-                    PhoneNumber = a.PhoneNumber,
-                    IsDefault = a.IsDefault
-                }).ToList() ?? new List<AddressViewModel>(),
+                UserAddresses = userAddresses,
+                UserCreditNotes = userCreditNotes.Select(cn => new CreditNoteViewModel(cn)).ToList(),
+                AvailableCreditBalance = availableCreditBalance,
                 SubTotal = cartItems.Sum(item => item.TotalPrice),
                 TaxAmount = 0, // Will be calculated
                 ShippingFee = 0, // Will be calculated based on delivery method
+                DiscountAmount = 0,
+                CreditNoteAmount = appliedCreditAmount,
+                CreditNoteCode = creditNoteCode,
+                CreditNoteRequestedAmount = creditNoteAmount,
+                HasValidCreditNote = hasValidCreditNote,
                 Total = 0 // Will be calculated
             };
 
             // Calculate tax (15% VAT for South Africa)
             viewModel.TaxAmount = Math.Round(viewModel.SubTotal * 0.15m, 2);
-            viewModel.Total = viewModel.SubTotal + viewModel.TaxAmount + viewModel.ShippingFee;
+            
+            // Calculate total including credit note discount
+            var totalBeforeDiscount = viewModel.SubTotal + viewModel.TaxAmount + viewModel.ShippingFee;
+            viewModel.Total = Math.Max(0, totalBeforeDiscount - viewModel.CreditNoteAmount);
 
             return View("~/Views/Customer/Checkout/Index.cshtml", viewModel);
         }
@@ -114,12 +148,10 @@ namespace AccessoryWorld.Controllers
 
                 if (!ModelState.IsValid)
                 {
-                    // Reload the view with validation errors
+                    // Reload the view with validation errors using AddressService
                     var cart = await _cartService.GetCartAsync(HttpContext.Session.Id, userId);
                     var cartItems = cart?.Items ?? new List<CartItem>();
-                    var user = await _userManager.Users
-                        .Include(u => u.Addresses)
-                        .FirstOrDefaultAsync(u => u.Id == userId);
+                    var userAddresses = await _addressService.GetUserAddressesAsync(userId);
 
                     model.CartItems = cartItems.Select(item => new CartItemViewModel
                     {
@@ -132,26 +164,131 @@ namespace AccessoryWorld.Controllers
                         ImageUrl = item.SKU.Product.ProductImages.FirstOrDefault()?.ImageUrl
                     }).ToList();
 
-                    model.UserAddresses = user?.Addresses.Select(a => new AddressViewModel
-                    {
-                        Id = a.Id,
-                        FullName = a.FullName,
-                        AddressLine1 = a.AddressLine1,
-                        AddressLine2 = a.AddressLine2,
-                        City = a.City,
-                        Province = a.Province,
-                        PostalCode = a.PostalCode,
-                        Country = a.Country,
-                        PhoneNumber = a.PhoneNumber,
-                        IsDefault = a.IsDefault
-                    }).ToList() ?? new List<AddressViewModel>();
+                    model.UserAddresses = userAddresses;
 
                     return View("~/Views/Customer/Checkout/Index.cshtml", model);
                 }
 
                 // Create the order
-                var shippingAddressId = model.ShippingAddressId ?? model.SelectedAddressId ?? 0;
-                var order = await _orderService.CreateOrderAsync(
+                // For pickup orders, shipping address is not required
+                var shippingAddressId = model.FulfillmentMethod == "PICKUP" ? Guid.Empty : (model.ShippingAddressId ?? model.SelectedAddressId ?? Guid.Empty);
+                
+                // Handle inline address form (workaround for address bug)
+                if (model.FulfillmentMethod == "DELIVERY" && model.UseInlineAddress && model.InlineAddress != null)
+                {
+                    // Validate inline address
+                    if (string.IsNullOrWhiteSpace(model.InlineAddress.FullName) ||
+                        string.IsNullOrWhiteSpace(model.InlineAddress.AddressLine1) ||
+                        string.IsNullOrWhiteSpace(model.InlineAddress.City) ||
+                        string.IsNullOrWhiteSpace(model.InlineAddress.Province) ||
+                        string.IsNullOrWhiteSpace(model.InlineAddress.PostalCode) ||
+                        string.IsNullOrWhiteSpace(model.InlineAddress.PhoneNumber))
+                    {
+                        ModelState.AddModelError("", "Please fill in all required address fields.");
+                        
+                        // Reload the view with validation errors
+                        var cart = await _cartService.GetCartAsync(HttpContext.Session.Id, userId);
+                        var cartItems = cart?.Items ?? new List<CartItem>();
+                        var userAddresses = await _addressService.GetUserAddressesAsync(userId);
+
+                        model.CartItems = cartItems.Select(item => new CartItemViewModel
+                        {
+                            Id = item.Id,
+                            ProductName = item.SKU.Product.Name,
+                            SKUName = item.SKU.Name,
+                            Quantity = item.Quantity,
+                            Price = item.SKU.Price,
+                            LineTotal = item.Quantity * item.SKU.Price,
+                            ImageUrl = item.SKU.Product.ProductImages.FirstOrDefault()?.ImageUrl
+                        }).ToList();
+
+                        model.UserAddresses = userAddresses;
+                        return View("~/Views/Customer/Checkout/Index.cshtml", model);
+                    }
+
+                    // Try to save the inline address
+                    try
+                    {
+                        var addressId = await _addressService.AddAddressAsync(model.InlineAddress, userId);
+                        if (addressId != Guid.Empty)
+                        {
+                            shippingAddressId = addressId;
+                            _logger.LogInformation("Successfully created address from inline form: {AddressId}", addressId);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Failed to create address from inline form, using temporary address for order");
+                            // Continue with order creation using inline address data directly
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error creating address from inline form, using temporary address for order");
+                        // Continue with order creation using inline address data directly
+                    }
+                }
+                
+                // Validate address for delivery orders only
+                if (model.FulfillmentMethod == "DELIVERY" && shippingAddressId == Guid.Empty && !model.UseInlineAddress)
+                {
+                    ModelState.AddModelError("", "Please select a delivery address.");
+                    
+                    // Reload the view with validation errors using AddressService
+                    var cart = await _cartService.GetCartAsync(HttpContext.Session.Id, userId);
+                    var cartItems = cart?.Items ?? new List<CartItem>();
+                    var userAddresses = await _addressService.GetUserAddressesAsync(userId);
+
+                    model.CartItems = cartItems.Select(item => new CartItemViewModel
+                    {
+                        Id = item.Id,
+                        ProductName = item.SKU.Product.Name,
+                        SKUName = item.SKU.Name,
+                        Quantity = item.Quantity,
+                        Price = item.SKU.Price,
+                        LineTotal = item.Quantity * item.SKU.Price,
+                        ImageUrl = item.SKU.Product.ProductImages.FirstOrDefault()?.ImageUrl
+                    }).ToList();
+
+                    model.UserAddresses = userAddresses;
+
+                    return View("~/Views/Customer/Checkout/Index.cshtml", model);
+                }
+
+                // Validate that the selected address belongs to the current user
+                if (model.FulfillmentMethod == "DELIVERY" && shippingAddressId != Guid.Empty)
+                {
+                    var selectedAddress = await _addressService.GetAddressByPublicIdAsync(shippingAddressId, userId);
+                    if (selectedAddress == null)
+                    {
+                        ModelState.AddModelError("", "Invalid delivery address selected.");
+                        
+                        // Reload the view with validation errors using AddressService
+                        var cart = await _cartService.GetCartAsync(HttpContext.Session.Id, userId);
+                        var cartItems = cart?.Items ?? new List<CartItem>();
+                        var userAddresses = await _addressService.GetUserAddressesAsync(userId);
+
+                        model.CartItems = cartItems.Select(item => new CartItemViewModel
+                        {
+                            Id = item.Id,
+                            ProductName = item.SKU.Product.Name,
+                            SKUName = item.SKU.Name,
+                            Quantity = item.Quantity,
+                            Price = item.SKU.Price,
+                            LineTotal = item.Quantity * item.SKU.Price,
+                            ImageUrl = item.SKU.Product.ProductImages.FirstOrDefault()?.ImageUrl
+                        }).ToList();
+
+                        model.UserAddresses = userAddresses;
+
+                        return View("~/Views/Customer/Checkout/Index.cshtml", model);
+                    }
+                }
+                
+                // Create checkout session and process order with credit notes
+                var checkoutSession = await _checkoutService.CreateCheckoutSessionAsync(userId, model.CreditNoteCode, model.CreditNoteRequestedAmount);
+                
+                var order = await _checkoutService.ProcessOrderAsync(
+                    checkoutSession.SessionId,
                     userId, 
                     shippingAddressId, 
                     model.FulfillmentMethod, 
@@ -202,7 +339,7 @@ namespace AccessoryWorld.Controllers
                 {
                     // Simple shipping calculation - in real app, integrate with courier APIs
                     var address = await _context.Addresses
-                        .FirstOrDefaultAsync(a => a.Id == request.AddressId);
+                        .FirstOrDefaultAsync(a => a.PublicId == request.AddressId);
 
                     if (address != null)
                     {
@@ -260,11 +397,23 @@ namespace AccessoryWorld.Controllers
                 }
 
                 // Create order
+                // Convert PublicId to internal Id for database operations
+                int addressId = 0;
+                if (model.SelectedAddressId.HasValue && model.SelectedAddressId != Guid.Empty)
+                {
+                    var address = await _context.Addresses
+                        .FirstOrDefaultAsync(a => a.PublicId == model.SelectedAddressId && a.UserId == userId);
+                    if (address != null)
+                    {
+                        addressId = address.Id;
+                    }
+                }
+
                 var order = new Order
                 {
                     OrderNumber = GenerateOrderNumber(),
                     UserId = userId,
-                    ShippingAddressId = model.SelectedAddressId ?? 0,
+                    ShippingAddressId = addressId,
                     Status = "PENDING",
                     FulfilmentMethod = model.FulfillmentMethod.ToUpper(),
                     SubTotal = model.SubTotal,
@@ -501,42 +650,29 @@ namespace AccessoryWorld.Controllers
         // GET: /Checkout/AddAddress
         public async Task<IActionResult> AddAddress()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null)
             {
                 return NotFound();
             }
 
-            // Debug: Log user information
-            _logger.LogInformation($"User FirstName: '{user.FirstName}', LastName: '{user.LastName}', Email: '{user.Email}'");
-            
-            var fullName = $"{user.FirstName} {user.LastName}".Trim();
-            _logger.LogInformation($"Generated FullName: '{fullName}'");
-
-            // If FirstName or LastName is empty, use email prefix as fallback
-            if (string.IsNullOrWhiteSpace(user.FirstName) || string.IsNullOrWhiteSpace(user.LastName))
-            {
-                var emailPrefix = user.Email?.Split('@')[0] ?? "User";
-                fullName = string.IsNullOrWhiteSpace(fullName.Trim()) ? emailPrefix : fullName;
-                _logger.LogInformation($"Using fallback FullName: '{fullName}'");
-            }
-
-            var model = new AddressViewModel
-            {
-                FullName = fullName,
-                Country = "South Africa" // Default country
-            };
-
+            var model = await _addressService.CreateAddressViewModelForUserAsync(userId);
             return View("~/Views/Customer/Checkout/AddAddress.cshtml", model);
         }
 
         // POST: /Checkout/AddAddress
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddAddress(AddressViewModel model)
+        public async Task<IActionResult> AddAddress(AddressViewModel model, string? returnUrl)
         {
             if (!ModelState.IsValid)
             {
+                // Log all model errors to help diagnose future 400s
+                var errors = ModelState
+                    .Where(kv => kv.Value?.Errors.Count > 0)
+                    .Select(kv => new { Field = kv.Key, Messages = kv.Value!.Errors.Select(e => e.ErrorMessage) });
+                _logger.LogWarning("Checkout address form invalid: {@Errors}", errors);
+
                 return View("~/Views/Customer/Checkout/AddAddress.cshtml", model);
             }
 
@@ -546,39 +682,77 @@ namespace AccessoryWorld.Controllers
                 return NotFound();
             }
 
-            // If this is set as default, remove default from other addresses
-            if (model.IsDefault)
+            try
             {
-                var existingAddresses = await _context.Addresses
-                    .Where(a => a.UserId == userId && a.IsDefault)
-                    .ToListAsync();
+                await _addressService.AddAddressAsync(model, userId);
+                TempData["Success"] = "Address added successfully.";
                 
-                foreach (var addr in existingAddresses)
+                // Handle return URL for checkout flow
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
                 {
-                    addr.IsDefault = false;
+                    return Redirect(returnUrl);
                 }
+                
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving address for user {UserId}", userId);
+                ModelState.AddModelError("", "An error occurred while saving the address. Please try again.");
+                return View("~/Views/Customer/Checkout/AddAddress.cshtml", model);
+            }
+        }
+
+        // POST: /Checkout/ValidateCreditNote
+        [HttpPost]
+        public async Task<IActionResult> ValidateCreditNote([FromBody] ValidateCreditNoteRequest request)
+        {
+            if (!User.Identity?.IsAuthenticated == true)
+            {
+                return Json(new { success = false, message = "User not authenticated" });
             }
 
-            var address = new Address
+            try
             {
-                UserId = userId,
-                FullName = model.FullName, // Use the FullName from the form instead of overriding it
-                PhoneNumber = model.PhoneNumber,
-                AddressLine1 = model.AddressLine1,
-                AddressLine2 = model.AddressLine2,
-                City = model.City,
-                Province = model.Province,
-                PostalCode = model.PostalCode,
-                Country = model.Country,
-                IsDefault = model.IsDefault,
-                CreatedAt = DateTime.UtcNow
-            };
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+                
+                // Validate credit note
+                var isValid = await _checkoutService.ValidateCreditNoteForCheckoutAsync(
+                    request.CreditNoteCode, request.RequestedAmount, userId);
 
-            _context.Addresses.Add(address);
-            await _context.SaveChangesAsync();
+                if (!isValid)
+                {
+                    return Json(new { success = false, message = "Invalid credit note or insufficient balance" });
+                }
 
-            TempData["Success"] = "Address added successfully.";
-            return RedirectToAction("Index");
+                // Try to lock the credit note for the current session
+                var sessionId = HttpContext.Session.GetString("CheckoutSessionId");
+                if (!string.IsNullOrEmpty(sessionId) && Guid.TryParse(sessionId, out var parsedSessionId))
+                {
+                    var lockSuccess = await _checkoutService.LockCreditNoteAsync(
+                        request.CreditNoteCode, request.RequestedAmount, parsedSessionId);
+                    
+                    if (!lockSuccess)
+                    {
+                        return Json(new { success = false, message = "Credit note is currently being used by another session" });
+                    }
+                }
+
+                return Json(new { 
+                    success = true, 
+                    message = "Credit note validated successfully",
+                    amount = request.RequestedAmount
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error validating credit note {CreditNoteCode}", request.CreditNoteCode);
+                return Json(new { success = false, message = "An error occurred while validating the credit note" });
+            }
         }
 
         private string GenerateOrderNumber()

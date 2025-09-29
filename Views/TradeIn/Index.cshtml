@@ -1,0 +1,128 @@
+@model IEnumerable<AccessoryWorld.Models.TradeIn>
+@{
+    ViewData["Title"] = "My Trade-Ins";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-exchange-alt me-2"></i>My Trade-Ins</h2>
+                <a href="@Url.Action("Create")" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Submit New Trade-In
+                </a>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["InfoMessage"] != null)
+            {
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    @TempData["InfoMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (Model.Any())
+            {
+                <div class="row">
+                    @foreach (var tradeIn in Model)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">@tradeIn.DeviceBrand @tradeIn.DeviceModel</h6>
+                                    <span class="badge @GetStatusBadgeClass(tradeIn.Status)">@GetStatusDisplayText(tradeIn.Status)</span>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text">
+                                        <strong>Case ID:</strong> @tradeIn.PublicId.ToString().Substring(0, 8)<br>
+                                        <strong>Condition:</strong> Grade @tradeIn.ConditionGrade<br>
+                                        <strong>Submitted:</strong> @tradeIn.CreatedAt.ToString("MMM dd, yyyy")
+                                    </p>
+                                    
+                                    @if (tradeIn.ProposedValue.HasValue)
+                                    {
+                                        <p><strong>Proposed Value:</strong> R @tradeIn.ProposedValue.Value.ToString("N2")</p>
+                                    }
+                                    
+                                    @if (tradeIn.ApprovedValue.HasValue)
+                                    {
+                                        <p><strong>Offer Amount:</strong> R @tradeIn.ApprovedValue.Value.ToString("N2")</p>
+                                    }
+                                </div>
+                                <div class="card-footer">
+                                    <a href="@Url.Action("Details", new { id = tradeIn.PublicId })" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="fas fa-exchange-alt fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Trade-Ins Yet</h4>
+                    <p class="text-muted mb-4">You haven't submitted any trade-in requests yet.</p>
+                    <a href="@Url.Action("Create")" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Submit Your First Trade-In
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@functions {
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "SUBMITTED" => "bg-info",
+            "UNDER_REVIEW" => "bg-warning",
+            "EVALUATED" => "bg-primary",
+            "OFFER_SENT" => "bg-success",
+            "ACCEPTED" => "bg-success",
+            "REJECTED" => "bg-danger",
+            "EXPIRED" => "bg-secondary",
+            "COMPLETED" => "bg-success",
+            "CANCELLED" => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusDisplayText(string status)
+    {
+        return status switch
+        {
+            "SUBMITTED" => "Submitted",
+            "UNDER_REVIEW" => "Under Review",
+            "EVALUATED" => "Evaluated",
+            "OFFER_SENT" => "Offer Sent",
+            "ACCEPTED" => "Accepted",
+            "REJECTED" => "Rejected",
+            "EXPIRED" => "Expired",
+            "COMPLETED" => "Completed",
+            "CANCELLED" => "Cancelled",
+            _ => status
+        };
+    }
+}

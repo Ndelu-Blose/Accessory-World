@@ -22,6 +22,9 @@ namespace AccessoryWorld
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
                 ??"Server=(localdb)\\MSSQLLocalDB;Database=AccessoryWorldDb;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true;Connection Timeout=60;Command Timeout=300";
             
+            // Log connection string for debugging (remove in production)
+            Console.WriteLine($"Using connection string: {connectionString}");
+            
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString, sqlOptions => 
                 {
@@ -95,6 +98,8 @@ namespace AccessoryWorld
             // Add custom services
             builder.Services.AddScoped<AccessoryWorld.Services.RoleSeeder>();
             builder.Services.AddScoped<AccessoryWorld.Services.ProductSeeder>();
+            builder.Services.AddScoped<AccessoryWorld.Services.AddressSeeder>();
+            builder.Services.AddScoped<AccessoryWorld.Services.IAddressService, AccessoryWorld.Services.AddressService>();
             builder.Services.AddScoped<AccessoryWorld.Services.ICartService, AccessoryWorld.Services.CartService>();
             builder.Services.AddScoped<AccessoryWorld.Services.IOrderService, AccessoryWorld.Services.OrderService>();
             builder.Services.AddScoped<AccessoryWorld.Services.IPayfastService, AccessoryWorld.Services.PayfastService>();
@@ -106,6 +111,16 @@ namespace AccessoryWorld
             builder.Services.AddScoped<AccessoryWorld.Services.IWorkflowValidationService, AccessoryWorld.Services.WorkflowValidationService>();
 builder.Services.AddScoped<AccessoryWorld.Services.IOrderWorkflowService, AccessoryWorld.Services.OrderWorkflowService>();
             builder.Services.AddScoped<AccessoryWorld.Services.IPerformanceValidationService, AccessoryWorld.Services.PerformanceValidationService>();
+            
+            // Add Trade-In services
+            builder.Services.AddScoped<AccessoryWorld.Services.TradeInDomainService>();
+            builder.Services.AddScoped<AccessoryWorld.Services.ITradeInService, AccessoryWorld.Services.TradeInService>();
+            builder.Services.AddScoped<AccessoryWorld.Services.ICreditNoteService, AccessoryWorld.Services.CreditNoteService>();
+            builder.Services.AddScoped<AccessoryWorld.Services.ICheckoutService, AccessoryWorld.Services.CheckoutService>();
+            
+            // Add Webhook services
+            builder.Services.AddScoped<AccessoryWorld.Services.IWebhookService, AccessoryWorld.Services.WebhookService>();
+            builder.Services.AddScoped<AccessoryWorld.Services.ITradeInWebhookService, AccessoryWorld.Services.TradeInWebhookService>();
 
             // Configure performance validation options
             builder.Services.Configure<AccessoryWorld.Services.PerformanceValidationOptions>(options =>
@@ -136,6 +151,9 @@ builder.Services.AddScoped<AccessoryWorld.Services.IOrderWorkflowService, Access
                     
                     var productSeeder = scope.ServiceProvider.GetRequiredService<AccessoryWorld.Services.ProductSeeder>();
                     await productSeeder.SeedAsync();
+                    
+                    var addressSeeder = scope.ServiceProvider.GetRequiredService<AccessoryWorld.Services.AddressSeeder>();
+                    await addressSeeder.SeedAsync();
                 }
                 catch (Exception ex)
                 {

@@ -1,0 +1,10 @@
+<svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <rect width="500" height="500" fill="#f8f9fa"/>
+  <rect x="150" y="150" width="200" height="120" rx="60" fill="#e9ecef" stroke="#dee2e6" stroke-width="2"/>
+  <circle cx="200" cy="210" r="25" fill="#6c757d"/>
+  <circle cx="300" cy="210" r="25" fill="#6c757d"/>
+  <rect x="190" y="240" width="20" height="40" rx="10" fill="#6c757d"/>
+  <rect x="290" y="240" width="20" height="40" rx="10" fill="#6c757d"/>
+  <text x="250" y="320" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#495057">AirPods Pro</text>
+  <text x="250" y="350" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6c757d">Placeholder Image</text>
+</svg>

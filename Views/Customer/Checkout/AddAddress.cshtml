@@ -19,13 +19,15 @@
                 <div class="card-body">
                     <form asp-action="AddAddress" method="post">
                         @Html.AntiForgeryToken()
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                         
-                        <!-- FullName is auto-populated from authenticated user -->
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
+                        
+                        <!-- FullName is auto-populated from authenticated user but editable -->
                         <div class="mb-3">
-                            <label class="form-label">Name (from your account)</label>
-                            <input asp-for="FullName" class="form-control" readonly style="background-color: #f8f9fa;" />
-                            <small class="text-muted">This is automatically filled from your account information.</small>
+                            <label asp-for="FullName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input asp-for="FullName" class="form-control" placeholder="Enter recipient's full name" />
+                            <small class="text-muted">This is pre-filled from your account but can be edited for different recipients.</small>
+                            <span asp-validation-for="FullName" class="text-danger"></span>
                         </div>
                         
                         <div class="mb-3">
@@ -79,6 +81,7 @@
                         <div class="mb-3">
                             <label asp-for="Country" class="form-label">Country <span class="text-danger">*</span></label>
                             <input asp-for="Country" class="form-control" value="South Africa" readonly />
+                            <input asp-for="Country" type="hidden" />
                             <span asp-validation-for="Country" class="text-danger"></span>
                         </div>
                         

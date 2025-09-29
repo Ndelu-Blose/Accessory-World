@@ -35,20 +35,22 @@
                 </div>
                 <div class="card-body">
                     <form id="addAddressForm" asp-action="AddAddress" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="All" class="text-danger mb-3"></div>
                         
                         <!-- FullName is auto-populated from authenticated user -->
                          <div class="mb-3">
-                             <label asp-for="FullName" class="form-label">Name (from your account)</label>
-                             <input asp-for="FullName" class="form-control" readonly style="background-color: #f8f9fa;" />
-                             <small class="text-muted">This is automatically filled from your account information.</small>
+                             <label asp-for="FullName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                             <input asp-for="FullName" class="form-control" placeholder="Enter your full name" />
+                             <small class="text-muted">This is pre-filled from your account information but can be edited.</small>
+                             <span asp-validation-for="FullName" class="text-danger"></span>
                          </div>
                         
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label asp-for="PhoneNumber" class="form-label"></label>
-                                    <input asp-for="PhoneNumber" class="form-control" placeholder="Phone Number" />
+                                    <label asp-for="PhoneNumber" class="form-label">Phone Number <span class="text-danger">*</span></label>
+                                    <input asp-for="PhoneNumber" class="form-control" placeholder="e.g., +27123456789 or 0123456789" />
                                     <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                                 </div>
                             </div>
@@ -57,7 +59,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label asp-for="AddressLine1" class="form-label"></label>
+                                    <label asp-for="AddressLine1" class="form-label">Address Line 1 <span class="text-danger">*</span></label>
                                     <input asp-for="AddressLine1" class="form-control" placeholder="Street address, P.O. box, company name, c/o" />
                                     <span asp-validation-for="AddressLine1" class="text-danger"></span>
                                 </div>
@@ -67,7 +69,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label asp-for="AddressLine2" class="form-label"></label>
+                                    <label asp-for="AddressLine2" class="form-label">Address Line 2 (Optional)</label>
                                     <input asp-for="AddressLine2" class="form-control" placeholder="Apartment, suite, unit, building, floor, etc." />
                                     <span asp-validation-for="AddressLine2" class="text-danger"></span>
                                 </div>
@@ -77,14 +79,14 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label asp-for="City" class="form-label"></label>
-                                    <input asp-for="City" class="form-control" />
+                                    <label asp-for="City" class="form-label">City <span class="text-danger">*</span></label>
+                                    <input asp-for="City" class="form-control" placeholder="Enter city name" />
                                     <span asp-validation-for="City" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label asp-for="Province" class="form-label"></label>
+                                    <label asp-for="Province" class="form-label">Province <span class="text-danger">*</span></label>
                                     <select asp-for="Province" class="form-select">
                                         <option value="">Select Province</option>
                                         <option value="Eastern Cape">Eastern Cape</option>
@@ -105,15 +107,17 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label asp-for="PostalCode" class="form-label"></label>
-                                    <input asp-for="PostalCode" class="form-control" />
+                                    <label asp-for="PostalCode" class="form-label">Postal Code <span class="text-danger">*</span></label>
+                                    <input asp-for="PostalCode" class="form-control" placeholder="e.g., 2000" maxlength="4" />
                                     <span asp-validation-for="PostalCode" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label asp-for="Country" class="form-label"></label>
-                                    <input asp-for="Country" class="form-control" readonly />
+                                    <label asp-for="Country" class="form-label">Country <span class="text-danger">*</span></label>
+                                    <input asp-for="Country" class="form-control" readonly style="background-color: #f8f9fa;" />
+                                    <input asp-for="Country" type="hidden" />
+                                    <span asp-validation-for="Country" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>

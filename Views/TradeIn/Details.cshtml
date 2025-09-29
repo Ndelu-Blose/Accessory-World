@@ -1,0 +1,326 @@
+@model AccessoryWorld.Models.TradeIn
+@{
+    ViewData["Title"] = "Trade-In Details";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-exchange-alt me-2"></i>Trade-In Details</h2>
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to My Trade-Ins
+                </a>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["InfoMessage"] != null)
+            {
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    @TempData["InfoMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">@Model.DeviceBrand @Model.DeviceModel</h5>
+                            <span class="badge @GetStatusBadgeClass(Model.Status) fs-6">@GetStatusDisplayText(Model.Status)</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Device Information</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Brand:</strong></td>
+                                            <td>@Model.DeviceBrand</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Model:</strong></td>
+                                            <td>@Model.DeviceModel</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Brand:</strong></td>
+                                            <td>@Model.DeviceBrand</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Condition:</strong></td>
+                                            <td>Grade @Model.ConditionGrade</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Request Information</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Case ID:</strong></td>
+                                            <td>@Model.PublicId</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Submitted:</strong></td>
+                                            <td>@Model.CreatedAt.ToString("MMM dd, yyyy 'at' HH:mm")</td>
+                                        </tr>
+                                        @if (Model.ReviewedAt.HasValue)
+                                {
+                                    <tr>
+                                        <td><strong>Last Updated:</strong></td>
+                                        <td>@Model.ReviewedAt.Value.ToString("MMM dd, yyyy 'at' HH:mm")</td>
+                                    </tr>
+                                }
+                                        @if (Model.ProposedValue.HasValue)
+                                        {
+                                            <tr>
+                                                <td><strong>Your Expected Value:</strong></td>
+                                                <td>R @Model.ProposedValue.Value.ToString("N2")</td>
+                                            </tr>
+                                        }
+                                    </table>
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(Model.Notes))
+                            {
+                                <div class="mt-3">
+                                    <h6>Notes</h6>
+                                    <p class="text-muted">@Model.Notes</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    @if (Model.ApprovedValue.HasValue && Model.Status == "OFFER_SENT")
+                    {
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0"><i class="fas fa-tag me-1"></i>Trade-In Offer</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <h2 class="text-success mb-3">R @Model.ApprovedValue.Value.ToString("N2")</h2>
+                                <p class="text-muted mb-4">We're offering this amount for your device based on our evaluation.</p>
+                                
+                                <div class="d-grid gap-2">
+                                    <form asp-action="Accept" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@Model.PublicId" />
+                                        <button type="submit" class="btn btn-success btn-lg w-100" 
+                                                onclick="return confirm('Are you sure you want to accept this offer? This action cannot be undone.')">
+                                            <i class="fas fa-check me-1"></i>Accept Offer
+                                        </button>
+                                    </form>
+                                    
+                                    <form asp-action="Reject" method="post" class="d-inline">
+                                        <input type="hidden" name="id" value="@Model.PublicId" />
+                                        <button type="submit" class="btn btn-outline-danger w-100"
+                                                onclick="return confirm('Are you sure you want to reject this offer?')">
+                                            <i class="fas fa-times me-1"></i>Reject Offer
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (Model.ApprovedValue.HasValue)
+                    {
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-tag me-1"></i>Final Value</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <h2 class="mb-3">R @Model.ApprovedValue.Value.ToString("N2")</h2>
+                                <p class="text-muted">
+                                    @if (Model.Status == "ACCEPTED")
+                                    {
+                                        <span class="text-success">Offer accepted! Credit has been issued to your account.</span>
+                                    }
+                                    else if (Model.Status == "REJECTED")
+                                    {
+                                        <span class="text-danger">Offer was rejected.</span>
+                                    }
+                                    else if (Model.Status == "COMPLETED")
+                                    {
+                                        <span class="text-success">Trade-in completed successfully!</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-clock me-1"></i>Status Timeline</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline">
+                                <div class="timeline-item @(GetTimelineStatus("SUBMITTED", Model.Status))">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6>Submitted</h6>
+                                        <small class="text-muted">@Model.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="timeline-item @(GetTimelineStatus("UNDER_REVIEW", Model.Status))">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6>Under Review</h6>
+                                        <small class="text-muted">Being evaluated by our team</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="timeline-item @(GetTimelineStatus("OFFER_SENT", Model.Status))">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6>Offer Sent</h6>
+                                        <small class="text-muted">Awaiting your response</small>
+                                    </div>
+                                </div>
+                                
+                                @if (Model.Status == "ACCEPTED" || Model.Status == "COMPLETED")
+                                {
+                                    <div class="timeline-item completed">
+                                        <div class="timeline-marker"></div>
+                                        <div class="timeline-content">
+                                            <h6>@(Model.Status == "COMPLETED" ? "Completed" : "Accepted")</h6>
+                                            <small class="text-muted">@Model.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                        </div>
+                                    </div>
+                                }
+                                else if (Model.Status == "REJECTED")
+                                {
+                                    <div class="timeline-item rejected">
+                                        <div class="timeline-marker"></div>
+                                        <div class="timeline-content">
+                                            <h6>Rejected</h6>
+                                            <small class="text-muted">@(Model.ReviewedAt?.ToString("MMM dd, yyyy") ?? Model.CreatedAt.ToString("MMM dd, yyyy"))</small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -23px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #dee2e6;
+    border: 2px solid #fff;
+}
+
+.timeline-item.completed .timeline-marker {
+    background: #28a745;
+}
+
+.timeline-item.active .timeline-marker {
+    background: #007bff;
+}
+
+.timeline-item.rejected .timeline-marker {
+    background: #dc3545;
+}
+
+.timeline-content h6 {
+    margin-bottom: 2px;
+    font-size: 0.9rem;
+}
+</style>
+
+@functions {
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "SUBMITTED" => "bg-info",
+            "UNDER_REVIEW" => "bg-warning",
+            "EVALUATED" => "bg-primary",
+            "OFFER_SENT" => "bg-success",
+            "ACCEPTED" => "bg-success",
+            "REJECTED" => "bg-danger",
+            "EXPIRED" => "bg-secondary",
+            "COMPLETED" => "bg-success",
+            "CANCELLED" => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusDisplayText(string status)
+    {
+        return status switch
+        {
+            "SUBMITTED" => "Submitted",
+            "UNDER_REVIEW" => "Under Review",
+            "EVALUATED" => "Evaluated",
+            "OFFER_SENT" => "Offer Sent",
+            "ACCEPTED" => "Accepted",
+            "REJECTED" => "Rejected",
+            "EXPIRED" => "Expired",
+            "COMPLETED" => "Completed",
+            "CANCELLED" => "Cancelled",
+            _ => status
+        };
+    }
+
+    private string GetTimelineStatus(string timelineStatus, string currentStatus)
+    {
+        var statusOrder = new[] { "SUBMITTED", "UNDER_REVIEW", "EVALUATED", "OFFER_SENT", "ACCEPTED", "COMPLETED" };
+        var timelineIndex = Array.IndexOf(statusOrder, timelineStatus);
+        var currentIndex = Array.IndexOf(statusOrder, currentStatus);
+
+        if (currentStatus == "REJECTED" && timelineStatus == "OFFER_SENT")
+            return "rejected";
+        
+        if (timelineIndex <= currentIndex)
+            return timelineIndex == currentIndex ? "active" : "completed";
+        
+        return "";
+    }
+}

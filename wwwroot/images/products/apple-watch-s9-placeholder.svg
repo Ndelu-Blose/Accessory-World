@@ -1,0 +1,10 @@
+<svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <rect width="500" height="500" fill="#f8f9fa"/>
+  <rect x="150" y="120" width="200" height="240" rx="50" fill="#e9ecef" stroke="#dee2e6" stroke-width="2"/>
+  <rect x="170" y="140" width="160" height="120" rx="20" fill="#6c757d"/>
+  <circle cx="250" cy="200" r="30" fill="#495057"/>
+  <rect x="240" y="100" width="20" height="20" rx="10" fill="#6c757d"/>
+  <rect x="240" y="380" width="20" height="20" rx="10" fill="#6c757d"/>
+  <text x="250" y="320" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#495057">Apple Watch S9</text>
+  <text x="250" y="350" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6c757d">Placeholder Image</text>
+</svg>

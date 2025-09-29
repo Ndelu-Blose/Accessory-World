@@ -22,24 +22,27 @@ namespace AccessoryWorld.Middleware
                 var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var sessionId = context.Session.Id;
                 
-                // Check if we need to merge guest cart with user cart
-                var cartMergedKey = $"cart_merged_{userId}";
-                if (!context.Session.Keys.Contains(cartMergedKey))
+                if (!string.IsNullOrEmpty(userId))
                 {
-                    try
+                    // Check if we need to merge guest cart with user cart
+                    var cartMergedKey = $"cart_merged_{userId}";
+                    if (!context.Session.Keys.Contains(cartMergedKey))
                     {
-                        // Merge guest cart with user cart
-                        await cartService.MergeGuestCartAsync(sessionId, userId);
+                        try
+                        {
+                            // Merge guest cart with user cart
+                            await cartService.MergeGuestCartAsync(sessionId, userId);
                         
                         // Mark as merged to avoid duplicate merges
                         context.Session.SetString(cartMergedKey, "true");
                         
                         _logger.LogInformation("Cart merged for user {UserId} from session {SessionId}", userId, sessionId);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to merge cart for user {UserId}", userId);
-                        // Don't throw - cart merge failure shouldn't break the request
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to merge cart for user {UserId}", userId);
+                            // Don't throw - cart merge failure shouldn't break the request
+                        }
                     }
                 }
             }

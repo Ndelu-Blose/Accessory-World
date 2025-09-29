@@ -86,15 +86,13 @@ namespace AccessoryWorld.Security
             }
         }
         
-        private async Task<bool> CheckRateLimit(HttpContext context)
+        private Task<bool> CheckRateLimit(HttpContext context)
         {
             // Simple in-memory rate limiting (in production, use Redis or similar)
             var clientIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
             var key = $"rate_limit_{clientIp}";
             
-            // This is a simplified implementation
-            // In production, implement proper distributed rate limiting
-            return true; // Allow all requests for now
+            return Task.FromResult(true); // Allow all requests for now - rate limiting disabled for development
         }
         
         private static bool IsBlockedUserAgent(string userAgent)

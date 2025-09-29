@@ -5,7 +5,7 @@ namespace AccessoryWorld.ViewModels
     public class ShippingCalculationRequest
     {
         [Required]
-        public int AddressId { get; set; }
+        public Guid AddressId { get; set; }
         
         [Required]
         public string FulfillmentMethod { get; set; } = "delivery";

@@ -13,13 +13,15 @@ namespace AccessoryWorld.Services
         private readonly ApplicationDbContext _context;
         private readonly ILogger<PayfastService> _logger;
         private readonly IPaymentValidationService _paymentValidationService;
+        private readonly IWebhookService _webhookService;
 
-        public PayfastService(IConfiguration configuration, ApplicationDbContext context, ILogger<PayfastService> logger, IPaymentValidationService paymentValidationService)
+        public PayfastService(IConfiguration configuration, ApplicationDbContext context, ILogger<PayfastService> logger, IPaymentValidationService paymentValidationService, IWebhookService webhookService)
         {
             _configuration = configuration;
             _context = context;
             _logger = logger;
             _paymentValidationService = paymentValidationService;
+            _webhookService = webhookService;
         }
 
         public PayfastPaymentRequest CreatePaymentRequest(Order order, string returnUrl, string cancelUrl, string notifyUrl)
@@ -101,12 +103,35 @@ namespace AccessoryWorld.Services
 
         public async Task<bool> ProcessPaymentNotificationAsync(Dictionary<string, string> payfastData)
         {
+            var pfPaymentId = payfastData.GetValueOrDefault("pf_payment_id", "");
+            var orderNumber = payfastData["m_payment_id"];
+            
+            // Use WebhookService for idempotency
+            var eventId = !string.IsNullOrEmpty(pfPaymentId) ? pfPaymentId : $"payfast_{orderNumber}_{DateTime.UtcNow:yyyyMMddHHmmss}";
+            
+            return await _webhookService.ProcessWebhookAsync(
+                eventId,
+                "PAYMENT_NOTIFICATION",
+                "PAYFAST",
+                payfastData,
+                async () => await ProcessPaymentNotificationInternalAsync(payfastData)
+            );
+        }
+
+        private async Task<bool> ProcessPaymentNotificationInternalAsync(Dictionary<string, string> payfastData)
+        {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 // Get order for validation
                 var orderNumber = payfastData["m_payment_id"];
                 var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderNumber == orderNumber);
+                
+                if (order == null)
+                {
+                    _logger.LogWarning("Order not found for payment validation: {OrderNumber}", orderNumber);
+                    return false;
+                }
                 
                 // Use PaymentValidationService for comprehensive validation
                 var validationResult = await _paymentValidationService.ValidatePaymentRequestAsync(order, "payfast");

@@ -8,6 +8,7 @@ using System.Text;
 namespace AccessoryWorld.Services
 {
     public class OrderService : IOrderService
+
     {
         private readonly ApplicationDbContext _context;
         private readonly ICartService _cartService;
@@ -23,11 +24,23 @@ namespace AccessoryWorld.Services
             _logger = logger;
         }
 
-        public async Task<Order> CreateOrderAsync(string userId, int shippingAddressId, string fulfillmentMethod, string? notes = null)
+        public async Task<Order> CreateOrderAsync(string userId, Guid shippingAddressId, string fulfillmentMethod, string? notes = null, decimal creditNoteAmount = 0)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                // Convert PublicId to internal Id for database operations
+                int? addressId = null;
+                if (shippingAddressId != Guid.Empty)
+                {
+                    var address = await _context.Addresses
+                        .FirstOrDefaultAsync(a => a.PublicId == shippingAddressId && a.UserId == userId);
+                    if (address == null)
+                    {
+                        throw new InvalidOperationException("Invalid shipping address");
+                    }
+                    addressId = address.Id;
+                }
                 // Get cart items
                 var cart = await _cartService.GetCartAsync(userId);
                 var cartItems = cart.Items;
@@ -50,19 +63,21 @@ namespace AccessoryWorld.Services
                 var subtotal = cartItems.Sum(item => item.Quantity * item.SKU.Price);
                 var taxAmount = subtotal * 0.15m; // 15% VAT
                 var shippingFee = fulfillmentMethod == "DELIVERY" ? (subtotal < 500 ? 50m : 0m) : 0m;
-                var total = subtotal + taxAmount + shippingFee;
+                var totalBeforeDiscount = subtotal + taxAmount + shippingFee;
+                var total = Math.Max(0, totalBeforeDiscount - creditNoteAmount);
 
                 // Create order
                 var order = new Order
                 {
                     OrderNumber = await GenerateOrderNumberAsync(),
                     UserId = userId,
-                    ShippingAddressId = shippingAddressId,
+                    ShippingAddressId = addressId ?? 0,
                     Status = "PENDING",
                     FulfilmentMethod = fulfillmentMethod,
                     SubTotal = subtotal,
                     TaxAmount = taxAmount,
                     ShippingFee = shippingFee,
+                    CreditNoteAmount = creditNoteAmount,
                     Total = total,
                     Notes = notes,
                     CreatedAt = DateTime.UtcNow,
@@ -200,12 +215,12 @@ namespace AccessoryWorld.Services
             }
         }
 
-        public async Task<decimal> CalculateOrderTotalAsync(List<CartItem> cartItems)
+        public Task<decimal> CalculateOrderTotalAsync(List<CartItem> cartItems)
         {
             var subtotal = cartItems.Sum(item => item.Quantity * item.SKU.Price);
             var taxAmount = subtotal * 0.15m; // 15% VAT
             var shippingFee = subtotal < 500 ? 50m : 0m; // Free shipping over R500
-            return subtotal + taxAmount + shippingFee;
+            return Task.FromResult(subtotal + taxAmount + shippingFee);
         }
 
         public async Task<string> GenerateOrderNumberAsync()

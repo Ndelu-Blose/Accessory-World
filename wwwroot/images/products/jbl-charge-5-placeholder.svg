@@ -1,0 +1,10 @@
+<svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <rect width="500" height="500" fill="#f8f9fa"/>
+  <rect x="100" y="180" width="300" height="140" rx="70" fill="#e9ecef" stroke="#dee2e6" stroke-width="2"/>
+  <circle cx="150" cy="250" r="30" fill="#6c757d"/>
+  <circle cx="250" cy="250" r="30" fill="#6c757d"/>
+  <circle cx="350" cy="250" r="30" fill="#6c757d"/>
+  <rect x="120" y="160" width="260" height="20" rx="10" fill="#6c757d"/>
+  <text x="250" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#495057">JBL Charge 5</text>
+  <text x="250" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6c757d">Placeholder Image</text>
+</svg>

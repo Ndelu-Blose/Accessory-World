@@ -1,0 +1,10 @@
+<svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <rect width="500" height="500" fill="#f8f9fa"/>
+  <path d="M100 250 Q250 150 400 250" stroke="#6c757d" stroke-width="8" fill="none"/>
+  <rect x="80" y="235" width="40" height="30" rx="5" fill="#495057"/>
+  <rect x="380" y="235" width="40" height="30" rx="5" fill="#495057"/>
+  <rect x="85" y="240" width="30" height="20" rx="3" fill="#e9ecef"/>
+  <rect x="385" y="240" width="30" height="20" rx="3" fill="#e9ecef"/>
+  <text x="250" y="350" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#495057">USB-C Cable</text>
+  <text x="250" y="380" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6c757d">Placeholder Image</text>
+</svg>

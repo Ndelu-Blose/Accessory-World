@@ -79,7 +79,7 @@ namespace AccessoryWorld.Controllers
         public async Task<IActionResult> Count()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId) || !User.Identity.IsAuthenticated)
+            if (string.IsNullOrEmpty(userId) || User.Identity?.IsAuthenticated != true)
                 return Json(new { count = 0 });
 
             var count = await _wishlistService.GetWishlistCountAsync(userId);
@@ -91,7 +91,7 @@ namespace AccessoryWorld.Controllers
         public async Task<IActionResult> IsInWishlist(int productId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId) || !User.Identity.IsAuthenticated)
+            if (string.IsNullOrEmpty(userId) || User.Identity?.IsAuthenticated != true)
                 return Json(new { isInWishlist = false });
 
             var isInWishlist = await _wishlistService.IsInWishlistAsync(userId, productId);

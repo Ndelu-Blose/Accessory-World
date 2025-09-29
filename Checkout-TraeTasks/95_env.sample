@@ -1,0 +1,9 @@
+\
+# Payfast / App Settings (example)
+PF_MERCHANT_ID=10000100
+PF_MERCHANT_KEY=46f0cd694581a
+PF_PASSPHRASE=yourpassphrase
+RETURN_URL=https://yourapp.com/payment/return
+CANCEL_URL=https://yourapp.com/payment/cancel
+NOTIFY_URL=https://yourapp.com/payment/itn
+CURRENCY=ZAR
