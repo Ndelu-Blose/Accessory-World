@@ -249,7 +249,7 @@ namespace AccessoryWorld.Services
                 {
                     EventType = "REDEEMED",
                     Amount = usedAmount,
-                    Timestamp = creditNote.RedeemedAt.Value,
+                    Timestamp = creditNote.RedeemedAt.Value.DateTime,
                     Description = $"Applied to order #{creditNote.ConsumedInOrderId}",
                     OrderId = creditNote.ConsumedInOrderId
                 });

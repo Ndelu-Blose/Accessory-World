@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.AI.Vision.ImageAnalysis" Version="1.0.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.5.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0" />
@@ -14,6 +16,13 @@
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.0" />
     <PackageReference Include="FluentValidation" Version="11.9.0" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="TraeAI-TradeIn-Advanced\**" />
+    <Content Remove="TraeAI-TradeIn-Advanced\**" />
+    <EmbeddedResource Remove="TraeAI-TradeIn-Advanced\**" />
+    <None Remove="TraeAI-TradeIn-Advanced\**" />
   </ItemGroup>
 
 </Project>

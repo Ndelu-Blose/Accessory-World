@@ -90,8 +90,8 @@ namespace AccessoryWorld.Models.Api
             ConditionGrade = tradeIn.ConditionGrade;
             EvaluationNotes = tradeIn.Notes;
             OfferExpiryDate = null; // TradeIn doesn't have ExpiresAt, only TradeInCase does
-            CreatedAt = tradeIn.CreatedAt;
-            UpdatedAt = tradeIn.CreatedAt; // TradeIn doesn't have UpdatedAt, using CreatedAt
+            CreatedAt = tradeIn.CreatedAt.DateTime;
+            UpdatedAt = tradeIn.CreatedAt.DateTime; // TradeIn doesn't have UpdatedAt, using CreatedAt
             AdditionalNotes = tradeIn.Notes;
             ContactEmail = string.Empty; // Not available in TradeIn model
             ContactPhone = string.Empty; // Not available in TradeIn model
@@ -170,8 +170,8 @@ namespace AccessoryWorld.Models.Api
             IssuedDate = creditNote.CreatedAt;
             ExpiryDate = creditNote.ExpiresAt;
             ConsumedInOrderId = creditNote.ConsumedInOrderId;
-            ConsumedAt = creditNote.RedeemedAt;
-            TradeInId = creditNote.TradeInId;
+            ConsumedAt = creditNote.RedeemedAt?.DateTime;
+            TradeInId = 0; // TradeInId removed from CreditNote model
         }
     }
 

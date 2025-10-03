@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using AccessoryWorld.Services;
 using AccessoryWorld.Models;
 using AccessoryWorld.Models.ViewModels;
+using AccessoryWorld.Services.Background;
 using Microsoft.AspNetCore.Hosting;
 using System.Security.Claims;
 
@@ -12,12 +13,18 @@ namespace AccessoryWorld.Controllers
     public class TradeInController : Controller
     {
         private readonly ITradeInService _tradeInService;
+        private readonly ITradeInQueue _tradeInQueue;
         private readonly ILogger<TradeInController> _logger;
         private readonly IWebHostEnvironment _env;
 
-        public TradeInController(ITradeInService tradeInService, ILogger<TradeInController> logger, IWebHostEnvironment env)
+        public TradeInController(
+            ITradeInService tradeInService, 
+            ITradeInQueue tradeInQueue,
+            ILogger<TradeInController> logger, 
+            IWebHostEnvironment env)
         {
             _tradeInService = tradeInService;
+            _tradeInQueue = tradeInQueue;
             _logger = logger;
             _env = env;
         }
@@ -44,6 +51,74 @@ namespace AccessoryWorld.Controllers
                 DeviceType = "",
                 Description = ""
             });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AcceptAiOffer(Guid id)
+        {
+            try
+            {
+                var tradeIn = await _tradeInService.GetTradeInByPublicIdAsync(id);
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                // Users can only accept their own trade-ins
+                if (tradeIn.CustomerId != userId)
+                    return Forbid();
+
+                // Validate that there's an AI offer to accept
+                if (string.IsNullOrEmpty(tradeIn.AutoGrade) || !tradeIn.AutoOfferAmount.HasValue)
+                {
+                    TempData["ErrorMessage"] = "No AI offer available to accept.";
+                    return RedirectToRoute("TradeIn_Details_PublicId", new { publicId = id });
+                }
+
+                // Accept the AI offer by creating a credit note with store credit restrictions
+                var creditNote = await _tradeInService.AcceptAiOfferAsync(tradeIn.Id);
+                TempData["SuccessMessage"] = $"AI trade-in offer accepted! Store credit {creditNote.CreditNoteCode} has been issued to your account.";
+                
+                return RedirectToRoute("TradeIn_Details_PublicId", new { publicId = id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error accepting AI trade-in offer for {TradeInId}", id);
+                TempData["ErrorMessage"] = "An error occurred while accepting the AI offer. Please try again.";
+                return RedirectToRoute("TradeIn_Details_PublicId", new { publicId = id });
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectAiOffer(Guid id)
+        {
+            try
+            {
+                var tradeIn = await _tradeInService.GetTradeInByPublicIdAsync(id);
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                // Users can only reject their own trade-ins
+                if (tradeIn.CustomerId != userId)
+                    return Forbid();
+
+                // Validate that there's an AI offer to reject
+                if (string.IsNullOrEmpty(tradeIn.AutoGrade) || !tradeIn.AutoOfferAmount.HasValue)
+                {
+                    TempData["ErrorMessage"] = "No AI offer available to reject.";
+                    return RedirectToRoute("TradeIn_Details_PublicId", new { publicId = id });
+                }
+
+                // Reject the AI offer and request manual review
+                await _tradeInService.RejectAiOfferAsync(tradeIn.Id, "Customer rejected AI offer - requesting manual review");
+                TempData["InfoMessage"] = "AI offer rejected. Your trade-in has been queued for manual review by our team.";
+                
+                return RedirectToRoute("TradeIn_Details_PublicId", new { publicId = id });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error rejecting AI trade-in offer for {TradeInId}", id);
+                TempData["ErrorMessage"] = "An error occurred while rejecting the AI offer. Please try again.";
+                return RedirectToRoute("TradeIn_Details_PublicId", new { publicId = id });
+            }
         }
 
         [HttpPost]
@@ -142,8 +217,8 @@ namespace AccessoryWorld.Controllers
                     Description   = vm.Description,
                     Photos        = savedPhotos,
                     // Include these if your service accepts them:
-                    ConditionGrade = vm.ConditionGrade,
-                    ProposedValue  = vm.ProposedValue
+                    ConditionGrade = vm.ConditionGrade ?? string.Empty,
+                    ProposedValue  = vm.ProposedValue ?? 0
                 };
 
                 _logger.LogInformation("TradeIn Create - Calling service with request: {ServiceRequest}", 
@@ -153,10 +228,22 @@ namespace AccessoryWorld.Controllers
 
                 _logger.LogInformation("Trade-in submitted successfully by {UserId} for {Brand} {Model} - TradeIn ID: {TradeInId}", 
                     userId, vm.DeviceBrand, vm.DeviceModel, tradeIn?.Id);
-                TempData["SuccessMessage"] = $"Trade-in request submitted successfully! Your case number is: {tradeIn.PublicId}";
-
-                // PRG pattern only on success
-                return RedirectToAction("Details", new { id = tradeIn.PublicId });
+                
+                if (tradeIn != null)
+                {
+                    // Enqueue for AI assessment processing
+                    await _tradeInQueue.EnqueueAsync(tradeIn.Id, priority: 1);
+                    _logger.LogInformation("TradeIn {TradeInId} enqueued for AI assessment", tradeIn.Id);
+                    
+                    TempData["SuccessMessage"] = $"Trade-in request submitted successfully! Your case number is: {tradeIn.PublicId}. AI assessment is in progress.";
+                    // PRG pattern only on success - redirect to the GUID route by name and parameter "publicId"
+                    return RedirectToRoute("TradeIn_Details_PublicId", new { publicId = tradeIn.PublicId });
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = "Trade-in request submitted successfully!";
+                    return RedirectToAction("Index");
+                }
             }
             catch (Exception ex)
             {
@@ -166,24 +253,55 @@ namespace AccessoryWorld.Controllers
             }
         }
 
-        public async Task<IActionResult> Details(Guid id)
+        // ✅ GUID-based Details route (named for easy RedirectToRoute)
+        [HttpGet("Details/{publicId:guid}", Name = "TradeIn_Details_PublicId")]
+        public async Task<IActionResult> DetailsByPublicId(Guid publicId)
         {
             try
             {
-                var tradeIn = await _tradeInService.GetTradeInByPublicIdAsync(id);
+                var tradeIn = await _tradeInService.GetTradeInByPublicIdAsync(publicId);
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 // Users can only see their own trade-ins
                 if (tradeIn.CustomerId != userId)
                     return Forbid();
 
-                return View(tradeIn);
+                return View("Details", tradeIn);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving trade-in details");
+                _logger.LogError(ex, "Error retrieving trade-in details for PublicId {PublicId}", publicId);
+                TempData["Error"] = "Trade-in not found or no longer available.";
+                return RedirectToAction("Index");
+            }
+        }
+
+        // (Optional) keep an int variant if you use it in admin:
+        [HttpGet("DetailsById/{id:int}")]
+        public async Task<IActionResult> DetailsById(int id)
+        {
+            try
+            {
+                var tradeIn = await _tradeInService.GetTradeInByIdAsync(id);
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                // Users can only see their own trade-ins
+                if (tradeIn.CustomerId != userId)
+                    return Forbid();
+
+                return View("Details", tradeIn);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving trade-in details for Id {Id}", id);
                 return NotFound();
             }
+        }
+
+        // Legacy Details method for backward compatibility
+        public async Task<IActionResult> Details(Guid id)
+        {
+            return await DetailsByPublicId(id);
         }
 
         [HttpPost]
@@ -202,13 +320,13 @@ namespace AccessoryWorld.Controllers
                 var creditNote = await _tradeInService.AcceptTradeInAsync(tradeIn.Id);
                 TempData["SuccessMessage"] = $"Trade-in offer accepted! Credit note {creditNote.CreditNoteCode} has been issued to your account.";
                 
-                return RedirectToAction("Details", new { id });
+                return RedirectToRoute("TradeIn_Details_PublicId", new { publicId = id });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error accepting trade-in offer");
                 TempData["ErrorMessage"] = "An error occurred while accepting the trade-in offer. Please try again.";
-                return RedirectToAction("Details", new { id });
+                return RedirectToRoute("TradeIn_Details_PublicId", new { publicId = id });
             }
         }
 
@@ -228,13 +346,13 @@ namespace AccessoryWorld.Controllers
                 await _tradeInService.UpdateTradeInStatusAsync(tradeIn.Id, "REJECTED");
                 TempData["InfoMessage"] = "Trade-in offer has been rejected.";
                 
-                return RedirectToAction("Details", new { id });
+                return RedirectToRoute("TradeIn_Details_PublicId", new { publicId = id });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error rejecting trade-in offer");
                 TempData["ErrorMessage"] = "An error occurred while rejecting the trade-in offer. Please try again.";
-                return RedirectToAction("Details", new { id });
+                return RedirectToRoute("TradeIn_Details_PublicId", new { publicId = id });
             }
         }
     }

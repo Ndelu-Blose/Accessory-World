@@ -22,13 +22,13 @@ namespace AccessoryWorld.Models
         public string DeviceModel { get; set; } = string.Empty;
         
         [MaxLength(64)]
-        public string? DeviceType { get; set; }
+        public string? DeviceType { get; set; }    // <— NEW
         
         [MaxLength(32)]
         public string? IMEI { get; set; }
         
         [Column(TypeName = "nvarchar(max)")]
-        public string? Description { get; set; }
+        public string? Description { get; set; }   // <— NEW
         
         [Required]
         [MaxLength(2)]
@@ -51,14 +51,45 @@ namespace AccessoryWorld.Models
         [Column(TypeName = "nvarchar(max)")]
         public string? Notes { get; set; }
         
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        
         public DateTime? ReviewedAt { get; set; }
         
         public string? ApprovedBy { get; set; }
         
+        // ===== AI Assessment Fields =====
+        [MaxLength(64)]
+        public string? AiVendor { get; set; }          // e.g., "TraeAI"
+
+        [MaxLength(32)]
+        public string? AiVersion { get; set; }         // e.g., "v1.3.2"
+
+        [Column(TypeName = "nvarchar(max)")]
+        public string? AiAssessmentJson { get; set; }  // raw detection + reasons
+
+        public float? AiConfidence { get; set; }       // 0..1
+
+        [MaxLength(2)]
+        public string? AutoGrade { get; set; }         // A/B/C/D from AI
+
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? AutoOfferAmount { get; set; }  // ZAR
+
+        [Column(TypeName = "nvarchar(max)")]
+        public string? AutoOfferBreakdownJson { get; set; } // pricing calc details
+
+        public int AiRetryCount { get; set; } = 0;
+
         [Timestamp]
-        public byte[] RowVersion { get; set; } = new byte[0];
+        public byte[] RowVersion { get; set; } = new byte[0];        // <— Concurrency token
+
+        // Audit / lifecycle
+        public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset? AssessedAt { get; set; }
+        public DateTimeOffset? UserAcceptedAt { get; set; }
+        public DateTimeOffset? AdminApprovedAt { get; set; }
+        public DateTimeOffset? CreditIssuedAt { get; set; }
+
+        // Optional relation to CreditNote
+        public int? CreditNoteId { get; set; }
         
         // Navigation properties
         public virtual ApplicationUser Customer { get; set; } = null!;
@@ -76,6 +107,8 @@ namespace AccessoryWorld.Models
         [Required]
         public string UserId { get; set; } = string.Empty;
         
+        public string? ApplicationUserId { get; set; }
+        
         public int? TradeInCaseId { get; set; }
         
         public int? ConsumedInOrderId { get; set; }
@@ -84,8 +117,6 @@ namespace AccessoryWorld.Models
         [MaxLength(20)]
         public string CreditNoteCode { get; set; } = string.Empty;
         
-        [Required]
-        public int TradeInId { get; set; }
         
         [Required]
         [Column(TypeName = "decimal(18,2)")]
@@ -99,17 +130,22 @@ namespace AccessoryWorld.Models
         [MaxLength(32)]
         public string Status { get; set; } = string.Empty;
         
+        // Store credit enforcement flags
+        public bool StoreCreditOnly { get; set; } = true;
+        
+        public bool NonWithdrawable { get; set; } = true;
+        
         [Required]
         public DateTime ExpiresAt { get; set; }
         
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         
-        public DateTime? RedeemedAt { get; set; }
+        public DateTimeOffset? RedeemedAt { get; set; }
         
         public int? RedeemedOrderId { get; set; }
         
         [Timestamp]
-        public byte[] RowVersion { get; set; } = new byte[0];
+        public byte[]? RowVersion { get; set; }
         
         // Navigation properties
         public virtual ApplicationUser User { get; set; } = null!;

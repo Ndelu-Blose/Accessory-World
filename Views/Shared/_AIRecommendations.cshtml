@@ -1,0 +1,283 @@
+@model List<AccessoryWorld.DTOs.AI.RecommendedProduct>
+
+@if (Model != null && Model.Any())
+{
+    <div class="ai-recommendations-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h3 class="section-title">
+                        <i class="fas fa-robot me-2"></i>
+                        Recommended for You
+                        <small class="text-muted">Powered by AI</small>
+                    </h3>
+                </div>
+            </div>
+            
+            <div class="row">
+                @foreach (var product in Model)
+                {
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                        <div class="card product-card h-100 recommendation-card" data-product-id="@product.ProductId">
+                            <div class="position-relative">
+                                @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                {
+                                    <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name" style="height: 200px; object-fit: cover;">
+                                }
+                                else
+                                {
+                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                        <i class="fas fa-image fa-3x text-muted"></i>
+                                    </div>
+                                }
+                                
+                                @if (product.IsOnSale)
+                                {
+                                    <span class="badge bg-danger position-absolute top-0 start-0 m-2">Sale</span>
+                                }
+                                @if (product.IsNew)
+                                {
+                                    <span class="badge bg-success position-absolute top-0 end-0 m-2">New</span>
+                                }
+                                @if (product.IsBestSeller)
+                                {
+                                    <span class="badge bg-warning position-absolute top-0 start-50 translate-middle-x m-2">Best Seller</span>
+                                }
+                                
+                                <!-- AI Recommendation Score -->
+                                <div class="position-absolute bottom-0 end-0 m-2">
+                                    <span class="badge bg-primary" title="AI Recommendation Score: @(product.RecommendationScore.ToString("P0"))">
+                                        @(product.RecommendationScore.ToString("P0"))
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title text-truncate" title="@product.Name">@product.Name</h6>
+                                
+                                <div class="mb-2">
+                                    <small class="text-muted">@product.Brand</small>
+                                    <br>
+                                    <small class="text-muted">@product.Category</small>
+                                </div>
+                                
+                                <div class="price-section mb-2">
+                                    @if (product.IsOnSale && product.SalePrice.HasValue)
+                                    {
+                                        <span class="h5 text-danger">R @product.SalePrice.Value.ToString("N2")</span>
+                                        <small class="text-muted text-decoration-line-through ms-1">R @product.Price.ToString("N2")</small>
+                                    }
+                                    else
+                                    {
+                                        <span class="h5">R @product.Price.ToString("N2")</span>
+                                    }
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(product.Reason))
+                                {
+                                    <div class="recommendation-reason mb-2">
+                                        <small class="text-info">
+                                            <i class="fas fa-lightbulb me-1"></i>
+                                            @product.Reason
+                                        </small>
+                                    </div>
+                                }
+                                
+                                <div class="mt-auto">
+                                    @if (product.IsInStock)
+                                    {
+                                        <button class="btn btn-primary btn-sm w-100 add-to-cart-btn" 
+                                                data-product-id="@product.ProductId"
+                                                data-sku-id="@product.ProductId">
+                                            <i class="fas fa-shopping-cart me-1"></i>
+                                            Add to Cart
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+                                            <i class="fas fa-times me-1"></i>
+                                            Out of Stock
+                                        </button>
+                                    }
+                                    
+                                    <div class="d-flex justify-content-between mt-2">
+                                        <button class="btn btn-outline-primary btn-sm flex-fill me-1 view-details-btn" 
+                                                data-product-id="@product.ProductId">
+                                            <i class="fas fa-eye me-1"></i>
+                                            View
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm flex-fill wishlist-btn" 
+                                                data-product-id="@product.ProductId">
+                                            <i class="fas fa-heart me-1"></i>
+                                            Wishlist
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-12 text-center">
+                    <button class="btn btn-outline-primary" id="refresh-recommendations">
+                        <i class="fas fa-sync-alt me-1"></i>
+                        Refresh Recommendations
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+.ai-recommendations-section {
+    margin: 2rem 0;
+    padding: 1.5rem 0;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+}
+
+.section-title {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.recommendation-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.recommendation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.recommendation-reason {
+    background: rgba(13, 110, 253, 0.1);
+    padding: 0.5rem;
+    border-radius: 5px;
+    border-left: 3px solid #0d6efd;
+}
+
+.price-section {
+    font-weight: 600;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+@@media (max-width: 768px) {
+    .ai-recommendations-section {
+        margin: 1rem 0;
+        padding: 1rem 0;
+    }
+    
+    .recommendation-card .card-img-top {
+        height: 150px !important;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add to cart functionality
+    document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const skuId = this.dataset.skuId;
+            
+            // Track recommendation click
+            trackRecommendationAction(productId, 'CLICKED');
+            
+            // Add to cart logic (implement based on your existing cart system)
+            addToCart(productId, skuId);
+        });
+    });
+    
+    // View details functionality
+    document.querySelectorAll('.view-details-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            
+            // Track recommendation click
+            trackRecommendationAction(productId, 'CLICKED');
+            
+            // Navigate to product details
+            window.location.href = `/Products/Details/${productId}`;
+        });
+    });
+    
+    // Wishlist functionality
+    document.querySelectorAll('.wishlist-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            
+            // Track recommendation action
+            trackRecommendationAction(productId, 'LIKED');
+            
+            // Add to wishlist logic (implement based on your existing wishlist system)
+            addToWishlist(productId);
+        });
+    });
+    
+    // Refresh recommendations
+    document.getElementById('refresh-recommendations')?.addEventListener('click', function() {
+        loadRecommendations();
+    });
+    
+    // Track recommendation actions
+    function trackRecommendationAction(productId, actionType) {
+        fetch('/api/ai/recommendations/behavior', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+            },
+            body: JSON.stringify({
+                productId: parseInt(productId),
+                actionType: actionType,
+                sessionId: getSessionId(),
+                deviceType: getDeviceType(),
+                userAgent: navigator.userAgent
+            })
+        }).catch(error => console.error('Error tracking recommendation action:', error));
+    }
+    
+    // Helper functions
+    function getSessionId() {
+        return document.querySelector('meta[name="session-id"]')?.content || 
+               Math.random().toString(36).substring(2, 15);
+    }
+    
+    function getDeviceType() {
+        const width = window.innerWidth;
+        if (width < 768) return 'MOBILE';
+        if (width < 1024) return 'TABLET';
+        return 'DESKTOP';
+    }
+    
+    function addToCart(productId, skuId) {
+        // Implement your existing add to cart logic
+        console.log('Adding to cart:', productId, skuId);
+        // You can integrate with your existing cart service here
+    }
+    
+    function addToWishlist(productId) {
+        // Implement your existing wishlist logic
+        console.log('Adding to wishlist:', productId);
+        // You can integrate with your existing wishlist service here
+    }
+    
+    function loadRecommendations() {
+        // Implement recommendation loading logic
+        console.log('Loading recommendations...');
+        // You can make an AJAX call to load new recommendations here
+    }
+});
+</script>

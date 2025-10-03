@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using AccessoryWorld.Models;
+using AccessoryWorld.Models.AI;
 
 namespace AccessoryWorld.Data
 {
@@ -34,6 +35,9 @@ namespace AccessoryWorld.Data
         public DbSet<TradeInImage> TradeInImages { get; set; } = null!;
         public DbSet<TradeInEvaluation> TradeInEvaluations { get; set; } = null!;
         public DbSet<DeviceModel> DeviceModels { get; set; } = null!;
+        public DbSet<DeviceModelCatalog> DeviceModelCatalogs { get; set; } = null!;
+        public DbSet<DeviceBasePrice> DeviceBasePrices { get; set; } = null!;
+        public DbSet<PriceAdjustmentRule> PriceAdjustmentRules { get; set; } = null!;
         public DbSet<AuditLog> AuditLogs { get; set; } = null!;
         public DbSet<Role> CustomRoles { get; set; } = null!;
         public DbSet<Permission> Permissions { get; set; } = null!;
@@ -47,6 +51,13 @@ namespace AccessoryWorld.Data
         public DbSet<StockLock> StockLocks { get; set; } = null!;
         public DbSet<CreditNoteLock> CreditNoteLocks { get; set; } = null!;
         public DbSet<WebhookEvent> WebhookEvents { get; set; } = null!;
+        
+        // AI Recommendation System
+        public DbSet<UserBehavior> UserBehaviors { get; set; } = null!;
+        public DbSet<RecommendationModel> RecommendationModels { get; set; } = null!;
+        public DbSet<RecommendationFeedback> RecommendationFeedbacks { get; set; } = null!;
+        public DbSet<ProductSimilarity> ProductSimilarities { get; set; } = null!;
+        public DbSet<UserProfile> UserProfiles { get; set; } = null!;
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -221,6 +232,7 @@ namespace AccessoryWorld.Data
                 .WithMany()
                 .HasForeignKey(cn => cn.ConsumedInOrderId)
                 .OnDelete(DeleteBehavior.SetNull);
+            
             
             // User -> RMA (One-to-Many)
             modelBuilder.Entity<RMA>()
@@ -452,7 +464,7 @@ namespace AccessoryWorld.Data
                 entity.Property(e => e.ProposedValue).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.ApprovedValue).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.Notes).HasColumnType("nvarchar(max)");
-                entity.Property(e => e.CreatedAt).IsRequired().HasDefaultValueSql("SYSUTCDATETIME()");
+                entity.Property(e => e.CreatedAt).IsRequired().HasDefaultValueSql("SYSUTCDATETIME()").HasColumnType("datetimeoffset");
                 entity.Property(e => e.RowVersion).IsRowVersion();
                 
                 // Indexes
@@ -493,8 +505,6 @@ namespace AccessoryWorld.Data
                       .IsRequired()
                       .HasMaxLength(450);
 
-                entity.Property(e => e.TradeInId)
-                      .IsRequired(); // FK to TradeIn (1:1)
 
                 entity.Property(e => e.TradeInCaseId);     // nullable
                 entity.Property(e => e.ConsumedInOrderId); // nullable
@@ -527,7 +537,6 @@ namespace AccessoryWorld.Data
                 entity.HasIndex(e => e.CreditNoteCode).IsUnique();
                 entity.HasIndex(e => new { e.UserId, e.Status });
                 // One CreditNote per TradeIn
-                entity.HasIndex(e => e.TradeInId).IsUnique();
 
                 // Relationships
 
@@ -555,7 +564,7 @@ namespace AccessoryWorld.Data
             {
                 entity.HasOne(t => t.CreditNote)
                       .WithOne()                                 // CreditNote has no nav back to TradeIn
-                      .HasForeignKey<CreditNote>(cn => cn.TradeInId)
+                      .HasForeignKey<CreditNote>(cn => cn.Id)    // Use CreditNote.Id as the foreign key
                       .OnDelete(DeleteBehavior.Restrict);
             });
             
@@ -617,7 +626,7 @@ namespace AccessoryWorld.Data
                 
                 // Relationships
                 entity.HasOne(e => e.SKU)
-                    .WithMany()
+                    .WithMany(s => s.StockMovements)
                     .HasForeignKey(e => e.SKUId)
                     .OnDelete(DeleteBehavior.Restrict);
                     
@@ -748,6 +757,213 @@ namespace AccessoryWorld.Data
             {
                 entity.Property(e => e.ShippingCost).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.TaxRate).HasColumnType("decimal(18,4)");
+            });
+
+            // AI Recommendation System Configuration
+            ConfigureAIRecommendationModels(modelBuilder);
+
+            // DeviceModelCatalog configuration
+            modelBuilder.Entity<DeviceModelCatalog>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Brand).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Model).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.DeviceType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.ReleaseYear).IsRequired();
+                entity.Property(e => e.StorageGb);
+                
+                // Unique index for Brand + Model + DeviceType
+                entity.HasIndex(e => new { e.Brand, e.Model, e.DeviceType }).IsUnique();
+            });
+
+            // DeviceBasePrice configuration
+            modelBuilder.Entity<DeviceBasePrice>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.DeviceModelCatalogId).IsRequired();
+                entity.Property(e => e.BasePrice).IsRequired().HasColumnType("decimal(18,2)");
+                entity.Property(e => e.AsOf).IsRequired().HasDefaultValueSql("SYSUTCDATETIME()");
+                
+                // Relationship
+                entity.HasOne(e => e.DeviceModel)
+                    .WithMany(d => d.BasePrices)
+                    .HasForeignKey(e => e.DeviceModelCatalogId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                    
+                // Index
+                entity.HasIndex(e => e.DeviceModelCatalogId);
+            });
+
+            // PriceAdjustmentRule configuration
+            modelBuilder.Entity<PriceAdjustmentRule>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Code).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Multiplier).IsRequired().HasColumnType("decimal(5,4)");
+                entity.Property(e => e.FlatDeduction).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.AppliesTo).HasMaxLength(100).HasDefaultValue("ANY");
+                entity.Property(e => e.Description).HasMaxLength(500);
+                entity.Property(e => e.IsActive).HasDefaultValue(true);
+                
+                // Index
+                entity.HasIndex(e => e.Code);
+                entity.HasIndex(e => e.IsActive);
+            });
+        }
+
+        private void ConfigureAIRecommendationModels(ModelBuilder modelBuilder)
+        {
+            // UserBehavior configuration
+            modelBuilder.Entity<UserBehavior>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+                entity.Property(e => e.ProductId).IsRequired();
+                entity.Property(e => e.ActionType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.SearchQuery).HasMaxLength(100);
+                entity.Property(e => e.Category).HasMaxLength(50);
+                entity.Property(e => e.Brand).HasMaxLength(50);
+                entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.Quantity);
+                entity.Property(e => e.Timestamp).IsRequired().HasDefaultValueSql("SYSUTCDATETIME()");
+                entity.Property(e => e.SessionId).HasMaxLength(500);
+                entity.Property(e => e.DeviceType).HasMaxLength(50);
+                entity.Property(e => e.UserAgent).HasMaxLength(100);
+
+                // Relationships
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Product)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Indexes
+                entity.HasIndex(e => new { e.UserId, e.Timestamp });
+                entity.HasIndex(e => new { e.ProductId, e.ActionType });
+                entity.HasIndex(e => e.SessionId);
+                entity.HasIndex(e => e.ActionType);
+            });
+
+            // RecommendationModel configuration
+            modelBuilder.Entity<RecommendationModel>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+                entity.Property(e => e.ProductId).IsRequired();
+                entity.Property(e => e.AlgorithmType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Score).IsRequired();
+                entity.Property(e => e.Rank).IsRequired();
+                entity.Property(e => e.Reason).HasMaxLength(500);
+                entity.Property(e => e.GeneratedAt).IsRequired().HasDefaultValueSql("SYSUTCDATETIME()");
+                entity.Property(e => e.ExpiresAt);
+                entity.Property(e => e.IsActive).IsRequired().HasDefaultValue(true);
+                entity.Property(e => e.TestGroup).HasMaxLength(50);
+                entity.Property(e => e.TestVariant).HasMaxLength(50);
+
+                // Relationships
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Product)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Indexes
+                entity.HasIndex(e => new { e.UserId, e.GeneratedAt });
+                entity.HasIndex(e => new { e.AlgorithmType, e.GeneratedAt });
+                entity.HasIndex(e => e.IsActive);
+                entity.HasIndex(e => e.TestGroup);
+            });
+
+            // RecommendationFeedback configuration
+            modelBuilder.Entity<RecommendationFeedback>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.RecommendationId).IsRequired();
+                entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+                entity.Property(e => e.FeedbackType).IsRequired().HasMaxLength(20);
+                entity.Property(e => e.Timestamp).IsRequired().HasDefaultValueSql("SYSUTCDATETIME()");
+                entity.Property(e => e.Comment).HasMaxLength(500);
+
+                // Relationships
+                entity.HasOne(e => e.Recommendation)
+                    .WithMany()
+                    .HasForeignKey(e => e.RecommendationId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                // Indexes
+                entity.HasIndex(e => new { e.RecommendationId, e.FeedbackType });
+                entity.HasIndex(e => e.UserId);
+                entity.HasIndex(e => e.Timestamp);
+            });
+
+            // ProductSimilarity configuration
+            modelBuilder.Entity<ProductSimilarity>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ProductId1).IsRequired();
+                entity.Property(e => e.ProductId2).IsRequired();
+                entity.Property(e => e.SimilarityScore).IsRequired();
+                entity.Property(e => e.SimilarityType).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.CalculatedAt).IsRequired().HasDefaultValueSql("SYSUTCDATETIME()");
+                entity.Property(e => e.ExpiresAt);
+
+                // Relationships
+                entity.HasOne(e => e.Product1)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProductId1)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(e => e.Product2)
+                    .WithMany()
+                    .HasForeignKey(e => e.ProductId2)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                // Indexes
+                entity.HasIndex(e => new { e.ProductId1, e.SimilarityType });
+                entity.HasIndex(e => new { e.ProductId2, e.SimilarityType });
+                entity.HasIndex(e => e.SimilarityType);
+                entity.HasIndex(e => e.CalculatedAt);
+
+                // Unique constraint to prevent duplicate similarities
+                entity.HasIndex(e => new { e.ProductId1, e.ProductId2, e.SimilarityType }).IsUnique();
+            });
+
+            // UserProfile configuration
+            modelBuilder.Entity<UserProfile>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
+                entity.Property(e => e.PreferredCategories).HasMaxLength(500);
+                entity.Property(e => e.PreferredBrands).HasMaxLength(500);
+                entity.Property(e => e.PriceRange).HasMaxLength(100);
+                entity.Property(e => e.ShoppingStyle).HasMaxLength(50);
+                entity.Property(e => e.AverageOrderValue).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.PurchaseFrequency);
+                entity.Property(e => e.PreferredDeviceType).HasMaxLength(50);
+                entity.Property(e => e.LastUpdated).IsRequired().HasDefaultValueSql("SYSUTCDATETIME()");
+
+                // Relationships
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Indexes
+                entity.HasIndex(e => e.UserId).IsUnique();
+                entity.HasIndex(e => e.LastUpdated);
             });
         }
     }

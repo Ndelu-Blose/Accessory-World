@@ -333,7 +333,7 @@ namespace AccessoryWorld.Controllers.Api
             ProposedValue = tradeIn.ProposedValue;
             ApprovedValue = tradeIn.ApprovedValue;
             Notes = tradeIn.Notes;
-            CreatedAt = tradeIn.CreatedAt;
+            CreatedAt = tradeIn.CreatedAt.DateTime;
             ReviewedAt = tradeIn.ReviewedAt;
             ApprovedByUserEmail = tradeIn.ApprovedByUser?.Email;
             CreditNote = tradeIn.CreditNote != null ? new CreditNoteResponse(tradeIn.CreditNote) : null;
@@ -359,7 +359,7 @@ namespace AccessoryWorld.Controllers.Api
             Status = creditNote.Status;
             ExpiresAt = creditNote.ExpiresAt;
             CreatedAt = creditNote.CreatedAt;
-            RedeemedAt = creditNote.RedeemedAt;
+            RedeemedAt = creditNote.RedeemedAt?.DateTime;
             ConsumedInOrderId = creditNote.ConsumedInOrderId;
         }
     }

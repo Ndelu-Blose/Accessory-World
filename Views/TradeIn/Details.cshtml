@@ -109,15 +109,115 @@
                 </div>
 
                 <div class="col-lg-4">
+                    @* AI Assessment Section *@
+                    @if (!string.IsNullOrEmpty(Model.AutoGrade) && Model.AutoOfferAmount.HasValue)
+                    {
+                        <div class="card border-primary mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-robot me-1"></i>AI Assessment</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center mb-3">
+                                    <div class="col-6">
+                                        <h6 class="text-muted mb-1">Grade</h6>
+                                        <span class="badge @GetGradeBadgeClass(Model.AutoGrade) fs-5">@Model.AutoGrade</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <h6 class="text-muted mb-1">Confidence</h6>
+                                        <span class="text-primary fw-bold">@((Model.AiConfidence ?? 0).ToString("P0"))</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center mb-3">
+                                    <h3 class="text-primary mb-2">R @Model.AutoOfferAmount.Value.ToString("N2")</h3>
+                                    <small class="text-muted">AI-generated offer</small>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(Model.AutoOfferBreakdownJson))
+                                {
+                                    <div class="accordion" id="breakdownAccordion">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#breakdownCollapse">
+                                                    <i class="fas fa-calculator me-2"></i>View Pricing Breakdown
+                                                </button>
+                                            </h2>
+                                            <div id="breakdownCollapse" class="accordion-collapse collapse" data-bs-parent="#breakdownAccordion">
+                                                <div class="accordion-body">
+                                                    <div id="pricing-breakdown">
+                                                        @* Breakdown will be populated by JavaScript *@
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                @if (Model.Status == "AI_OFFER_PENDING")
+                                {
+                                    <div class="d-grid gap-2 mt-3">
+                                        <form asp-action="AcceptAiOffer" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@Model.PublicId" />
+                                            <button type="submit" class="btn btn-success btn-lg w-100" 
+                                                    onclick="return confirm('Accept this AI-generated offer? You will receive store credit that can be used for purchases.')">
+                                                <i class="fas fa-check me-1"></i>Accept AI Offer
+                                            </button>
+                                        </form>
+                                        
+                                        <form asp-action="RejectAiOffer" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@Model.PublicId" />
+                                            <button type="submit" class="btn btn-outline-danger w-100"
+                                                    onclick="return confirm('Reject this offer? Your trade-in will be queued for manual review.')">
+                                                <i class="fas fa-times me-1"></i>Request Manual Review
+                                            </button>
+                                        </form>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else if (Model.Status == "SUBMITTED" || Model.Status == "AI_PROCESSING")
+                    {
+                        <div class="card border-info mb-3" id="ai-processing-card">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="fas fa-cog fa-spin me-1"></i><span id="ai-status-title">AI Analysis in Progress</span></h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="spinner-border text-info mb-3" role="status" id="ai-spinner">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="text-muted mb-0" id="ai-status-message">Our AI is analyzing your device photos to provide an instant assessment. This usually takes 1-2 minutes.</p>
+                                <small class="text-muted" id="ai-status-detail">Real-time status updates enabled.</small>
+                                <div class="mt-2">
+                                    <small class="text-muted">Last updated: <span id="last-updated">@DateTime.Now.ToString("HH:mm:ss")</span></small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (Model.Status == "AI_ERROR")
+                    {
+                        <div class="card border-warning mb-3">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-1"></i>AI Analysis Unavailable</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <i class="fas fa-user-tie fa-3x text-warning mb-3"></i>
+                                <p class="text-muted mb-0">Our automated assessment couldn't be completed. Don't worry - our expert team will manually review your device within 24 hours and provide you with a fair offer.</p>
+                                <small class="text-muted">You'll receive an email notification when the review is complete.</small>
+                            </div>
+                        </div>
+                    }
+
+                    @* Manual Offer Section (existing) *@
                     @if (Model.ApprovedValue.HasValue && Model.Status == "OFFER_SENT")
                     {
                         <div class="card border-success">
                             <div class="card-header bg-success text-white">
-                                <h5 class="mb-0"><i class="fas fa-tag me-1"></i>Trade-In Offer</h5>
+                                <h5 class="mb-0"><i class="fas fa-user-tie me-1"></i>Manual Review Offer</h5>
                             </div>
                             <div class="card-body text-center">
                                 <h2 class="text-success mb-3">R @Model.ApprovedValue.Value.ToString("N2")</h2>
-                                <p class="text-muted mb-4">We're offering this amount for your device based on our evaluation.</p>
+                                <p class="text-muted mb-4">Final offer after manual evaluation by our experts.</p>
                                 
                                 <div class="d-grid gap-2">
                                     <form asp-action="Accept" method="post" class="d-inline">
@@ -179,18 +279,46 @@
                                     </div>
                                 </div>
                                 
+                                <div class="timeline-item @(GetTimelineStatus("AI_PROCESSING", Model.Status))">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6>AI Analysis</h6>
+                                        <small class="text-muted">
+                                            @if (Model.Status == "AI_ERROR")
+                                            {
+                                                <span class="text-warning">Analysis failed - manual review required</span>
+                                            }
+                                            else
+                                            {
+                                                <span>Automated assessment in progress</span>
+                                            }
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                @if (!string.IsNullOrEmpty(Model.AutoGrade))
+                                {
+                                    <div class="timeline-item @(GetTimelineStatus("AI_OFFER_PENDING", Model.Status))">
+                                        <div class="timeline-marker"></div>
+                                        <div class="timeline-content">
+                                            <h6>AI Offer Ready</h6>
+                                            <small class="text-muted">Grade @Model.AutoGrade - R @(Model.AutoOfferAmount?.ToString("N2") ?? "0.00")</small>
+                                        </div>
+                                    </div>
+                                }
+                                
                                 <div class="timeline-item @(GetTimelineStatus("UNDER_REVIEW", Model.Status))">
                                     <div class="timeline-marker"></div>
                                     <div class="timeline-content">
-                                        <h6>Under Review</h6>
-                                        <small class="text-muted">Being evaluated by our team</small>
+                                        <h6>Manual Review</h6>
+                                        <small class="text-muted">Expert evaluation if needed</small>
                                     </div>
                                 </div>
                                 
                                 <div class="timeline-item @(GetTimelineStatus("OFFER_SENT", Model.Status))">
                                     <div class="timeline-marker"></div>
                                     <div class="timeline-content">
-                                        <h6>Offer Sent</h6>
+                                        <h6>Final Offer</h6>
                                         <small class="text-muted">Awaiting your response</small>
                                     </div>
                                 </div>
@@ -223,6 +351,142 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Real-time status polling for AI processing
+    @if (Model.Status == "SUBMITTED" || Model.Status == "AI_PROCESSING")
+    {
+        <text>
+        const statusUrl = '@Url.Action("GetSimpleStatus", "TradeInStatus", new { publicId = Model.PublicId })';
+        const statusTitle = document.getElementById('ai-status-title');
+        const statusMessage = document.getElementById('ai-status-message');
+        const statusDetail = document.getElementById('ai-status-detail');
+        const lastUpdated = document.getElementById('last-updated');
+        const spinner = document.getElementById('ai-spinner');
+        
+        let pollCount = 0;
+        const maxPolls = 60; // Stop after 5 minutes (60 * 5s intervals)
+        
+        function updateStatus() {
+            fetch(statusUrl)
+                .then(response => response.json())
+                .then(data => {
+                    pollCount++;
+                    const now = new Date();
+                    lastUpdated.textContent = now.toLocaleTimeString();
+                    
+                    // Update status display based on current status
+                    switch(data.status) {
+                        case 'SUBMITTED':
+                            statusTitle.textContent = 'Trade-in Submitted';
+                            statusMessage.textContent = 'Your trade-in has been submitted and is queued for AI analysis.';
+                            statusDetail.textContent = 'Waiting for AI processing to begin...';
+                            break;
+                        case 'AI_PROCESSING':
+                            statusTitle.textContent = 'AI Analysis in Progress';
+                            statusMessage.textContent = 'Our AI is analyzing your device photos to provide an instant assessment.';
+                            statusDetail.textContent = `Analysis attempt ${data.aiRetryCount || 1} of 3`;
+                            break;
+                        case 'AI_ASSESSED':
+                        case 'AI_OFFER_PENDING':
+                        case 'UNDER_REVIEW':
+                        case 'EVALUATED':
+                        case 'OFFER_SENT':
+                            // Status has changed - reload page to show new content
+                            location.reload();
+                            return;
+                        case 'AI_ERROR':
+                            statusTitle.textContent = 'AI Analysis Error';
+                            statusMessage.textContent = 'AI analysis encountered an error. Your trade-in will be reviewed manually.';
+                            statusDetail.textContent = 'Manual review will be completed within 24 hours.';
+                            spinner.style.display = 'none';
+                            clearInterval(pollInterval);
+                            return;
+                    }
+                    
+                    // Stop polling after max attempts or if taking too long
+                    if (pollCount >= maxPolls) {
+                        statusDetail.textContent = 'Taking longer than usual. We\'ll email you when it\'s ready.';
+                        spinner.style.display = 'none';
+                        clearInterval(pollInterval);
+                    }
+                })
+                .catch(error => {
+                    console.error('Status polling error:', error);
+                    statusDetail.textContent = 'Connection issue. Retrying...';
+                });
+        }
+        
+        // Poll every 5 seconds
+        const pollInterval = setInterval(updateStatus, 5000);
+        
+        // Initial status check after 2 seconds
+        setTimeout(updateStatus, 2000);
+        </text>
+    }
+    else
+    {
+        <text>
+        // For non-processing statuses, remove the old auto-refresh
+        // Status polling is only active for SUBMITTED/AI_PROCESSING states
+        </text>
+    }
+
+    // Load pricing breakdown if available
+    @if (!string.IsNullOrEmpty(Model.AutoOfferBreakdownJson))
+    {
+        <text>
+        try {
+            var breakdown = @Html.Raw(Model.AutoOfferBreakdownJson);
+            var container = document.getElementById('pricing-breakdown');
+            
+            if (breakdown && container) {
+                var html = '<div class="pricing-breakdown">';
+                
+                if (breakdown.basePrice) {
+                    html += '<div class="d-flex justify-content-between mb-2">';
+                    html += '<span>Base Price:</span>';
+                    html += '<span class="fw-bold">R ' + breakdown.basePrice.toFixed(2) + '</span>';
+                    html += '</div>';
+                }
+                
+                if (breakdown.gradeMultiplier) {
+                    html += '<div class="d-flex justify-content-between mb-2">';
+                    html += '<span>Grade ' + (breakdown.grade || 'N/A') + ' Multiplier:</span>';
+                    html += '<span>' + (breakdown.gradeMultiplier * 100).toFixed(0) + '%</span>';
+                    html += '</div>';
+                }
+                
+                if (breakdown.appliedRules && breakdown.appliedRules.length > 0) {
+                    breakdown.appliedRules.forEach(function(rule) {
+                        html += '<div class="d-flex justify-content-between mb-2">';
+                        html += '<span>' + rule.description + ':</span>';
+                        if (rule.adjustment > 0) {
+                            html += '<span class="text-success">+R ' + rule.adjustment.toFixed(2) + '</span>';
+                        } else {
+                            html += '<span class="text-danger">-R ' + Math.abs(rule.adjustment).toFixed(2) + '</span>';
+                        }
+                        html += '</div>';
+                    });
+                }
+                
+                html += '<hr class="my-2">';
+                html += '<div class="d-flex justify-content-between fw-bold">';
+                html += '<span>Final Offer:</span>';
+                html += '<span class="text-primary">R ' + (breakdown.finalAmount || 0).toFixed(2) + '</span>';
+                html += '</div>';
+                html += '</div>';
+                
+                container.innerHTML = html;
+            }
+        } catch (e) {
+            console.error('Error parsing pricing breakdown:', e);
+        }
+        </text>
+    }
+});
+</script>
 
 <style>
 .timeline {
@@ -268,6 +532,10 @@
     background: #dc3545;
 }
 
+.timeline-item.error .timeline-marker {
+    background: #ffc107;
+}
+
 .timeline-content h6 {
     margin-bottom: 2px;
     font-size: 0.9rem;
@@ -280,6 +548,9 @@
         return status switch
         {
             "SUBMITTED" => "bg-info",
+            "AI_PROCESSING" => "bg-primary",
+            "AI_ERROR" => "bg-warning",
+            "AI_OFFER_PENDING" => "bg-success",
             "UNDER_REVIEW" => "bg-warning",
             "EVALUATED" => "bg-primary",
             "OFFER_SENT" => "bg-success",
@@ -297,7 +568,10 @@
         return status switch
         {
             "SUBMITTED" => "Submitted",
-            "UNDER_REVIEW" => "Under Review",
+            "AI_PROCESSING" => "AI Analysis",
+            "AI_ERROR" => "AI Error - Manual Review",
+            "AI_OFFER_PENDING" => "AI Offer Ready",
+            "UNDER_REVIEW" => "Manual Review",
             "EVALUATED" => "Evaluated",
             "OFFER_SENT" => "Offer Sent",
             "ACCEPTED" => "Accepted",
@@ -311,16 +585,37 @@
 
     private string GetTimelineStatus(string timelineStatus, string currentStatus)
     {
-        var statusOrder = new[] { "SUBMITTED", "UNDER_REVIEW", "EVALUATED", "OFFER_SENT", "ACCEPTED", "COMPLETED" };
+        var statusOrder = new[] { "SUBMITTED", "AI_PROCESSING", "AI_OFFER_PENDING", "UNDER_REVIEW", "EVALUATED", "OFFER_SENT", "ACCEPTED", "COMPLETED" };
         var timelineIndex = Array.IndexOf(statusOrder, timelineStatus);
         var currentIndex = Array.IndexOf(statusOrder, currentStatus);
 
-        if (currentStatus == "REJECTED" && timelineStatus == "OFFER_SENT")
+        // Handle AI_ERROR as a special case - it should show AI_PROCESSING as failed
+        if (currentStatus == "AI_ERROR")
+        {
+            if (timelineStatus == "SUBMITTED") return "completed";
+            if (timelineStatus == "AI_PROCESSING") return "rejected";
+            if (timelineStatus == "UNDER_REVIEW") return "active";
+            return "";
+        }
+
+        if (currentStatus == "REJECTED" && (timelineStatus == "OFFER_SENT" || timelineStatus == "AI_OFFER_PENDING"))
             return "rejected";
         
         if (timelineIndex <= currentIndex)
             return timelineIndex == currentIndex ? "active" : "completed";
         
         return "";
+    }
+
+    private string GetGradeBadgeClass(string grade)
+    {
+        return grade switch
+        {
+            "A" => "bg-success",
+            "B" => "bg-primary",
+            "C" => "bg-warning text-dark",
+            "D" => "bg-danger",
+            _ => "bg-secondary"
+        };
     }
 }

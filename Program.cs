@@ -156,9 +156,72 @@ builder.Services.AddScoped<AccessoryWorld.Services.IOrderWorkflowService, Access
             builder.Services.AddScoped<AccessoryWorld.Services.ICreditNoteService, AccessoryWorld.Services.CreditNoteService>();
             builder.Services.AddScoped<AccessoryWorld.Services.ICheckoutService, AccessoryWorld.Services.CheckoutService>();
             
+            // Add AI Assessment services
+            builder.Services.Configure<AccessoryWorld.Services.AI.TraeAiOptions>(
+                builder.Configuration.GetSection("TraeAI"));
+            builder.Services.Configure<AccessoryWorld.Services.AI.AzureVisionOptions>(
+                builder.Configuration.GetSection("AzureVision"));
+            
+            // Add Trae AI client and services
+            builder.Services.AddHttpClient<AccessoryWorld.Services.AI.ITraeAiClient, AccessoryWorld.Services.AI.TraeAiClient>(client =>
+            {
+                var traeAiConfig = builder.Configuration.GetSection("TraeAI");
+                client.BaseAddress = new Uri(traeAiConfig["BaseAddress"] ?? "https://api.trae.ai/v1/");
+                client.Timeout = TimeSpan.FromSeconds(30);
+                client.DefaultRequestHeaders.Add("User-Agent", "AccessoryWorld/1.0");
+                
+                var apiKey = traeAiConfig["ApiKey"];
+                if (!string.IsNullOrEmpty(apiKey))
+                {
+                    client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+                }
+            });
+            
+            // Add pricing adapter
+            builder.Services.AddScoped<AccessoryWorld.Services.Pricing.ITraePricingAdapter, 
+                AccessoryWorld.Services.Pricing.TraePricingAdapter>();
+            
+            // Register AI provider based on configuration
+            var aiProvider = builder.Configuration.GetSection("TradeInSettings:AI:Provider").Value ?? "TraeAI";
+            switch (aiProvider.ToUpperInvariant())
+            {
+                case "AZUREVISION":
+                    builder.Services.AddScoped<AccessoryWorld.Services.AI.IDeviceAssessmentProvider, 
+                        AccessoryWorld.Services.AI.AzureVisionAssessmentProvider>();
+                    break;
+                case "STUB":
+                    builder.Services.AddScoped<AccessoryWorld.Services.AI.IDeviceAssessmentProvider, 
+                        AccessoryWorld.Services.AI.StubAssessmentProvider>();
+                    break;
+                case "TRAEAI":
+                default:
+                    builder.Services.AddScoped<AccessoryWorld.Services.AI.IDeviceAssessmentProvider, 
+                        AccessoryWorld.Services.AI.TraeAssessmentProvider>();
+                    break;
+            }
+            
+            builder.Services.AddScoped<AccessoryWorld.Services.PricingService>();
+            
+            // Add Background Processing services
+            builder.Services.AddSingleton<AccessoryWorld.Services.Background.ITradeInQueue, 
+                AccessoryWorld.Services.Background.TradeInQueue>();
+            builder.Services.AddHostedService<AccessoryWorld.Services.Background.TradeInAssessmentWorker>();
+            
+            // Add HTTP client for AI services
+            builder.Services.AddHttpClient<AccessoryWorld.Services.AI.TraeAiAssessmentProvider>(client =>
+            {
+                var traeAiConfig = builder.Configuration.GetSection("TraeAI");
+                client.BaseAddress = new Uri(traeAiConfig["ApiUrl"] ?? "https://api.trae.ai/v1/");
+                client.Timeout = TimeSpan.FromSeconds(traeAiConfig.GetValue<int>("TimeoutSeconds", 30));
+                client.DefaultRequestHeaders.Add("User-Agent", "AccessoryWorld/1.0");
+            });
+            
             // Add Webhook services
             builder.Services.AddScoped<AccessoryWorld.Services.IWebhookService, AccessoryWorld.Services.WebhookService>();
             builder.Services.AddScoped<AccessoryWorld.Services.ITradeInWebhookService, AccessoryWorld.Services.TradeInWebhookService>();
+            
+            // Add AI Recommendation services
+            builder.Services.AddScoped<AccessoryWorld.Services.AI.IAIRecommendationService, AccessoryWorld.Services.AI.AIRecommendationService>();
 
             // Configure performance validation options
             builder.Services.Configure<AccessoryWorld.Services.PerformanceValidationOptions>(options =>

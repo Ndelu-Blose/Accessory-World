@@ -10,11 +10,14 @@ namespace AccessoryWorld.Services
     {
         Task<TradeIn> CreateTradeInAsync(CreateTradeInRequest request);
         Task<TradeIn> GetTradeInAsync(int id);
+        Task<TradeIn> GetTradeInByIdAsync(int id);
         Task<TradeIn> GetTradeInByPublicIdAsync(Guid publicId);
         Task<IEnumerable<TradeIn>> GetUserTradeInsAsync(string userId);
         Task<TradeIn> UpdateTradeInStatusAsync(int id, string newStatus, string? approvedBy = null, string? notes = null);
         Task<TradeIn> EvaluateTradeInAsync(int id, decimal approvedValue, string approvedBy, string? notes = null);
         Task<CreditNote> AcceptTradeInAsync(int id);
+        Task<CreditNote> AcceptAiOfferAsync(int id);
+        Task<TradeIn> RejectAiOfferAsync(int id, string reason);
         Task<CreditNote> GetCreditNoteAsync(string creditNoteCode);
         Task<decimal> ApplyCreditNoteAsync(string creditNoteCode, int orderId, decimal amount);
         Task<IEnumerable<CreditNote>> GetUserCreditNotesAsync(string userId);
@@ -69,6 +72,20 @@ namespace AccessoryWorld.Services
         }
 
         public async Task<TradeIn> GetTradeInAsync(int id)
+        {
+            var tradeIn = await _context.TradeIns
+                .Include(t => t.Customer)
+                .Include(t => t.ApprovedByUser)
+                .Include(t => t.CreditNote)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (tradeIn == null)
+                throw new DomainException($"Trade-In with ID {id} not found");
+
+            return tradeIn;
+        }
+
+        public async Task<TradeIn> GetTradeInByIdAsync(int id)
         {
             var tradeIn = await _context.TradeIns
                 .Include(t => t.Customer)
@@ -168,6 +185,46 @@ namespace AccessoryWorld.Services
             return creditNote;
         }
 
+        public async Task<CreditNote> AcceptAiOfferAsync(int id)
+        {
+            var tradeIn = await GetTradeInAsync(id);
+            
+            if (tradeIn.Status != TradeInDomainService.TradeInStatus.OfferSent)
+                throw new DomainException("Trade-In must be in OFFER_SENT status to be accepted");
+
+            if (!tradeIn.AutoOfferAmount.HasValue || tradeIn.AutoOfferAmount.Value <= 0)
+                throw new DomainException("Trade-In must have a valid AI offer amount to be accepted");
+
+            // Transition to accepted status
+            await _domainService.TransitionTradeInStatusAsync(id, TradeInDomainService.TradeInStatus.Accepted);
+
+            // Create credit note using the AI offer amount
+            var creditNote = await _domainService.CreateCreditNoteAsync(id, tradeIn.AutoOfferAmount.Value);
+
+            // Complete the trade-in
+            await _domainService.TransitionTradeInStatusAsync(id, TradeInDomainService.TradeInStatus.Completed);
+
+            _logger.LogInformation("AI Trade-In {TradeInId} accepted and credit note {CreditNoteCode} created", 
+                id, creditNote.CreditNoteCode);
+
+            return creditNote;
+        }
+
+        public async Task<TradeIn> RejectAiOfferAsync(int id, string reason)
+        {
+            var tradeIn = await GetTradeInAsync(id);
+            
+            if (tradeIn.Status != TradeInDomainService.TradeInStatus.OfferSent)
+                throw new DomainException("Trade-In must be in OFFER_SENT status to be rejected");
+
+            // Transition to rejected status with reason
+            await _domainService.TransitionTradeInStatusAsync(id, TradeInDomainService.TradeInStatus.Rejected, notes: reason);
+
+            _logger.LogInformation("AI Trade-In {TradeInId} rejected with reason: {Reason}", id, reason);
+
+            return await GetTradeInAsync(id);
+        }
+
         public async Task<CreditNote> GetCreditNoteAsync(string creditNoteCode)
         {
             var creditNote = await _context.CreditNotes
@@ -210,7 +267,7 @@ namespace AccessoryWorld.Services
                 _logger.LogInformation("Credit note {CreditNoteCode} expired", creditNote.CreditNoteCode);
             }
 
-            if (expiredCreditNotes.Any())
+            if (expiredCreditNotes.Count > 0)
             {
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("Expired {Count} credit notes", expiredCreditNotes.Count);

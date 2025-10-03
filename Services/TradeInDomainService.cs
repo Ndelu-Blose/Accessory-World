@@ -126,16 +126,12 @@ namespace AccessoryWorld.Services
                 throw new DomainException("Credit note amount must be greater than zero");
 
             // Check if credit note already exists
-            var existingCreditNote = await _context.CreditNotes
-                .FirstOrDefaultAsync(cn => cn.TradeInId == tradeInId);
-            
-            if (existingCreditNote != null)
+            if (tradeIn.CreditNoteId.HasValue)
                 throw new DomainException("Credit note already exists for this trade-in");
 
             var creditNote = new CreditNote
             {
                 UserId = tradeIn.CustomerId,
-                TradeInId = tradeInId,
                 CreditNoteCode = GenerateCreditNoteCode(),
                 Amount = amount,
                 AmountRemaining = amount,
@@ -145,6 +141,10 @@ namespace AccessoryWorld.Services
             };
 
             _context.CreditNotes.Add(creditNote);
+            await _context.SaveChangesAsync();
+
+            // Link the CreditNote to the TradeIn
+            tradeIn.CreditNoteId = creditNote.Id;
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Credit note {CreditNoteCode} created for Trade-In {TradeInId} with amount {Amount}", 

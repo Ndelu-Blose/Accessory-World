@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Recommendations Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .result { margin-top: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 3px; }
+        button { padding: 10px 15px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🤖 AI Recommendations Test</h1>
+    
+    <div class="test-section">
+        <h3>1. Test Basic Recommendations</h3>
+        <button onclick="testRecommendations()">Get Recommendations</button>
+        <div id="recommendations-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Test Similar Products</h3>
+        <button onclick="testSimilarProducts()">Get Similar Products</button>
+        <div id="similar-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. Test Behavior Tracking</h3>
+        <button onclick="testBehaviorTracking()">Track Behavior</button>
+        <div id="behavior-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Test User Profile</h3>
+        <button onclick="testUserProfile()">Get User Profile</button>
+        <div id="profile-result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const baseUrl = 'http://localhost:5103/api/ai/recommendations';
+
+        async function testRecommendations() {
+            const resultDiv = document.getElementById('recommendations-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch(`${baseUrl}?count=3&algorithmType=TRENDING`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h4>✅ Success!</h4>
+                        <p><strong>Algorithm:</strong> ${data.algorithmUsed}</p>
+                        <p><strong>Products Found:</strong> ${data.products.length}</p>
+                        <p><strong>Processing Time:</strong> ${data.processingTimeMs}ms</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h4>❌ Error ${response.status}</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h4>❌ Network Error</h4>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+
+        async function testSimilarProducts() {
+            const resultDiv = document.getElementById('similar-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch(`${baseUrl}/similar?productId=1&count=2`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h4>✅ Success!</h4>
+                        <p><strong>Similarity Type:</strong> ${data.similarityType}</p>
+                        <p><strong>Products Found:</strong> ${data.products.length}</p>
+                        <p><strong>Processing Time:</strong> ${data.processingTimeMs}ms</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h4>❌ Error ${response.status}</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h4>❌ Network Error</h4>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+
+        async function testBehaviorTracking() {
+            const resultDiv = document.getElementById('behavior-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch(`${baseUrl}/behavior`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        productId: 1,
+                        actionType: 'VIEW',
+                        category: 'Electronics',
+                        brand: 'Test Brand',
+                        price: 99.99
+                    })
+                });
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h4>✅ Success!</h4>
+                        <p>Behavior tracked successfully</p>
+                    `;
+                } else {
+                    const data = await response.json();
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h4>❌ Error ${response.status}</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h4>❌ Network Error</h4>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+
+        async function testUserProfile() {
+            const resultDiv = document.getElementById('profile-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch(`${baseUrl}/profile`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h4>✅ Success!</h4>
+                        <p><strong>User ID:</strong> ${data.userId || 'Not authenticated'}</p>
+                        <p><strong>Preferred Categories:</strong> ${data.preferredCategories.join(', ') || 'None'}</p>
+                        <p><strong>Preferred Brands:</strong> ${data.preferredBrands.join(', ') || 'None'}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h4>❌ Error ${response.status}</h4>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h4>❌ Network Error</h4>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

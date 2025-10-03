@@ -1,0 +1,56 @@
+@* Drop this <script> at the bottom of TradeIn/Details.cshtml *@
+<script>
+(function(){
+  const statusUrl = '@Url.Action("GetStatus", "TradeInStatus", new { publicId = Model.PublicId })';
+  const statusEl = document.getElementById('ai-status');
+  const offerEl  = document.getElementById('ai-offer');
+  const gradeEl  = document.getElementById('ai-grade');
+  const spinner  = document.getElementById('ai-spinner');
+
+  let tries = 0;
+  const maxTries = 60; // ~3 minutes at 3s interval
+
+  async function tick(){
+    tries++;
+    try{
+      const resp = await fetch(statusUrl, { cache: 'no-store' });
+      if(!resp.ok) throw new Error('HTTP '+resp.status);
+      const data = await resp.json();
+
+      statusEl.textContent = data.status;
+
+      if(data.status === 'AiAnalysisInProgress'){
+        spinner?.classList.remove('d-none');
+      } else {
+        spinner?.classList.add('d-none');
+      }
+
+      if(data.hasOffer && data.offer != null){
+        offerEl.textContent = new Intl.NumberFormat().format(data.offer);
+      }
+
+      if(data.grade){
+        gradeEl.textContent = data.grade;
+      }
+
+      if(data.status === 'AiAnalysisCompleted' || data.status === 'ManualReview'){
+        // stop polling
+        return;
+      }
+    } catch(e){
+      console.warn('status poll failed', e);
+      if(tries % 5 === 0){
+        statusEl.textContent = 'Checking… (network issue)';
+      }
+    }
+    if(tries < maxTries){
+      setTimeout(tick, 3000);
+    } else {
+      statusEl.textContent = 'Taking longer than usual. We'll email you when it's ready.';
+      spinner?.classList.add('d-none');
+    }
+  }
+
+  tick();
+})();
+</script>
